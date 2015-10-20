@@ -1,0 +1,11 @@
+/.cvsignore
+/J2SEClassHierarchyExclusions.txt
+/SyntheticJ2SEModel.txt
+/WalaUtilMessages.properties
+/codetemplates.xml
+/com/
+/dictionary.txt
+/formatter.xml
+/log.properties
+/natives.xml
+/natives_no_model.xml
