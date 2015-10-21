@@ -8,6 +8,6 @@
 </listAttribute>
 <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="PAVpointerAnalysisPackage.PAVPointerAnalysis"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/home/arpith/iisc/pav/project/jar/pav.jar LTestCases/SampleTests LTestCases/SampleTests foo(I)V"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/home/arpith/iisc/pav/project/jar/pav.jar LTestCases/SampleTests LTestCases/SampleTests main([Ljava/lang/String;)V"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="PAV15Project"/>
 </launchConfiguration>

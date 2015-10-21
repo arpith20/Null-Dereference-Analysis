@@ -1,0 +1,56 @@
+package PAVpointerAnalysisPackage;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class Data {
+
+	private HashMap<String, ArrayList<String>> hm = new HashMap<String, ArrayList<String>>();
+
+	public void add(String index, String value) {
+		ArrayList<String> values = hm.get(index);
+
+		if (values == null) {
+			System.out.println("added "+value);
+			values = new ArrayList<String>();
+			values.add(value);
+			hm.put(index, values);
+		} else {
+			if (!values.contains(value)){
+				System.out.println("Added "+value);
+				values.add(value);
+			}
+		}
+		print(values);
+	}
+
+	public ArrayList<String> get(String index) {
+		print(hm.get(index));
+		return hm.get(index);
+	}
+
+	public String join(String index1, String index2) {
+		return null;
+	}
+
+	public void remove(String index) {
+		hm.remove(index);
+	}
+
+	public Boolean remove(String index, String value) {
+		ArrayList<String> v = hm.get(index);
+		if (v != null) {
+			v.remove(value);
+			return true;
+		}
+		return false;
+	}
+
+	public void print(ArrayList<String> values) {
+		String op = "";
+		for (String value : values) {
+			op = op + " " + value;
+		}
+		System.out.println(op);
+	}
+}
