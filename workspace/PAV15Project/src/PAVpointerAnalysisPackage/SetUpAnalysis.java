@@ -1,5 +1,11 @@
 package PAVpointerAnalysisPackage;
 
+/**
+ * @author Arpith K, Sridhar G
+ * Program Analysis and Verification, 2015
+ *
+ */
+
 // Do NOT import the pointer analysis package
 import java.io.*;
 import java.util.*;
@@ -213,14 +219,13 @@ public class SetUpAnalysis {
 			return null;
 		}
 	}
-	
-	public void printIRForAllMethods()
-	{
+
+	public void printIRForAllMethods() {
 		ArrayList<String> al = new ArrayList<String>();
 		al = getAllCallSites();
-		if(al==null)
+		if (al == null)
 			return;
-		for(String s : al){
+		for (String s : al) {
 			System.out.println(getIR(s));
 		}
 	}
