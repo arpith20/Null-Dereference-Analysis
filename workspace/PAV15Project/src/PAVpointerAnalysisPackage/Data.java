@@ -8,7 +8,14 @@ public class Data {
 
 	private HashMap<String, ArrayList<String>> hm = new HashMap<String, ArrayList<String>>();
 	private HashMap<String, Boolean> marked = new HashMap<String, Boolean>();
-
+	private ArrayList<HashMap<String, ArrayList<String>>> col = new ArrayList<HashMap<String, ArrayList<String>>>();
+	private HashMap<String, ArrayList<HashMap<String, ArrayList<String>>>> pp = new HashMap<String, ArrayList<HashMap<String, ArrayList<String>>>>();
+	
+	
+	public boolean comparehash(HashMap<String, ArrayList<String>> hm1, HashMap<String, ArrayList<String>> hm2)
+	{
+		return hm1.equals(hm2);
+	}
 	// TODO: is a bool argument called removenull required?
 	public void add(String index, String value) {
 		ArrayList<String> values = hm.get(index);
