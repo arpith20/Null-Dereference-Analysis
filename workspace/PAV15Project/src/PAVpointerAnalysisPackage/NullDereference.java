@@ -73,6 +73,7 @@ public class NullDereference {
 		d.add("BB1", 0, "v2", "v2");
 		d.add("BB1", 0, "v2", "v2");
 		d.add("BB1", 1, "v2", "v1");
+		d.add("BB1", 1, "v2", "v1");
 		d.display();
 
 	}

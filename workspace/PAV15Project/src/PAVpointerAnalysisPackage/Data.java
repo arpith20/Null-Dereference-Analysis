@@ -5,36 +5,23 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-class ArrayListAnySize<E> extends ArrayList<E> {
-	@Override
-	public void add(int index, E element) {
-		if (index >= 0 && index <= size())
-			super.add(index, element);
-		int insertNulls = index - size();
-		for (int i = 0; i < insertNulls; i++) {
-			super.add(null);
-		}
-		super.add(element);
-	}
-}
-
 public class Data {
 
 	private HashMap<String, ArrayList<String>> hm = new HashMap<String, ArrayList<String>>();
 	private HashMap<String, Boolean> marked = new HashMap<String, Boolean>();
-	private HashMap<String, ArrayListAnySize<HashMap<String, ArrayList<String>>>> pp = new HashMap<String, ArrayListAnySize<HashMap<String, ArrayList<String>>>>();
+	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
 
-	public void add(String programpoint, int col, String variable, String pointsto) {
-		ArrayListAnySize<HashMap<String, ArrayList<String>>> al_col = pp.get(programpoint);
+	public void add(String programpoint, Integer col, String variable, String pointsto) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col = pp.get(programpoint);
 		if (al_col == null) {
-			al_col = new ArrayListAnySize<HashMap<String, ArrayList<String>>>();
+			al_col = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
 
 			HashMap<String, ArrayList<String>> var_hash = new HashMap<String, ArrayList<String>>();
 
 			ArrayList<String> al_pointsto = new ArrayList<String>();
 			al_pointsto.add(pointsto);
 			var_hash.put(variable, al_pointsto);
-			al_col.add(col, var_hash);
+			al_col.put(col, var_hash);
 
 			pp.put(programpoint, al_col);
 		} else {
@@ -45,7 +32,7 @@ public class Data {
 				ArrayList<String> al_pointsto = new ArrayList<String>();
 				al_pointsto.add(pointsto);
 				var_hash.put(variable, al_pointsto);
-				al_col.add(col, var_hash);
+				al_col.put(col, var_hash);
 			} else {
 				ArrayList<String> al_pointsto = var_hash.get(variable);
 				if (al_pointsto == null) {
@@ -66,15 +53,15 @@ public class Data {
 		String s_pointsto = "";
 		if (pp == null)
 			return;
-		for (Map.Entry<String, ArrayListAnySize<HashMap<String, ArrayList<String>>>> entry : pp.entrySet()) {
+		for (Map.Entry<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> entry : pp.entrySet()) {
 			String programPoint = entry.getKey();
 			System.out.println("\n" + programPoint + ":  ");
-			ArrayListAnySize<HashMap<String, ArrayList<String>>> al_cols = entry.getValue();
+			HashMap<Integer, HashMap<String, ArrayList<String>>> al_cols = entry.getValue();
 			if (al_cols == null)
 				continue;
-			for (int i = 0; i < al_cols.size(); i++) {
-				HashMap<String, ArrayList<String>> var_hash = al_cols.get(i);
-				System.out.println(i+" " + al_cols.indexOf(var_hash) + ":  ");
+			for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> middleentry : al_cols.entrySet()) {
+				HashMap<String, ArrayList<String>> var_hash = middleentry.getValue();
+				System.out.println(" " + middleentry.getKey() + ":  ");
 				if (var_hash == null)
 					continue;
 				for (Map.Entry<String, ArrayList<String>> innerentry : var_hash.entrySet()) {
@@ -87,6 +74,7 @@ public class Data {
 					for (String s : pointsto) {
 						s_pointsto += s + ", ";
 					}
+					s_pointsto = s_pointsto.substring(0, s_pointsto.length() - 2);
 					s_pointsto += "}";
 					System.out.println(s_pointsto);
 				}
@@ -212,18 +200,5 @@ public class Data {
 		if (ret != null)
 			return ret;
 		return false; // TODO: change this according to logic
-	}
-
-	public void add_pp(String index, HashMap<String, ArrayList<String>> hm) {
-		ArrayList<HashMap<String, ArrayList<String>>> al = pp.get(index);
-		if (al == null) {
-			al = new ArrayList<HashMap<String, ArrayList<String>>>();
-			al.add(hm);
-			pp.put(index, al);
-		} else {
-			if (!al.contains(hm)) {
-				al.add(hm);
-			}
-		}
 	}
 }
