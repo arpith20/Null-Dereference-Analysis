@@ -157,7 +157,7 @@ public class SetUpAnalysis {
 	 * workflow. see project presentation and the write-up for details
 	 */
 
-	public String getIR(String analysisMethod) {
+	public IR getIR(String analysisMethod) {
 		Iterator<CGNode> nodes = cg.iterator();
 		CGNode target = null;
 		while (nodes.hasNext()) {
@@ -169,7 +169,7 @@ public class SetUpAnalysis {
 			}
 		}
 		if (target != null) {
-			return target.getIR().toString();
+			return target.getIR();
 		} else {
 			return null;
 		}
@@ -226,7 +226,7 @@ public class SetUpAnalysis {
 		if (al == null)
 			return;
 		for (String s : al) {
-			System.out.println(getIR(s));
+			System.out.println(getIR(s).toString());
 		}
 	}
 }
