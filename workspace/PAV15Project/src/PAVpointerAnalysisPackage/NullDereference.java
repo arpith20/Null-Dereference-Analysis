@@ -33,11 +33,11 @@ public class NullDereference {
 	void entry() {
 		System.out.println("this is a successful test");
 		Data d = new Data();
-		d.add("1", "test");
-		d.add("1", "test2");
-		d.add("1", "test3");
-		d.add("2", "test4");
-		d.add("2", "test5");
+		d.add_to_var("1", "test");
+		d.add_to_var("1", "test2");
+		d.add_to_var("1", "test3");
+		d.add_to_var("2", "test4");
+		d.add_to_var("2", "test5");
 
 		// d.remove("2");
 		d.get("1");
@@ -52,16 +52,16 @@ public class NullDereference {
 		d.remove("3", "test2");
 		d.get("3");
 
-		d.add("3", "null");
+		d.add_to_var("3", "null");
 		d.get("3");
 		d.removenull("3");
 		d.get("3");
 
-		d.add("1", "test");
-		d.add("1", "test2");
-		d.add("1", "test3");
-		d.add("2", "test4");
-		d.add("2", "test5");
+		d.add_to_var("1", "test");
+		d.add_to_var("1", "test2");
+		d.add_to_var("1", "test3");
+		d.add_to_var("2", "test4");
+		d.add_to_var("2", "test5");
 		
 		d.print("2");
 

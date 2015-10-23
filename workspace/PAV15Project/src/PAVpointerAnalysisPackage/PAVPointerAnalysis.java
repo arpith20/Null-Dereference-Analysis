@@ -79,6 +79,9 @@ public class PAVPointerAnalysis {
 		// setup.getCallSites("<init>()V");
 		// setup.getAllCallSites();
 		setup.printIRForAllMethods();
+		//setup.printIRForSomeMethods("main([Ljava/lang/String;)V");
+		//NullDereference n = new NullDereference();
+		//n.entry();
 	}
 
 	// START: NO CHANGE REGION

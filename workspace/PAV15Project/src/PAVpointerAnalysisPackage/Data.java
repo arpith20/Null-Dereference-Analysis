@@ -8,16 +8,15 @@ public class Data {
 
 	private HashMap<String, ArrayList<String>> hm = new HashMap<String, ArrayList<String>>();
 	private HashMap<String, Boolean> marked = new HashMap<String, Boolean>();
-	private ArrayList<HashMap<String, ArrayList<String>>> col = new ArrayList<HashMap<String, ArrayList<String>>>();
 	private HashMap<String, ArrayList<HashMap<String, ArrayList<String>>>> pp = new HashMap<String, ArrayList<HashMap<String, ArrayList<String>>>>();
+
 	
-	
-	public boolean comparehash(HashMap<String, ArrayList<String>> hm1, HashMap<String, ArrayList<String>> hm2)
-	{
+	//TODO: the following will most probably not work
+	public boolean comparehash(HashMap<String, ArrayList<String>> hm1, HashMap<String, ArrayList<String>> hm2) {
 		return hm1.equals(hm2);
 	}
-	// TODO: is a bool argument called removenull required?
-	public void add(String index, String value) {
+
+	public void add_to_var(String index, String value) {
 		ArrayList<String> values = hm.get(index);
 
 		if (values == null) {
@@ -30,6 +29,24 @@ public class Data {
 			}
 		}
 		sort(index);
+	}
+
+	public void add_pp(String index, HashMap<String, ArrayList<String>> hm) {
+		ArrayList<HashMap<String, ArrayList<String>>> al = pp.get(index);
+		if (al == null) {
+			al = new ArrayList<HashMap<String, ArrayList<String>>>();
+			al.add(hm);
+			pp.put(index, al);
+		} else {
+			if (!al.contains(hm)) {
+				al.add(hm);
+			}
+		}
+	}
+	
+	public void add(String pp, int col, String variable, String pointsto)
+	{
+		
 	}
 
 	public Boolean removenull(String index) {
@@ -64,12 +81,12 @@ public class Data {
 		ArrayList<String> s3 = hm.get(index3);
 		if (s2 != null) {
 			for (String value : s2) {
-				add(index1, value);
+				add_to_var(index1, value);
 			}
 		}
 		if (s3 != null) {
 			for (String value : s3) {
-				add(index1, value);
+				add_to_var(index1, value);
 			}
 		}
 		sort(index1);
@@ -90,11 +107,12 @@ public class Data {
 
 	public void print(String index) {
 		ArrayList<String> al = hm.get(index);
-		if(al==null)
+		if (al == null)
 			return;
-		System.out.print(index+"->");print(al);
+		System.out.print(index + "->");
+		print(al);
 	}
-	
+
 	public void print(ArrayList<String> values) {
 		if (values == null)
 			System.out.println("{}");
@@ -108,7 +126,7 @@ public class Data {
 			System.out.println(op);
 		}
 	}
-	
+
 	public void sort(String index) {
 		ArrayList<String> al = hm.get(index);
 		if (al != null)

@@ -222,7 +222,18 @@ public class SetUpAnalysis {
 
 	public void printIRForAllMethods() {
 		ArrayList<String> al = new ArrayList<String>();
+		//al = getCallSites("name of  analysis method here");
 		al = getAllCallSites();
+		if (al == null)
+			return;
+		for (String s : al) {
+			System.out.println(getIR(s).toString());
+		}
+	}
+	
+	public void printIRForSomeMethods(String am) {
+		ArrayList<String> al = new ArrayList<String>();
+		al = getCallSites(am);
 		if (al == null)
 			return;
 		for (String s : al) {
