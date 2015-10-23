@@ -3,17 +3,31 @@ package PAVpointerAnalysisPackage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
+
+class ArrayListAnySize<E> extends ArrayList<E> {
+	@Override
+	public void add(int index, E element) {
+		if (index >= 0 && index <= size())
+			super.add(index, element);
+		int insertNulls = index - size();
+		for (int i = 0; i < insertNulls; i++) {
+			super.add(null);
+		}
+		super.add(element);
+	}
+}
 
 public class Data {
 
 	private HashMap<String, ArrayList<String>> hm = new HashMap<String, ArrayList<String>>();
 	private HashMap<String, Boolean> marked = new HashMap<String, Boolean>();
-	private HashMap<String, ArrayList<HashMap<String, ArrayList<String>>>> pp = new HashMap<String, ArrayList<HashMap<String, ArrayList<String>>>>();
+	private HashMap<String, ArrayListAnySize<HashMap<String, ArrayList<String>>>> pp = new HashMap<String, ArrayListAnySize<HashMap<String, ArrayList<String>>>>();
 
 	public void add(String programpoint, int col, String variable, String pointsto) {
-		ArrayList<HashMap<String, ArrayList<String>>> al_col = pp.get(programpoint);
+		ArrayListAnySize<HashMap<String, ArrayList<String>>> al_col = pp.get(programpoint);
 		if (al_col == null) {
-			al_col = new ArrayList<HashMap<String, ArrayList<String>>>();
+			al_col = new ArrayListAnySize<HashMap<String, ArrayList<String>>>();
 
 			HashMap<String, ArrayList<String>> var_hash = new HashMap<String, ArrayList<String>>();
 
@@ -22,7 +36,7 @@ public class Data {
 			var_hash.put(variable, al_pointsto);
 			al_col.add(col, var_hash);
 
-			pp.put("programpoint", al_col);
+			pp.put(programpoint, al_col);
 		} else {
 			HashMap<String, ArrayList<String>> var_hash = al_col.get(col);
 			if (var_hash == null) {
@@ -46,6 +60,39 @@ public class Data {
 				}
 			}
 		}
+	}
+
+	public void display() {
+		String s_pointsto = "";
+		if (pp == null)
+			return;
+		for (Map.Entry<String, ArrayListAnySize<HashMap<String, ArrayList<String>>>> entry : pp.entrySet()) {
+			String programPoint = entry.getKey();
+			System.out.println("\n" + programPoint + ":  ");
+			ArrayListAnySize<HashMap<String, ArrayList<String>>> al_cols = entry.getValue();
+			if (al_cols == null)
+				continue;
+			for (int i = 0; i < al_cols.size(); i++) {
+				HashMap<String, ArrayList<String>> var_hash = al_cols.get(i);
+				System.out.println(i+" " + al_cols.indexOf(var_hash) + ":  ");
+				if (var_hash == null)
+					continue;
+				for (Map.Entry<String, ArrayList<String>> innerentry : var_hash.entrySet()) {
+					String variable = innerentry.getKey();
+					s_pointsto = variable;
+					ArrayList<String> pointsto = innerentry.getValue();
+					if (pointsto == null)
+						continue;
+					s_pointsto += " -> {";
+					for (String s : pointsto) {
+						s_pointsto += s + ", ";
+					}
+					s_pointsto += "}";
+					System.out.println(s_pointsto);
+				}
+			}
+		}
+
 	}
 
 	// TODO: the following will most probably not work

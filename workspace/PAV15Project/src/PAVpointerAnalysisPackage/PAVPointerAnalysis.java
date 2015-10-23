@@ -69,7 +69,7 @@ public class PAVPointerAnalysis {
 		 * will compute the call graph for the given program, and print out the
 		 * nodes. Feel free to erase this call, or use it otherwise.
 		 */
-		setup.printNodes();
+		//setup.printNodes();
 		// setup.printIR();
 
 		/*
@@ -79,9 +79,9 @@ public class PAVPointerAnalysis {
 		// setup.getCallSites("<init>()V");
 		// setup.getAllCallSites();
 		//setup.printIRForAllMethods();
-		setup.printIRForSomeMethods("foo(I)V");
-		//NullDereference n = new NullDereference();
-		//n.entry();
+		//setup.printIRForSomeMethods("foo(I)V");
+		NullDereference n = new NullDereference();
+		n.entry();
 	}
 
 	// START: NO CHANGE REGION
