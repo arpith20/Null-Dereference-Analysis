@@ -78,8 +78,8 @@ public class PAVPointerAnalysis {
 		 */
 		// setup.getCallSites("<init>()V");
 		// setup.getAllCallSites();
-		setup.printIRForAllMethods();
-		//setup.printIRForSomeMethods("main([Ljava/lang/String;)V");
+		//setup.printIRForAllMethods();
+		setup.printIRForSomeMethods("foo(I)V");
 		//NullDereference n = new NullDereference();
 		//n.entry();
 	}

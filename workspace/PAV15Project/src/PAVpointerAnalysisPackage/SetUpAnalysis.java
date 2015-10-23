@@ -237,7 +237,7 @@ public class SetUpAnalysis {
 		if (al == null)
 			return;
 		for (String s : al) {
-			System.out.println(getIR(s).toString());
+			System.out.println(s);
 		}
 	}
 }

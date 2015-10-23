@@ -10,8 +10,45 @@ public class Data {
 	private HashMap<String, Boolean> marked = new HashMap<String, Boolean>();
 	private HashMap<String, ArrayList<HashMap<String, ArrayList<String>>>> pp = new HashMap<String, ArrayList<HashMap<String, ArrayList<String>>>>();
 
-	
-	//TODO: the following will most probably not work
+	public void add(String programpoint, int col, String variable, String pointsto) {
+		ArrayList<HashMap<String, ArrayList<String>>> al_col = pp.get(programpoint);
+		if (al_col == null) {
+			al_col = new ArrayList<HashMap<String, ArrayList<String>>>();
+
+			HashMap<String, ArrayList<String>> var_hash = new HashMap<String, ArrayList<String>>();
+
+			ArrayList<String> al_pointsto = new ArrayList<String>();
+			al_pointsto.add(pointsto);
+			var_hash.put(variable, al_pointsto);
+			al_col.add(col, var_hash);
+
+			pp.put("programpoint", al_col);
+		} else {
+			HashMap<String, ArrayList<String>> var_hash = al_col.get(col);
+			if (var_hash == null) {
+				var_hash = new HashMap<String, ArrayList<String>>();
+
+				ArrayList<String> al_pointsto = new ArrayList<String>();
+				al_pointsto.add(pointsto);
+				var_hash.put(variable, al_pointsto);
+				al_col.add(col, var_hash);
+			} else {
+				ArrayList<String> al_pointsto = var_hash.get(variable);
+				if (al_pointsto == null) {
+					al_pointsto = new ArrayList<String>();
+					al_pointsto.add(pointsto);
+
+					var_hash.put(variable, al_pointsto);
+				} else {
+					if (!al_pointsto.contains(pointsto)) {
+						al_pointsto.add(pointsto);
+					}
+				}
+			}
+		}
+	}
+
+	// TODO: the following will most probably not work
 	public boolean comparehash(HashMap<String, ArrayList<String>> hm1, HashMap<String, ArrayList<String>> hm2) {
 		return hm1.equals(hm2);
 	}
@@ -29,24 +66,6 @@ public class Data {
 			}
 		}
 		sort(index);
-	}
-
-	public void add_pp(String index, HashMap<String, ArrayList<String>> hm) {
-		ArrayList<HashMap<String, ArrayList<String>>> al = pp.get(index);
-		if (al == null) {
-			al = new ArrayList<HashMap<String, ArrayList<String>>>();
-			al.add(hm);
-			pp.put(index, al);
-		} else {
-			if (!al.contains(hm)) {
-				al.add(hm);
-			}
-		}
-	}
-	
-	public void add(String pp, int col, String variable, String pointsto)
-	{
-		
 	}
 
 	public Boolean removenull(String index) {
@@ -146,5 +165,18 @@ public class Data {
 		if (ret != null)
 			return ret;
 		return false; // TODO: change this according to logic
+	}
+
+	public void add_pp(String index, HashMap<String, ArrayList<String>> hm) {
+		ArrayList<HashMap<String, ArrayList<String>>> al = pp.get(index);
+		if (al == null) {
+			al = new ArrayList<HashMap<String, ArrayList<String>>>();
+			al.add(hm);
+			pp.put(index, al);
+		} else {
+			if (!al.contains(hm)) {
+				al.add(hm);
+			}
+		}
 	}
 }
