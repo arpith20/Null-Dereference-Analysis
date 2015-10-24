@@ -71,10 +71,16 @@ public class NullDereference {
 		d.add("BB0", 0, "v2", "v1");
 		d.add("BB0", 0, "v2", "v2");
 		d.add("BB0", 0, "v2", "v2");
-		d.add("BB1", 0, "v2", "v2");
+		d.add("BB1", 0, "v2", "v3");
 		d.add("BB1", 0, "v2", "v2");
 		d.add("BB1", 1, "v2", "v1");
 		d.add("BB1", 1, "v2", "v1");
+		
+		d.display();
+		d.remove("BB0", 0, "v1", "null");
+		d.display();
+		
+		d.join("BB3", 0, "BB0", 0, "BB1", 0);
 		d.display();
 		
 		d.equals("v1", "v2");

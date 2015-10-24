@@ -2,13 +2,11 @@ package PAVpointerAnalysisPackage;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Data {
 
-	private HashMap<String, ArrayList<String>> hm = new HashMap<String, ArrayList<String>>();
 	private HashMap<String, HashMap<Integer, Boolean>> marked = new HashMap<String, HashMap<Integer, Boolean>>();
 	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
 
@@ -110,8 +108,8 @@ public class Data {
 		return false;
 	}
 
-	//most probable you'll use this
-	//returns the column number in pp1 where hash of (pp2,col2) is equal
+	// most probable you'll use this
+	// returns the column number in pp1 where hash of (pp2,col2) is equal
 	public Integer equals(String pp1, String pp2, Integer col2) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
@@ -212,17 +210,11 @@ public class Data {
 
 	}
 
-	// TODO: the following will most probably not work
-	public boolean comparehash(HashMap<String, ArrayList<String>> hm1, HashMap<String, ArrayList<String>> hm2) {
-		return hm1.equals(hm2);
-	}
-
 	public void sort(ArrayList<String> al) {
 		if (al != null)
 			Collections.sort(al);
 	}
 
-	// TODO untested
 	public void mark(String index, Integer col) {
 		HashMap<Integer, Boolean> h = marked.get(index);
 		if (h == null) {
@@ -234,7 +226,6 @@ public class Data {
 		}
 	}
 
-	// TODO untested
 	public void unmark(String index, Integer col) {
 		HashMap<Integer, Boolean> h = marked.get(index);
 		if (h == null) {
@@ -246,7 +237,6 @@ public class Data {
 		}
 	}
 
-	// TODO untested
 	public Boolean marked(String index, Integer col) {
 		HashMap<Integer, Boolean> h = marked.get(index);
 		if (h != null) {
@@ -257,6 +247,42 @@ public class Data {
 		return true; // with an assumption that initially everything is marked
 	}
 
-	// all elements of pp2 is in pp1
+	// pp1 = pp1 union pp2
+	public void join(String pp1, Integer col1, String pp2, Integer col2) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		if (al_col2 != null) {
+			HashMap<String, ArrayList<String>> h = al_col2.get(col2);
+			if (h != null) {
+				for (Map.Entry<String, ArrayList<String>> entry : h.entrySet()) {
+					String var = entry.getKey();
+					ArrayList<String> pointsto = entry.getValue();
+					for (String pt : pointsto) {
+						add(pp1, col1, var, pt);
+					}
+				}
+			}
+		}
+	}
 
+	// pp1 = pp2 union pp3
+	// previous values at pp1, if any are removed
+	public void join(String pp1, Integer col1, String pp2, Integer col2, String pp3, Integer col3) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		if (al_col1 != null) {
+			al_col1.clear();
+		}
+		join(pp1, col1, pp2, col2);
+		join(pp1, col1, pp3, col3);
+	}
+
+	public void remove(String pp1, Integer col, String var, String pttoremove) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		if (al_col1 != null) {
+			HashMap<String, ArrayList<String>> h = al_col1.get(col);
+			if (h != null) {
+				ArrayList<String> a = h.get(var);
+				a.remove(pttoremove);
+			}
+		}
+	}
 }
