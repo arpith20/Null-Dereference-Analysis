@@ -8,6 +8,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.wala.ide.tests"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.wala.shrike"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.ibm.wala.util"/>
-	<classpathentry kind="lib" path="lib/commons-lang3-3.4.jar"/>
+	<classpathentry kind="lib" path="/home/sridhar/Documents/pav_project/PAV_project/workspace/PAV15Project/lib/commons-lang3-3.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

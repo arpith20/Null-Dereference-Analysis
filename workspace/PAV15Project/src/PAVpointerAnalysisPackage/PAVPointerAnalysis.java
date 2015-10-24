@@ -63,25 +63,8 @@ public class PAVPointerAnalysis {
 		setup.generateCallGraph();
 		// END: NO CHANGE REGION
 
-		/*
-		 * For demonstration purposes, and to help you check whether Wala is
-		 * setup properly, I am calling the setup.printNodes() function. This
-		 * will compute the call graph for the given program, and print out the
-		 * nodes. Feel free to erase this call, or use it otherwise.
-		 */
-		setup.printNodes();
-		// setup.printIR();
-
-		/*
-		 * Create appropriate objects/make appropriate function calls here to
-		 * begin the analysis
-		 */
-		// setup.getCallSites("<init>()V");
-		// setup.getAllCallSites();
-		setup.printIRForAllMethods();
-		//setup.printIRForSomeMethods("main([Ljava/lang/String;)V");
-		//NullDereference n = new NullDereference();
-		//n.entry();
+		setup.init() ;
+		setup.getProgramPoints();
 	}
 
 	// START: NO CHANGE REGION
