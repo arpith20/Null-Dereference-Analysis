@@ -84,6 +84,8 @@ public class NullDereference {
 		d.display();
 		
 		d.equals("v1", "v2");
+		
+		d.retrive("BB0", 0, "v1");
 
 	}
 

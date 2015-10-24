@@ -285,4 +285,18 @@ public class Data {
 			}
 		}
 	}
+
+	public ArrayList<String> retrive(String pp1, Integer col, String var) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		if (al_col1 != null) {
+			HashMap<String, ArrayList<String>> h = al_col1.get(col);
+			if (h != null) {
+				ArrayList<String> a = h.get(var);
+				// for(String s: a)
+				// System.out.println(s);
+				return a;
+			}
+		}
+		return null;
+	}
 }
