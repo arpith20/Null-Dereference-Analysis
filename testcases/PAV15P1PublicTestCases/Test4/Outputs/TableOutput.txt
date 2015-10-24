@@ -1,0 +1,477 @@
+Columns:
+c0:
+{}
+
+c1:
+{v2 -> {null},
+ v3 -> {null}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22}}
+
+
+startTest:
+
+BB0 -> BB1: c0:
+{}
+
+BB1 -> BB2: c0:
+{v5 -> {phiTest.new4,phiTest.new8,phiTest.new12}}
+
+BB2 -> BB3: c0:
+{v5 -> {phiTest.new4,phiTest.new8,phiTest.new12}}
+
+
+iterativeTest:
+
+BB0 -> BB1: c0:
+{}
+
+BB1 -> BB2: c0:
+{}
+
+BB2 -> BB3: c0:
+{v12 -> {null},
+ v16 -> {phiTest.new4}}
+
+BB3 -> BB14: c0:
+{v12 -> {null},
+ v16 -> {phiTest.new4}}
+
+BB1 -> BB4: c0:
+{}
+
+BB4 -> BB5: c0:
+{v10 -> {iterativeTest.new8}}
+
+BB5 -> BB6: c0:
+{v10 -> {iterativeTest.new8}}
+
+BB6 -> BB7: c0:
+{v10 -> {iterativeTest.new8},
+ v12 -> {null},
+ v14 -> {phiTest.new8}}
+
+BB7 -> BB14: c0:
+{v10 -> {iterativeTest.new8},
+ v12 -> {null},
+ v14 -> {phiTest.new8}}
+
+BB1 -> BB8: c0:
+{}
+
+BB8 -> BB9: c0:
+{v4 -> {iterativeTest.new18}}
+
+BB9 -> BB10: c0:
+{v4 -> {iterativeTest.new18}}
+
+BB10 -> BB11: c0:
+{v4 -> {iterativeTest.new18},
+ v6 -> {iterativeTest.new22}}
+
+BB11 -> BB12: c0:
+{v4 -> {iterativeTest.new18},
+ v6 -> {iterativeTest.new22}}
+
+BB12 -> BB13: c0:
+{v4 -> {iterativeTest.new18},
+ v6 -> {iterativeTest.new22},
+ v9 -> {phiTest.new12}}
+
+BB13 -> BB14: c0:
+{v4 -> {iterativeTest.new18},
+ v6 -> {iterativeTest.new22},
+ v9 -> {phiTest.new12}}
+
+BB14 -> BB15: c0:
+{v12 -> {null},
+ v16 -> {phiTest.new4},
+ v10 -> {iterativeTest.new8},
+ v14 -> {phiTest.new8},
+ v4 -> {iterativeTest.new18},
+ v6 -> {iterativeTest.new22},
+ v9 -> {phiTest.new12},
+ v17 -> {phiTest.new4,phiTest.new8,phiTest.new12}}
+
+
+phiTest:
+
+BB0 -> BB1: c1:
+{v2 -> {null},
+ v3 -> {null}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22}}
+
+BB1 -> BB2: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0}}
+
+BB2 -> BB3: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0}}
+
+BB3 -> BB4: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4}}
+
+BB4 -> BB5: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4}}
+
+BB5 -> BB6: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8}}
+
+BB6 -> BB7: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8}}
+
+BB7 -> BB8: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12}}
+
+BB8 -> BB9: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12}}
+
+BB9 -> BB10: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+c2:
+bot
+
+c3:
+bot
+
+BB10 -> BB11: c1:
+bot
+
+c2:
+bot
+
+c3:
+bot
+
+BB11 -> BB16: c1:
+bot
+
+c2:
+bot
+
+c3:
+bot
+
+BB10 -> BB12: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+c2:
+bot
+
+c3:
+bot
+
+BB12 -> BB16: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+c2:
+bot
+
+c3:
+bot
+
+BB9 -> BB13: c1:
+bot
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+BB13 -> BB14: c1:
+bot
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+c3:
+bot
+
+BB14 -> BB16: c1:
+bot
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+c3:
+bot
+
+BB13 -> BB15: c1:
+bot
+
+c2:
+bot
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+BB15 -> BB16: c1:
+bot
+
+c2:
+bot
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}}
+
+BB16 -> BB17: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null}
+ v14 -> {phiTest.new4}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null},
+ v14 -> {phiTest.new8}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null},
+ v14 -> {phiTest.new12}}
+
+BB17 -> BB18: c1:
+{v2 -> {null},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null},
+ v14 -> {phiTest.new4}}
+
+c2:
+{v2 -> {iterativeTest.new8},
+ v3 -> {null},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null},
+ v14 -> {phiTest.new8}}
+
+c3:
+{v2 -> {iterativeTest.new18},
+ v3 -> {iterativeTest.new22},
+ v5 -> {phiTest.new0},
+ v7 -> {phiTest.new4},
+ v9 -> {phiTest.new8},
+ v11 -> {phiTest.new12},
+ v13 -> {null},
+ v14 -> {phiTest.new12}}
+
+

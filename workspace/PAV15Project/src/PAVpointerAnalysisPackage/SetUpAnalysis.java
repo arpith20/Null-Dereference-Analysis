@@ -186,7 +186,7 @@ public class SetUpAnalysis {
 				String[] s = nodeInfo.split("[ ]");
 				if (s[2].contains("Application")) {
 					al.add(s[4]);
-					// System.out.println(s[4]);
+					//System.out.println(s[4]);
 				}
 			}
 			// System.out.println(nodeInfo);

@@ -5,14 +5,13 @@ package TestCases;
  */
 
 public class SampleTests {
-	static int a, b, t;
-
+	int a, b, t;
 	public static void p() {
-		if (a == 0) {
-			a = a - 1;
+		if(a==0){
+			a=a-1;
 			p();
-			t = a * b;
-		} else {
+			t=a*b;
+		}else{
 			return;
 		}
 
@@ -20,8 +19,8 @@ public class SampleTests {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
-		t = a * b;
+	
+		t = a*b;
 		p();
 	}
 
