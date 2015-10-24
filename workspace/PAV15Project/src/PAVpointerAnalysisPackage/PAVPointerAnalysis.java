@@ -70,18 +70,23 @@ public class PAVPointerAnalysis {
 		 * nodes. Feel free to erase this call, or use it otherwise.
 		 */
 		setup.printNodes();
-		//setup.printIR();
+		// setup.printIR();
 
 		/*
 		 * Create appropriate objects/make appropriate function calls here to
 		 * begin the analysis
 		 */
 		// setup.getCallSites("<init>()V");
-		//setup.getAllCallSites();
-		//setup.printIRForAllMethods();
-		//setup.printIRForSomeMethods("foo(I)V");
-		NullDereference n = new NullDereference();
-		n.entry();
+		setup.getAllCallSites();
+		setup.getDirectCallSites("main([Ljava/lang/String;)V");
+		for (String s : SetUpAnalysis.callsites) {
+			System.out.println(s);
+		}
+		// setup.getAllCallSites();
+		// setup.printIRForAllMethods();
+		// setup.printIRForSomeMethods("foo(I)V");
+		// NullDereference n = new NullDereference();
+		// n.entry();
 	}
 
 	// START: NO CHANGE REGION

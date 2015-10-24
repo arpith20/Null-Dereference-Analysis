@@ -35,6 +35,7 @@ import com.ibm.wala.ssa.SSAPutInstruction;
 import com.ibm.wala.types.FieldReference;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.config.AnalysisScopeReader;
+import com.ibm.wala.util.graph.dominators.GenericDominators;
 import com.ibm.wala.util.io.FileProvider;
 import com.ibm.wala.ssa.analysis.ExplodedControlFlowGraph;
 
@@ -186,7 +187,8 @@ public class SetUpAnalysis {
 				String[] s = nodeInfo.split("[ ]");
 				if (s[2].contains("Application")) {
 					al.add(s[4]);
-					//System.out.println(s[4]);
+					allcallsites.add(s[4]);
+					// System.out.println(s[4]);
 				}
 			}
 			// System.out.println(nodeInfo);
@@ -222,7 +224,7 @@ public class SetUpAnalysis {
 
 	public void printIRForAllMethods() {
 		ArrayList<String> al = new ArrayList<String>();
-		//al = getCallSites("name of  analysis method here");
+		// al = getCallSites("name of analysis method here");
 		al = getAllCallSites();
 		if (al == null)
 			return;
@@ -230,7 +232,7 @@ public class SetUpAnalysis {
 			System.out.println(getIR(s).toString());
 		}
 	}
-	
+
 	public void printIRForSomeMethods(String am) {
 		ArrayList<String> al = new ArrayList<String>();
 		al = getCallSites(am);
@@ -238,6 +240,43 @@ public class SetUpAnalysis {
 			return;
 		for (String s : al) {
 			System.out.println(s);
+		}
+	}
+
+	static ArrayList<String> visited = new ArrayList<String>();
+	static ArrayList<String> callsites = new ArrayList<String>();
+	ArrayList<String> allcallsites = new ArrayList<String>();
+
+	public void getDirectCallSites(String analysisMethod) {
+		//REMEMBER to use setup.getAllCallSites(); before calling this function
+		if (visited.contains(analysisMethod))
+			return;
+		visited.add(analysisMethod);
+		Iterator<CGNode> nodes = cg.iterator();
+		CGNode target = null;
+		while (nodes.hasNext()) {
+			CGNode node = nodes.next();
+			String nodeInfo = node.toString();
+			if (nodeInfo.contains(analysisClass) && nodeInfo.contains(analysisMethod)) {
+				target = node;
+				break;
+			}
+		}
+		if (target != null) {
+			Iterator<CallSiteReference> m = target.getIR().iterateCallSites();
+			while (m.hasNext()) {
+				CallSiteReference csr = m.next();
+
+				String[] s = csr.getDeclaredTarget().toString().split("[,]");
+				String str = s[2].substring(1, s[2].length() - 2);
+				if (!callsites.contains(str) && allcallsites.contains(str) && !str.equals("<init>()V"))
+					callsites.add(str);
+				// System.out.println(str);
+				getDirectCallSites(str);
+			}
+			return;
+		} else {
+			return;
 		}
 	}
 }
