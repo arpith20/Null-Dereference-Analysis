@@ -67,6 +67,7 @@ public class NullDereference {
 		Data d = new Data();
 		d.add("BB0", 0, "v1", "null");
 		d.add("BB0", 0, "v1", "v2");
+		d.add("BB0", 0, "v1", "v1");
 		d.add("BB0", 0, "v2", "v1");
 		d.add("BB0", 0, "v2", "v2");
 		d.add("BB0", 0, "v2", "v2");

@@ -8,7 +8,7 @@ import java.util.Map;
 public class Data {
 
 	private HashMap<String, ArrayList<String>> hm = new HashMap<String, ArrayList<String>>();
-	private HashMap<String, Boolean> marked = new HashMap<String, Boolean>();
+	private HashMap<String, HashMap<Integer, Boolean>> marked = new HashMap<String, HashMap<Integer, Boolean>>();
 	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
 
 	public void add(String programpoint, Integer col, String variable, String pointsto) {
@@ -43,6 +43,7 @@ public class Data {
 				} else {
 					if (!al_pointsto.contains(pointsto)) {
 						al_pointsto.add(pointsto);
+						sort(al_pointsto);
 					}
 				}
 			}
@@ -88,117 +89,43 @@ public class Data {
 		return hm1.equals(hm2);
 	}
 
-	public void add_to_var(String index, String value) {
-		ArrayList<String> values = hm.get(index);
-
-		if (values == null) {
-			values = new ArrayList<String>();
-			values.add(value);
-			hm.put(index, values);
-		} else {
-			if (!values.contains(value)) {
-				values.add(value);
-			}
-		}
-		sort(index);
-	}
-
-	public Boolean removenull(String index) {
-		ArrayList<String> values = hm.get(index);
-		if (values != null) {
-			remove(index, "null");
-		}
-		return false;
-	}
-
-	public ArrayList<String> get(String index) {
-		ArrayList<String> v = hm.get(index);
-		print(v);
-		if (v != null) {
-			return hm.get(index);
-		}
-		return null;
-	}
-
-	public ArrayList<String> get(String index, Boolean noprint) {
-		ArrayList<String> v = hm.get(index);
-		if (v != null && noprint) {
-			return hm.get(index);
-		}
-		return null;
-	}
-
-	// i1 =i1 + (i2 join i3)
-	// only distinct values are stored
-	public void join(String index1, String index2, String index3) {
-		ArrayList<String> s2 = hm.get(index2);
-		ArrayList<String> s3 = hm.get(index3);
-		if (s2 != null) {
-			for (String value : s2) {
-				add_to_var(index1, value);
-			}
-		}
-		if (s3 != null) {
-			for (String value : s3) {
-				add_to_var(index1, value);
-			}
-		}
-		sort(index1);
-	}
-
-	public void remove(String index) {
-		hm.remove(index);
-	}
-
-	public Boolean remove(String index, String value) {
-		ArrayList<String> v = hm.get(index);
-		if (v != null) {
-			v.remove(value);
-			return true;
-		}
-		return false;
-	}
-
-	public void print(String index) {
-		ArrayList<String> al = hm.get(index);
-		if (al == null)
-			return;
-		System.out.print(index + "->");
-		print(al);
-	}
-
-	public void print(ArrayList<String> values) {
-		if (values == null)
-			System.out.println("{}");
-		else {
-			String op = "{";
-			for (String value : values) {
-				op = op + value + ", ";
-			}
-			op = op.substring(0, op.length() - 2);
-			op += "}";
-			System.out.println(op);
-		}
-	}
-
-	public void sort(String index) {
-		ArrayList<String> al = hm.get(index);
+	public void sort(ArrayList<String> al) {
 		if (al != null)
 			Collections.sort(al);
 	}
 
-	public void mark(String index) {
-		marked.put(index, true);
+	// TODO untested
+	public void mark(String index, Integer col) {
+		HashMap<Integer, Boolean> h = marked.get(index);
+		if (h == null) {
+			h = new HashMap<Integer, Boolean>();
+			h.put(col, true);
+			marked.put(index, h);
+		} else {
+			h.put(col, true);
+		}
 	}
 
-	public void unmark(String index) {
-		marked.put(index, false);
+	// TODO untested
+	public void unmark(String index, Integer col) {
+		HashMap<Integer, Boolean> h = marked.get(index);
+		if (h == null) {
+			h = new HashMap<Integer, Boolean>();
+			h.put(col, false);
+			marked.put(index, h);
+		} else {
+			h.put(col, false);
+		}
 	}
 
-	public Boolean marked(String index) {
-		Boolean ret = marked.get(index);
-		if (ret != null)
-			return ret;
-		return false; // TODO: change this according to logic
+	// TODO untested
+	public Boolean marked(String index, Integer col) {
+		HashMap<Integer, Boolean> h = marked.get(index);
+		if (h != null) {
+			Boolean b = h.get(col);
+			if (b != null)
+				return b;
+		}
+		return true; // with an assumption that initially everything is marked
 	}
 }
