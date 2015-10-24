@@ -76,6 +76,8 @@ public class NullDereference {
 		d.add("BB1", 1, "v2", "v1");
 		d.add("BB1", 1, "v2", "v1");
 		d.display();
+		
+		d.equals("v1", "v2");
 
 	}
 

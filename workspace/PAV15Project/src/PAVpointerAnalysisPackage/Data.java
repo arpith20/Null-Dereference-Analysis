@@ -2,6 +2,7 @@ package PAVpointerAnalysisPackage;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +11,133 @@ public class Data {
 	private HashMap<String, ArrayList<String>> hm = new HashMap<String, ArrayList<String>>();
 	private HashMap<String, HashMap<Integer, Boolean>> marked = new HashMap<String, HashMap<Integer, Boolean>>();
 	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
+
+	// pp1 contains pp2, ie, pp2 is a subset of pp1
+	public Boolean contains(String pp1, String pp2) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		if (al_col1 == null && al_col2 == null)
+			return true;
+		if (al_col1 == null || al_col2 == null)
+			return false;
+
+		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : al_col2.entrySet()) {
+			Integer col = entry.getKey();
+			if (al_col1.containsKey(col)) {
+				HashMap<String, ArrayList<String>> var_hash1 = al_col1.get(col);
+				HashMap<String, ArrayList<String>> var_hash2 = entry.getValue();
+				for (Map.Entry<String, ArrayList<String>> innerentry : var_hash2.entrySet()) {
+					String var = innerentry.getKey();
+					if (var_hash1.containsKey(var)) {
+						ArrayList<String> al_pt1 = var_hash1.get(var);
+						ArrayList<String> al_pt2 = innerentry.getValue();
+						if (al_pt1.containsAll(al_pt2)) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+
+	}
+
+	public Boolean contains(String pp1, Integer col1, String pp2, Integer col2) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		if (al_col1 == null && al_col2 == null)
+			return true;
+		if (al_col1 == null || al_col2 == null)
+			return false;
+
+		HashMap<String, ArrayList<String>> var_hash1 = al_col1.get(col1);
+		HashMap<String, ArrayList<String>> var_hash2 = al_col2.get(col2);
+		for (Map.Entry<String, ArrayList<String>> innerentry : var_hash2.entrySet()) {
+			String var = innerentry.getKey();
+			if (var_hash1.containsKey(var)) {
+				ArrayList<String> al_pt1 = var_hash1.get(var);
+				ArrayList<String> al_pt2 = innerentry.getValue();
+				if (al_pt1.containsAll(al_pt2)) {
+					return true;
+				}
+			}
+
+		}
+
+		return false;
+
+	}
+
+	// returns the column numbers
+	public ArrayList<Integer> contains(String pp1, String pp2, Integer col2) {
+		ArrayList<Integer> a = new ArrayList<>();
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		if (al_col1 == null && al_col2 == null)
+			return null;
+		if (al_col1 == null || al_col2 == null)
+			return null;
+
+		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : al_col1.entrySet()) {
+			HashMap<String, ArrayList<String>> var_hash1 = entry.getValue();
+			HashMap<String, ArrayList<String>> var_hash2 = al_col2.get(col2);
+			for (Map.Entry<String, ArrayList<String>> innerentry : var_hash2.entrySet()) {
+				String var = innerentry.getKey();
+				if (var_hash1.containsKey(var)) {
+					ArrayList<String> al_pt1 = var_hash1.get(var);
+					ArrayList<String> al_pt2 = innerentry.getValue();
+					if (al_pt1.containsAll(al_pt2)) {
+						a.add(entry.getKey());
+					}
+				}
+			}
+		}
+		return a;
+
+	}
+
+	// DO NOT USE THIS DIRECTLY checks equality of two program points
+	public Boolean equals(String pp1, String pp2) {
+		if (contains(pp1, pp2) && contains(pp2, pp1))
+			return true;
+		return false;
+	}
+
+	// checks equality of two hash maps
+	public Boolean equals(String pp1, Integer col1, String pp2, Integer col2) {
+		if (contains(pp1, col1, pp2, col2) && contains(pp2, col2, pp1, col1))
+			return true;
+		return false;
+	}
+
+	//most probable you'll use this
+	//returns the column number in pp1 where hash of (pp2,col2) is equal
+	public Integer equals(String pp1, String pp2, Integer col2) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		if (al_col1 == null && al_col2 == null)
+			return null;
+		if (al_col1 == null || al_col2 == null)
+			return null;
+
+		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : al_col1.entrySet()) {
+			HashMap<String, ArrayList<String>> var_hash1 = entry.getValue();
+			HashMap<String, ArrayList<String>> var_hash2 = al_col2.get(col2);
+			for (Map.Entry<String, ArrayList<String>> innerentry : var_hash2.entrySet()) {
+				String var = innerentry.getKey();
+				if (var_hash1.containsKey(var)) {
+					ArrayList<String> al_pt1 = var_hash1.get(var);
+					ArrayList<String> al_pt2 = innerentry.getValue();
+					if (al_pt1.containsAll(al_pt2)) {
+						if (equals(pp1, entry.getKey(), pp2, col2))
+							return entry.getKey();
+					}
+				}
+			}
+		}
+		return null;
+
+	}
 
 	public void add(String programpoint, Integer col, String variable, String pointsto) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col = pp.get(programpoint);
@@ -128,4 +256,7 @@ public class Data {
 		}
 		return true; // with an assumption that initially everything is marked
 	}
+
+	// all elements of pp2 is in pp1
+
 }
