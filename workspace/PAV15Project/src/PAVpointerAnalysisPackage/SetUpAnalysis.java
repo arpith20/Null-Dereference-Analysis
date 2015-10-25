@@ -41,6 +41,10 @@ import com.ibm.wala.ssa.analysis.ExplodedControlFlowGraph;
 
 public class SetUpAnalysis {
 
+	static ArrayList<String> visited = new ArrayList<String>();
+	static ArrayList<String> callsites = new ArrayList<String>();
+	static ArrayList<String> allcallsites = new ArrayList<String>();
+
 	private String classpath;
 	private String mainClass;
 	private String analysisClass;
@@ -187,7 +191,8 @@ public class SetUpAnalysis {
 				String[] s = nodeInfo.split("[ ]");
 				if (s[2].contains("Application")) {
 					al.add(s[4]);
-					allcallsites.add(s[4]);
+					if (!allcallsites.contains(s[4]))
+						allcallsites.add(s[4]);
 					// System.out.println(s[4]);
 				}
 			}
@@ -243,12 +248,8 @@ public class SetUpAnalysis {
 		}
 	}
 
-	static ArrayList<String> visited = new ArrayList<String>();
-	static ArrayList<String> callsites = new ArrayList<String>();
-	ArrayList<String> allcallsites = new ArrayList<String>();
-
 	public void getDirectCallSites(String analysisMethod) {
-		//REMEMBER to use setup.getAllCallSites(); before calling this function
+		// REMEMBER to use setup.getAllCallSites(); before calling this function
 		if (visited.contains(analysisMethod))
 			return;
 		visited.add(analysisMethod);

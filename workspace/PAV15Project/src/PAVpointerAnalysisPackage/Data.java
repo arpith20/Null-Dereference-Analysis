@@ -40,6 +40,8 @@ public class Data {
 
 	}
 
+	//tested
+	//returns true if pp1 dominates pp2, ie., all entries of pp2 is in pp1
 	public Boolean contains(String pp1, Integer col1, String pp2, Integer col2) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
@@ -55,14 +57,15 @@ public class Data {
 			if (var_hash1.containsKey(var)) {
 				ArrayList<String> al_pt1 = var_hash1.get(var);
 				ArrayList<String> al_pt2 = innerentry.getValue();
-				if (al_pt1.containsAll(al_pt2)) {
-					return true;
+				if (!al_pt1.containsAll(al_pt2)) {
+					return false;
 				}
+			} else {
+				return false;
 			}
 
 		}
-
-		return false;
+		return true;
 
 	}
 
@@ -299,4 +302,5 @@ public class Data {
 		}
 		return null;
 	}
+
 }
