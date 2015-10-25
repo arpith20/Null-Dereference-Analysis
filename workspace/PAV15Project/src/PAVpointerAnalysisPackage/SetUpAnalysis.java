@@ -57,8 +57,15 @@ public class SetUpAnalysis {
 	// List of CGNODEs of all the methods which are present in the class
 	private ArrayList<CGNode> globalMethods = new ArrayList<CGNode>();
 
+	// HashMap which maps the names of the methods to its corresponding CGNodes
+	HashMap<String, CGNode> hashGlobalMethods = new HashMap<String, CGNode>();
+
 	// Main DATA class to store the analysis results
 	private Data d;
+
+	// List of all the program points to analyze. End analysis when this list
+	// becomes empty
+	private ArrayList<String> workingList = new ArrayList<String>();
 
 	// START: NO CHANGE REGION
 	private AnalysisScope scope; // scope defines the set of files to be
@@ -164,7 +171,8 @@ public class SetUpAnalysis {
 	}
 
 	// Method to store all the methods present in the class in the data member
-	// GLOBALMETHODS
+	// GLOBALMETHODS and also add a hash mapping from the shorthand name of the
+	// method to their CGNode
 	public void setGlobalMethods() {
 
 		// Iterate over all the methods present in the CALLGRAPH and check if
@@ -177,7 +185,18 @@ public class SetUpAnalysis {
 			if (nodeInfo.contains("Application")) {
 				String[] s = nodeInfo.split("[ ]");
 				if (s[2].contains("Application")) {
-					globalMethods.add(node);
+
+					// Add the CGNode to the GLOBALMETHODS
+					// Do not add the Constructor i.e init to the array list or
+					// to the hashMap
+					if (!nodeInfo.contains("<init>()V")) {
+						globalMethods.add(node);
+
+						// Get shorthand name of the method and add it to the
+						// hashMap
+						String methodName = node.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
+						hashGlobalMethods.put(methodName, node);
+					}
 				}
 			}
 		}
@@ -211,8 +230,16 @@ public class SetUpAnalysis {
 					// Example: main.1.2 foo.9.10 bar.10.23
 					String pp = methodName + "." + bb.getNumber() + "." + succ.getNumber();
 
-					// Add the program point to the DATA object
-					// d.add(pp, col, variable, pointsto);
+					// Add the program point to the WORKINGLIST
+					workingList.add(pp);
+
+					// // Add the program point to the DATA object
+					// // We are creating a 0th column and then mapping "" to ""
+					// in
+					// // that.
+					// // This is the initial value at all program points
+					// d.add(pp, 0, "", "");
+
 					// System.out.println(pp);
 				}
 			}
@@ -275,12 +302,55 @@ public class SetUpAnalysis {
 						callSites.add(temp);
 				} else {
 					// Currently exit the code if more than one possible target
-					// is found for a callsite. Can do better!
+					// is found for a callSite. Can do better!
 					System.out.println("GetPossibleTargets returned more than 1 CGNode!!");
 					System.exit(-1);
 				}
 			}
 		}
 		return callSites;
+	}
+
+	// Method to set the initial value for the analysis
+	public void setD0() {
+		// Get the name of the method we are analyzing
+		String methodName = target.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
+
+		// Get the initial program point
+		String pp = methodName + ".0.1";
+
+		// Add D0 to DATA
+		d.add(pp, 0, "", "");
+		d.mark(pp, 0);
+		// System.out.println(methodName);
+	}
+
+	// Main kildall algorithm. This will do the analysis and will return once
+	// the WORKINGLIST is empty
+	public void kildall() {
+		while (!workingList.isEmpty()) {
+			String curPP = workingList.get(0);
+
+			// Check if all the columns in the program point are unmarked.
+			// If true, continue
+			if (!d.checkAllColumnsUnmarked(curPP)) {
+				workingList.remove(0);
+				continue;
+			}
+
+			// Extract info from the program point
+			String methodName = curPP.split("[.]")[0];
+			int srcBB = Integer.parseInt(curPP.split("[.]")[2]);
+
+			System.out.println("PP:" + curPP);
+			CGNode node = hashGlobalMethods.get(methodName);
+
+			workingList.remove(0);
+		}
+	}
+
+	public void transferFunctionDriver() {
+
+		BasicBlock src = target.getIR().getControlFlowGraph().getBasicBlock(0);
 	}
 }

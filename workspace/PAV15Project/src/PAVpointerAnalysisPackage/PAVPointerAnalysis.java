@@ -65,6 +65,10 @@ public class PAVPointerAnalysis {
 
 		setup.init() ;
 		setup.getProgramPoints();
+		
+		setup.setD0() ;
+		
+		setup.kildall();
 	}
 
 	// START: NO CHANGE REGION
