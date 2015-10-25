@@ -296,14 +296,25 @@ public class Data {
 		}
 		return null;
 	}
-
+	
+	public HashMap<Integer, Boolean> getColumnMarkings (String pPoint)
+	{
+		if ( marked.get(pPoint) != null )
+			return marked.get(pPoint) ;
+		else
+			return null ;
+	}
+	
 	public void openColumn(String pPoint, Integer col) {
 		mark(pPoint, col);
 		HashMap<Integer, HashMap<String, ArrayList<String>>> hm = pp.get(pPoint);
 		if (hm == null) {
 			hm = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
+			HashMap<String, ArrayList<String>> hMap = new HashMap<String, ArrayList<String>>() ;
+			hm.put(col, hMap) ;
 			pp.put(pPoint, hm);
 		}
 	}
+
 
 }
