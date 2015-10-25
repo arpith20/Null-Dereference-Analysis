@@ -60,9 +60,11 @@ public class Data {
 
 	}
 
+	// do we need this?
+	// untested.
 	// returns the column numbers
 	public ArrayList<Integer> contains(String pp1, String pp2, Integer col2) {
-		ArrayList<Integer> a = new ArrayList<>();
+		ArrayList<Integer> a = new ArrayList<Integer>();
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
 		if (al_col1 == null && al_col2 == null)
@@ -102,7 +104,6 @@ public class Data {
 		return false;
 	}
 
-	// most probable you'll use this
 	// returns the column number in pp1 where hash of (pp2,col2) is equal
 	public Integer equals(String pp1, String pp2, Integer col2) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
@@ -113,22 +114,11 @@ public class Data {
 			return null;
 
 		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : al_col1.entrySet()) {
-			HashMap<String, ArrayList<String>> var_hash1 = entry.getValue();
-			HashMap<String, ArrayList<String>> var_hash2 = al_col2.get(col2);
-			for (Map.Entry<String, ArrayList<String>> innerentry : var_hash2.entrySet()) {
-				String var = innerentry.getKey();
-				if (var_hash1.containsKey(var)) {
-					ArrayList<String> al_pt1 = var_hash1.get(var);
-					ArrayList<String> al_pt2 = innerentry.getValue();
-					if (al_pt1.containsAll(al_pt2)) {
-						if (equals(pp1, entry.getKey(), pp2, col2))
-							return entry.getKey();
-					}
-				}
-			}
+			Integer col1 = entry.getKey();
+			if (contains(pp1, col1, pp2, col2) && contains(pp2, col2, pp1, col1))
+				return col1;
 		}
 		return null;
-
 	}
 
 	public void add(String programpoint, Integer col, String variable, String pointsto) {
@@ -209,12 +199,12 @@ public class Data {
 			Collections.sort(al);
 	}
 
-	public void mark(String index, Integer col) {
-		HashMap<Integer, Boolean> h = marked.get(index);
+	public void mark(String pp, Integer col) {
+		HashMap<Integer, Boolean> h = marked.get(pp);
 		if (h == null) {
 			h = new HashMap<Integer, Boolean>();
 			h.put(col, true);
-			marked.put(index, h);
+			marked.put(pp, h);
 		} else {
 			h.put(col, true);
 		}
@@ -243,10 +233,12 @@ public class Data {
 
 	public Boolean checkAllColumnsUnmarked(String program_point) {
 		HashMap<Integer, Boolean> h = marked.get(program_point);
+		if (h == null)
+			return true;
 		for (Map.Entry<Integer, Boolean> entry : h.entrySet()) {
 			Integer column = entry.getKey();
 			Boolean point = entry.getValue();
-			if(point)
+			if (point)
 				return false;
 		}
 		return true;
@@ -303,6 +295,15 @@ public class Data {
 			}
 		}
 		return null;
+	}
+
+	public void openColumn(String pPoint, Integer col) {
+		mark(pPoint, col);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> hm = pp.get(pPoint);
+		if (hm == null) {
+			hm = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
+			pp.put(pPoint, hm);
+		}
 	}
 
 }
