@@ -58,7 +58,7 @@ public class SetUpAnalysis {
 	private ArrayList<CGNode> globalMethods = new ArrayList<CGNode>();
 
 	// HashMap which maps the names of the methods to its corresponding CGNodes
-	HashMap<String, CGNode> hashGlobalMethods = new HashMap<String, CGNode>();
+	private HashMap<String, CGNode> hashGlobalMethods = new HashMap<String, CGNode>();
 
 	// Main DATA class to store the analysis results
 	private Data d;
@@ -66,6 +66,10 @@ public class SetUpAnalysis {
 	// List of all the program points to analyze. End analysis when this list
 	// becomes empty
 	private ArrayList<String> workingList = new ArrayList<String>();
+
+	// HashMap which contains the list of all program points corresponding to
+	// each method in the program
+	private HashMap<String, ArrayList<String>> programPoints = new HashMap<String, ArrayList<String>>();
 
 	// START: NO CHANGE REGION
 	private AnalysisScope scope; // scope defines the set of files to be
@@ -132,6 +136,7 @@ public class SetUpAnalysis {
 	public void generateCallGraph() throws Exception {
 		cg = builder.makeCallGraph(options, null);
 	}
+
 	// END: NO CHANGE REGION
 
 	// Method to initialize a few things before the analysis starts
@@ -233,14 +238,21 @@ public class SetUpAnalysis {
 					// Add the program point to the WORKINGLIST
 					workingList.add(pp);
 
-					// // Add the program point to the DATA object
-					// // We are creating a 0th column and then mapping "" to ""
-					// in
-					// // that.
-					// // This is the initial value at all program points
-					// d.add(pp, 0, "", "");
-
-					// System.out.println(pp);
+					// Add the program point to the hash map containing the set
+					// of all program points present in a particular method
+					//
+					// Check if the method is already present in the
+					// programPoints hashMap
+					if (!programPoints.containsKey(methodName)) {
+						// List of programPoints doesn't exist. Create a new one
+						ArrayList<String> list = new ArrayList<String>();
+						list.add(pp);
+						programPoints.put(methodName, list);
+					} else {
+						// Add the programPoint to the existing arrayList
+						ArrayList<String> list = programPoints.get(methodName);
+						list.add(pp);
+					}
 				}
 			}
 		}
@@ -275,7 +287,6 @@ public class SetUpAnalysis {
 			// Reduce the size of the workingList
 			workingList.remove(cur);
 		}
-
 		return callSites;
 	}
 
@@ -328,29 +339,63 @@ public class SetUpAnalysis {
 	// Main kildall algorithm. This will do the analysis and will return once
 	// the WORKINGLIST is empty
 	public void kildall() {
-		while (!workingList.isEmpty()) {
-			String curPP = workingList.get(0);
 
-			// Check if all the columns in the program point are unmarked.
-			// If true, continue
-			if (!d.checkAllColumnsUnmarked(curPP)) {
-				workingList.remove(0);
-				continue;
-			}
-
-			// Extract info from the program point
-			String methodName = curPP.split("[.]")[0];
-			int srcBB = Integer.parseInt(curPP.split("[.]")[2]);
-
-			System.out.println("PP:" + curPP);
-			CGNode node = hashGlobalMethods.get(methodName);
-
-			workingList.remove(0);
+		for (CGNode node : globalMethods) {
+			System.out.println(node.toString());
 		}
+		System.out.println("\n");
+		for (Map.Entry<String, CGNode> entry : hashGlobalMethods.entrySet()) {
+			System.out.println("Key:" + entry.getKey());
+			System.out.println("Value:" + entry.getValue() + "\n");
+		}
+		
+		System.out.println("\n");
+		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
+			System.out.println("Key:" + entry.getKey());
+			System.out.println("Value:" + entry.getValue() + "\n");
+		}
+
+		// while (!workingList.isEmpty()) {
+		// String curPP = workingList.get(0);
+		//
+		// // Check if all the columns in the program point are unmarked.
+		// // If true, continue
+		// if (!d.checkAllColumnsUnmarked(curPP)) {
+		// workingList.remove(0);
+		// continue;
+		// }
+		//
+		// System.out.println("PP:" + curPP);
+		// // Call the transfer function driver for the SRC basicBlock
+		// transferFunctionDriver(curPP);
+		//
+		// String methodName = curPP.split("[.]")[0];
+		// int srcBB = Integer.parseInt(curPP.split("[.]")[2]);
+		// CGNode node = hashGlobalMethods.get(methodName);
+		//
+		// workingList.remove(0);
+		// }
 	}
 
-	public void transferFunctionDriver() {
+	public void transferFunctionDriver(String pPoint) {
 
-		BasicBlock src = target.getIR().getControlFlowGraph().getBasicBlock(0);
+		// Extract info from the program point
+		String methodName = pPoint.split("[.]")[0];
+		int srcBB = Integer.parseInt(pPoint.split("[.]")[2]);
+
+		// Get the list of all the successor basiBlocks
+		CGNode node = hashGlobalMethods.get(methodName);
+		SSACFG cfg = node.getIR().getControlFlowGraph();
+		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(cfg.getBasicBlock(srcBB));
+
+		// Get the markings present at the current program point
+		HashMap<Integer, Boolean> markings = d.getColumnMarkings(methodName);
+		if (markings == null) {
+
+		}
+
+		for (ISSABasicBlock succ : succBB) {
+
+		}
 	}
 }

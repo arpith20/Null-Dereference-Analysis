@@ -22,24 +22,17 @@ public class Data {
 		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : al_col2.entrySet()) {
 			Integer col = entry.getKey();
 			if (al_col1.containsKey(col)) {
-				HashMap<String, ArrayList<String>> var_hash1 = al_col1.get(col);
-				HashMap<String, ArrayList<String>> var_hash2 = entry.getValue();
-				for (Map.Entry<String, ArrayList<String>> innerentry : var_hash2.entrySet()) {
-					String var = innerentry.getKey();
-					if (var_hash1.containsKey(var)) {
-						ArrayList<String> al_pt1 = var_hash1.get(var);
-						ArrayList<String> al_pt2 = innerentry.getValue();
-						if (al_pt1.containsAll(al_pt2)) {
-							return true;
-						}
-					}
-				}
-			}
+				if (!contains(pp1, col, pp2, col))
+					return false;
+			} else
+				return false;
 		}
-		return false;
+		return true;
 
 	}
 
+	// tested
+	// returns true if pp1 dominates pp2, ie., all entries of pp2 is in pp1
 	public Boolean contains(String pp1, Integer col1, String pp2, Integer col2) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
@@ -55,14 +48,15 @@ public class Data {
 			if (var_hash1.containsKey(var)) {
 				ArrayList<String> al_pt1 = var_hash1.get(var);
 				ArrayList<String> al_pt2 = innerentry.getValue();
-				if (al_pt1.containsAll(al_pt2)) {
-					return true;
+				if (!al_pt1.containsAll(al_pt2)) {
+					return false;
 				}
+			} else {
+				return false;
 			}
 
 		}
-
-		return false;
+		return true;
 
 	}
 
@@ -247,6 +241,17 @@ public class Data {
 		return true; // with an assumption that initially everything is marked
 	}
 
+	public Boolean checkAllColumnsUnmarked(String program_point) {
+		HashMap<Integer, Boolean> h = marked.get(program_point);
+		for (Map.Entry<Integer, Boolean> entry : h.entrySet()) {
+			Integer column = entry.getKey();
+			Boolean point = entry.getValue();
+			if (point)
+				return false;
+		}
+		return true;
+	}
+
 	// pp1 = pp1 union pp2
 	public void join(String pp1, Integer col1, String pp2, Integer col2) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
@@ -298,5 +303,13 @@ public class Data {
 			}
 		}
 		return null;
+	}
+
+	public HashMap<Integer, Boolean> getColumnMarkings (String pPoint)
+	{
+		if ( marked.get(pPoint) != null )
+			return marked.get(pPoint) ;
+		else
+			return null ;
 	}
 }
