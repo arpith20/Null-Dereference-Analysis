@@ -32,11 +32,14 @@ import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSACFG;
 import com.ibm.wala.ssa.SSACFG.BasicBlock;
+import com.ibm.wala.ssa.SSAConditionalBranchInstruction;
 import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAInvokeInstruction;
 import com.ibm.wala.ssa.SSANewInstruction;
+import com.ibm.wala.ssa.SSAPhiInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
+import com.ibm.wala.ssa.SSAReturnInstruction;
 import com.ibm.wala.types.FieldReference;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.config.AnalysisScopeReader;
@@ -236,7 +239,9 @@ public class SetUpAnalysis {
 					String pp = methodName + "." + bb.getNumber() + "." + succ.getNumber();
 
 					// Add the program point to the WORKINGLIST
-					workingList.add(pp);
+					// TODO
+					if ( methodName.equals("main")) 
+						workingList.add(pp);
 
 					// Add the program point to the hash map containing the set
 					// of all program points present in a particular method
@@ -330,72 +335,111 @@ public class SetUpAnalysis {
 		// Get the initial program point
 		String pp = methodName + ".0.1";
 
+		// Open column 0 in all programPoints in target method
+		openColumnsDriver(methodName, 0);
+
 		// Add D0 to DATA
 		d.add(pp, 0, "", "");
-		d.mark(pp, 0);
-		// System.out.println(methodName);
+
+		return;
+	}
+
+	public void openColumnsDriver(String methodName, int column) {
+		ArrayList<String> pPoints = programPoints.get(methodName);
+		for (String pp : pPoints) {
+			d.openColumn(pp, column);
+		}
 	}
 
 	// Main kildall algorithm. This will do the analysis and will return once
 	// the WORKINGLIST is empty
 	public void kildall() {
+		while (!workingList.isEmpty()) {
+			String curPP = workingList.get(0);
 
-		for (CGNode node : globalMethods) {
-			System.out.println(node.toString());
-		}
-		System.out.println("\n");
-		for (Map.Entry<String, CGNode> entry : hashGlobalMethods.entrySet()) {
-			System.out.println("Key:" + entry.getKey());
-			System.out.println("Value:" + entry.getValue() + "\n");
-		}
-		
-		System.out.println("\n");
-		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
-			System.out.println("Key:" + entry.getKey());
-			System.out.println("Value:" + entry.getValue() + "\n");
-		}
+			System.out.println("PP:" + curPP);
+			
+			// Check if all the columns in the program point are unmarked.
+			// If true, continue
+			if (!d.checkAllColumnsUnmarked(curPP)) {
+				workingList.remove(0);
+				continue;
+			}
 
-		// while (!workingList.isEmpty()) {
-		// String curPP = workingList.get(0);
-		//
-		// // Check if all the columns in the program point are unmarked.
-		// // If true, continue
-		// if (!d.checkAllColumnsUnmarked(curPP)) {
-		// workingList.remove(0);
-		// continue;
-		// }
-		//
-		// System.out.println("PP:" + curPP);
-		// // Call the transfer function driver for the SRC basicBlock
-		// transferFunctionDriver(curPP);
-		//
-		// String methodName = curPP.split("[.]")[0];
-		// int srcBB = Integer.parseInt(curPP.split("[.]")[2]);
-		// CGNode node = hashGlobalMethods.get(methodName);
-		//
-		// workingList.remove(0);
-		// }
+			// Call the transfer function driver
+			transferFunctionDriver(curPP);
+
+			String methodName = curPP.split("[.]")[0];
+			int srcBB = Integer.parseInt(curPP.split("[.]")[2]);
+			CGNode node = hashGlobalMethods.get(methodName);
+
+			workingList.remove(0);
+		}
+		d.display();
 	}
 
 	public void transferFunctionDriver(String pPoint) {
 
 		// Extract info from the program point
 		String methodName = pPoint.split("[.]")[0];
-		int srcBB = Integer.parseInt(pPoint.split("[.]")[2]);
+		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
-		// Get the list of all the successor basiBlocks
+		// Get the list of all the successor basicBlocks
 		CGNode node = hashGlobalMethods.get(methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
-		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(cfg.getBasicBlock(srcBB));
+		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
+		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
 		// Get the markings present at the current program point
-		HashMap<Integer, Boolean> markings = d.getColumnMarkings(methodName);
-		if (markings == null) {
+		HashMap<Integer, Boolean> markings = d.getColumnMarkings(pPoint);
 
+		// Iterate ONLY over the set of columns which are marked
+		for (Map.Entry<Integer, Boolean> entry : markings.entrySet()) {
+			Integer column = entry.getKey();
+			Boolean mark = entry.getValue();
+
+			// Unmarked
+			if (mark == false)
+				continue;
+
+			// Apply transfer function to the data present in COLUMN for the
+			// instructions in the basicBlock
+			Iterator<SSAInstruction> iSSA = srcBB.iterateNormalInstructions();
+			while (iSSA.hasNext()) {
+				SSAInstruction inst = iSSA.next();
+
+				if (inst instanceof SSANewInstruction)
+					newTransferFunction();
+				else if (inst instanceof SSAConditionalBranchInstruction)
+					callTransferFunction();
+				else if (inst instanceof SSAPhiInstruction)
+					phiTransferFunction();
+				else if (inst instanceof SSAReturnInstruction)
+					returnTransferFunction();
+
+			}
+
+//			// Iterate over the successor basicBlocks to transfer the 
+//			for (ISSABasicBlock succ : succBB) {
+//
+//			}
 		}
 
-		for (ISSABasicBlock succ : succBB) {
+	}
 
-		}
+	private void returnTransferFunction() {
+
+	}
+
+	private void phiTransferFunction() {
+
+	}
+
+	private void callTransferFunction() {
+
+	}
+
+	private void newTransferFunction() {
+
 	}
 }
