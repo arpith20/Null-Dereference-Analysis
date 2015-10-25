@@ -233,8 +233,8 @@ public class Data {
 
 	public Boolean checkAllColumnsUnmarked(String program_point) {
 		HashMap<Integer, Boolean> h = marked.get(program_point);
-		if (h == null)
-			return true;
+		// if (h == null)
+		// return true;
 		for (Map.Entry<Integer, Boolean> entry : h.entrySet()) {
 			Integer column = entry.getKey();
 			Boolean point = entry.getValue();
@@ -283,7 +283,7 @@ public class Data {
 		}
 	}
 
-	public ArrayList<String> retrive(String pp1, Integer col, String var) {
+	public ArrayList<String> retrieve(String pp1, Integer col, String var) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
 		if (al_col1 != null) {
 			HashMap<String, ArrayList<String>> h = al_col1.get(col);
@@ -296,25 +296,34 @@ public class Data {
 		}
 		return null;
 	}
-	
-	public HashMap<Integer, Boolean> getColumnMarkings (String pPoint)
-	{
-		if ( marked.get(pPoint) != null )
-			return marked.get(pPoint) ;
-		else
-			return null ;
+
+	public HashMap<String, ArrayList<String>> retrieve(String pp1, Integer col) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		if (al_col1 != null) {
+			HashMap<String, ArrayList<String>> h = al_col1.get(col);
+			if (h != null) {
+				return h;
+			}
+		}
+		return null;
 	}
-	
+
+	public HashMap<Integer, Boolean> getColumnMarkings(String pPoint) {
+		if (marked.get(pPoint) != null)
+			return marked.get(pPoint);
+		else
+			return null;
+	}
+
 	public void openColumn(String pPoint, Integer col) {
 		mark(pPoint, col);
 		HashMap<Integer, HashMap<String, ArrayList<String>>> hm = pp.get(pPoint);
 		if (hm == null) {
 			hm = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
-			HashMap<String, ArrayList<String>> hMap = new HashMap<String, ArrayList<String>>() ;
-			hm.put(col, hMap) ;
+			HashMap<String, ArrayList<String>> hMap = new HashMap<String, ArrayList<String>>();
+			hm.put(col, hMap);
 			pp.put(pPoint, hm);
 		}
 	}
-
 
 }
