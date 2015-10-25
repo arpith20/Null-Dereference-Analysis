@@ -51,9 +51,14 @@ public class SetUpAnalysis {
 	private String analysisClass;
 	private String analysisMethod;
 
+	// CGNODE of the method which we are analyzing
 	private CGNode target;
+
+	// List of CGNODEs of all the methods which are present in the class
 	private ArrayList<CGNode> globalMethods = new ArrayList<CGNode>();
-	private Data d ;
+
+	// Main DATA class to store the analysis results
+	private Data d;
 
 	// START: NO CHANGE REGION
 	private AnalysisScope scope; // scope defines the set of files to be
@@ -122,22 +127,28 @@ public class SetUpAnalysis {
 	}
 	// END: NO CHANGE REGION
 
+	// Method to initialize a few things before the analysis starts
 	public void init() {
 		if (!setTarget()) {
 			System.out.println("Set Target Failed");
 			System.exit(-1);
 		}
 		setGlobalMethods();
-		
-		d = new Data() ;
+
+		d = new Data();
 	}
 
+	// Method to store the CGNODE of the method which we are analyzing in the
+	// data member TARGET
 	public boolean setTarget() {
 		Iterator<CGNode> nodes = cg.iterator();
 		CGNode target = null;
 		while (nodes.hasNext()) {
 			CGNode node = nodes.next();
 			String nodeInfo = node.toString();
+
+			// Check if the signature of the method contains the string. This is
+			// sufficient to say that it is the method we are searching for
 			if (nodeInfo.contains(analysisClass) && nodeInfo.contains(analysisMethod)) {
 				target = node;
 				break;
@@ -152,7 +163,13 @@ public class SetUpAnalysis {
 		}
 	}
 
+	// Method to store all the methods present in the class in the data member
+	// GLOBALMETHODS
 	public void setGlobalMethods() {
+
+		// Iterate over all the methods present in the CALLGRAPH and check if
+		// the name of the method has APPLICATION as the third word in it.
+		// This can be done better! TODO
 		Iterator<CGNode> nodes = cg.iterator();
 		while (nodes.hasNext()) {
 			CGNode node = nodes.next();
@@ -169,20 +186,34 @@ public class SetUpAnalysis {
 
 	// Prints the program point names of the methods we are analyzing
 	public void getProgramPoints() {
+
+		// Get the list of all the methods reachable directly or transitively
+		// from the method which we are analyzing
 		ArrayList<CGNode> methods = getTransitiveCallSites();
 		for (CGNode cgnode : methods) {
-			System.out.println("\n\n");
+
+			// Get just the name of the method from the method signature. This
+			// follows the structure of the WALA method signature
 			String methodName = cgnode.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
+
+			// Iterate over the basicBlocks present in the CFG
 			SSACFG cfg = cgnode.getIR().getControlFlowGraph();
 			Iterator<ISSABasicBlock> ibb = cfg.iterator();
-
 			while (ibb.hasNext()) {
 				ISSABasicBlock bb = ibb.next();
+
+				// Get all the normal successors of the current basicBlock. This
+				// will exclude the exception edges.
 				Collection<ISSABasicBlock> succSet = cfg.getNormalSuccessors(bb);
 				for (ISSABasicBlock succ : succSet) {
-					String pp = methodName + "." + bb.getNumber() + "." + succ.getNumber() ;
-					//d.add(pp, col, variable, pointsto);
-					System.out.println(pp);
+					// The unique number assigned to each basicBlock and method
+					// name is used as a program point.
+					// Example: main.1.2 foo.9.10 bar.10.23
+					String pp = methodName + "." + bb.getNumber() + "." + succ.getNumber();
+
+					// Add the program point to the DATA object
+					// d.add(pp, col, variable, pointsto);
+					// System.out.println(pp);
 				}
 			}
 		}
@@ -193,16 +224,28 @@ public class SetUpAnalysis {
 	public ArrayList<CGNode> getTransitiveCallSites() {
 		ArrayList<CGNode> callSites = new ArrayList<CGNode>();
 		ArrayList<CGNode> workingList = new ArrayList<CGNode>();
+
+		// Add the method which we are currently analyzing to working list.
+		// We want transitive callSites from the method which we are analyzing
 		callSites.add(target);
 		workingList.add(target);
-
 		while (!workingList.isEmpty()) {
 			CGNode cur = workingList.get(0);
+
+			// Get the direct callSites from CUR
 			ArrayList<CGNode> directSites = getDirectCallSites(cur);
 			if (!directSites.isEmpty()) {
-				callSites.addAll(directSites);
-				workingList.addAll(directSites);
+				for (CGNode add : directSites) {
+
+					// Add the direct callSites to the workingList and callSites
+					// if NOT already present
+					if (!callSites.contains(add))
+						callSites.addAll(directSites);
+					if (!workingList.contains(add))
+						workingList.addAll(directSites);
+				}
 			}
+			// Reduce the size of the workingList
 			workingList.remove(cur);
 		}
 
@@ -213,17 +256,26 @@ public class SetUpAnalysis {
 	// method
 	public ArrayList<CGNode> getDirectCallSites(CGNode root) {
 		ArrayList<CGNode> callSites = new ArrayList<CGNode>();
+
+		// Iterate over all the call sites in ROOT
 		Iterator<CallSiteReference> icsr = root.getIR().iterateCallSites();
 		while (icsr.hasNext()) {
 			CallSiteReference csr = icsr.next();
 			if (!csr.isSpecial()) {
+
+				// Get the CGNode of the target method. This is a singleton set
 				Set<CGNode> nodes = cg.getPossibleTargets(root, csr);
 				if (nodes.size() == 1) {
 					Iterator<CGNode> i = nodes.iterator();
 					CGNode temp = i.next();
+
+					// Check if the method is a class method and not library
+					// function
 					if (globalMethods.contains(temp))
 						callSites.add(temp);
 				} else {
+					// Currently exit the code if more than one possible target
+					// is found for a callsite. Can do better!
 					System.out.println("GetPossibleTargets returned more than 1 CGNode!!");
 					System.exit(-1);
 				}
