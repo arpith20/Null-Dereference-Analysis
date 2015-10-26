@@ -244,6 +244,18 @@ public class Data {
 		return true;
 	}
 
+	public void join(String ppoint, Integer col, HashMap<String, ArrayList<String>> h) {
+		if (h != null) {
+			for (Map.Entry<String, ArrayList<String>> entry : h.entrySet()) {
+				String var = entry.getKey();
+				ArrayList<String> pointsto = entry.getValue();
+				for (String pt : pointsto) {
+					add(ppoint, col, var, pt);
+				}
+			}
+		}
+	}
+
 	// pp1 = pp1 union pp2
 	public void join(String pp1, Integer col1, String pp2, Integer col2) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
