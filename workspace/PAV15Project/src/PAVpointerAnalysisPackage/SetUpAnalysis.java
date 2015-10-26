@@ -240,7 +240,7 @@ public class SetUpAnalysis {
 
 					// Add the program point to the WORKINGLIST
 					// TODO
-					if ( methodName.equals("main")) 
+					if (methodName.equals("main"))
 						workingList.add(pp);
 
 					// Add the program point to the hash map containing the set
@@ -358,7 +358,7 @@ public class SetUpAnalysis {
 			String curPP = workingList.get(0);
 
 			System.out.println("PP:" + curPP);
-			
+
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
 			if (!d.checkAllColumnsUnmarked(curPP)) {
@@ -382,12 +382,15 @@ public class SetUpAnalysis {
 
 		// Extract info from the program point
 		String methodName = pPoint.split("[.]")[0];
+		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
 		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
-		// Get the list of all the successor basicBlocks
 		CGNode node = hashGlobalMethods.get(methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
+		BasicBlock prevBB = cfg.getBasicBlock(prevBBNum);
 		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
+
+		// Get the list of all the successor basicBlocks
 		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
 		// Get the markings present at the current program point
@@ -402,14 +405,22 @@ public class SetUpAnalysis {
 			if (mark == false)
 				continue;
 
+			// Create a new hashMap and initialize it to the value present at
+			// the current program point. This value will be propagated to the
+			// successors
+			HashMap<String, ArrayList<String>> propagatedValue = new HashMap<String, ArrayList<String>>();
+			propagatedValue = d.retrieve(pPoint, column);
+
 			// Apply transfer function to the data present in COLUMN for the
 			// instructions in the basicBlock
+			// The output will be a new HashMap<String,ArrayList<String>>. This
+			// value will be propagated to the successors
 			Iterator<SSAInstruction> iSSA = srcBB.iterateNormalInstructions();
 			while (iSSA.hasNext()) {
 				SSAInstruction inst = iSSA.next();
 
 				if (inst instanceof SSANewInstruction)
-					newTransferFunction();
+					newTransferFunction((SSANewInstruction) inst, propagatedValue);
 				else if (inst instanceof SSAConditionalBranchInstruction)
 					callTransferFunction();
 				else if (inst instanceof SSAPhiInstruction)
@@ -419,27 +430,27 @@ public class SetUpAnalysis {
 
 			}
 
-//			// Iterate over the successor basicBlocks to transfer the 
-//			for (ISSABasicBlock succ : succBB) {
-//
-//			}
+			// // Iterate over the successor basicBlocks to transfer the
+			// for (ISSABasicBlock succ : succBB) {
+			//
+			// }
 		}
 
 	}
 
-	private void returnTransferFunction() {
+	public void returnTransferFunction() {
 
 	}
 
-	private void phiTransferFunction() {
+	public void phiTransferFunction() {
 
 	}
 
-	private void callTransferFunction() {
+	public void callTransferFunction() {
 
 	}
 
-	private void newTransferFunction() {
-
+	public void newTransferFunction(SSANewInstruction inst, HashMap<String, ArrayList<String>> propagatedValue) {
+		
 	}
 }
