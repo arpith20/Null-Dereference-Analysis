@@ -253,6 +253,8 @@ public class Data {
 					add(ppoint, col, var, pt);
 				}
 			}
+		} else {
+			throw new NullPointerException("H is null here");
 		}
 	}
 
