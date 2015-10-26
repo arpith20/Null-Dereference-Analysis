@@ -161,6 +161,7 @@ public class Data {
 	}
 
 	public void display() {
+		System.out.println("inside display");
 		String s_pointsto = "";
 		if (pp == null)
 			return;
@@ -202,9 +203,8 @@ public class Data {
 	public void mark(String pp, Integer col) {
 		HashMap<Integer, Boolean> h = marked.get(pp);
 		if (h == null) {
-			h = new HashMap<Integer, Boolean>();
-			h.put(col, true);
-			marked.put(pp, h);
+			throw new NullPointerException(
+					"mark: " + pp + " " + col + " Program Point doesn't exist while trying to mark");
 		} else {
 			h.put(col, true);
 		}
@@ -213,9 +213,8 @@ public class Data {
 	public void unmark(String index, Integer col) {
 		HashMap<Integer, Boolean> h = marked.get(index);
 		if (h == null) {
-			h = new HashMap<Integer, Boolean>();
-			h.put(col, false);
-			marked.put(index, h);
+			throw new NullPointerException(
+					"unmark: " + index + " " + col + " Program Point doesn't exist while trying to mark");
 		} else {
 			h.put(col, false);
 		}
@@ -242,6 +241,20 @@ public class Data {
 				return false;
 		}
 		return true;
+	}
+
+	public void join(String ppoint, Integer col, HashMap<String, ArrayList<String>> h) {
+		if (h != null) {
+			for (Map.Entry<String, ArrayList<String>> entry : h.entrySet()) {
+				String var = entry.getKey();
+				ArrayList<String> pointsto = entry.getValue();
+				for (String pt : pointsto) {
+					add(ppoint, col, var, pt);
+				}
+			}
+		} else {
+			throw new NullPointerException("H is null here");
+		}
 	}
 
 	// pp1 = pp1 union pp2
@@ -302,7 +315,7 @@ public class Data {
 		if (al_col1 != null) {
 			HashMap<String, ArrayList<String>> h = al_col1.get(col);
 			if (h != null) {
-				return h;
+				return new HashMap<String, ArrayList<String>>(h);
 			}
 		}
 		return null;
@@ -316,14 +329,30 @@ public class Data {
 	}
 
 	public void openColumn(String pPoint, Integer col) {
-		mark(pPoint, col);
 		HashMap<Integer, HashMap<String, ArrayList<String>>> hm = pp.get(pPoint);
-		if (hm == null) {
-			hm = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
+		if (hm != null) {
 			HashMap<String, ArrayList<String>> hMap = new HashMap<String, ArrayList<String>>();
 			hm.put(col, hMap);
-			pp.put(pPoint, hm);
+		} else {
+			throw new NullPointerException("openColumn: " + pPoint + " " + col + " programPoint not present");
 		}
+
+		// Open a column in the MARKED data structure as well and MARK it
+		HashMap<Integer, Boolean> markings = marked.get(pPoint);
+		markings.put(col, true);
 	}
 
+	public void addProgramPoint(String pPoint) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> newPP = pp.get(pPoint);
+		if (newPP == null) {
+			newPP = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
+			pp.put(pPoint, newPP);
+
+			// Create a HashMap for this program point in MARKED as well
+			HashMap<Integer, Boolean> markings = new HashMap<Integer, Boolean>();
+			marked.put(pPoint, markings);
+		} else {
+			throw new NullPointerException("addProgramPoint: " + pPoint + "programPoint already present");
+		}
+	}
 }

@@ -242,6 +242,8 @@ public class SetUpAnalysis {
 					// TODO
 					if (methodName.equals("main"))
 						workingList.add(pp);
+					
+					d.addProgramPoint(pp);
 
 					// Add the program point to the hash map containing the set
 					// of all program points present in a particular method
@@ -354,6 +356,7 @@ public class SetUpAnalysis {
 	// Main kildall algorithm. This will do the analysis and will return once
 	// the WORKINGLIST is empty
 	public void kildall() {
+		System.out.println("Working List is:" + workingList);
 		while (!workingList.isEmpty()) {
 			String curPP = workingList.get(0);
 
@@ -361,11 +364,12 @@ public class SetUpAnalysis {
 
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
-			if (!d.checkAllColumnsUnmarked(curPP)) {
+			if (d.checkAllColumnsUnmarked(curPP)) {
 				workingList.remove(0);
 				continue;
 			}
 
+			// System.out.println("kildall");
 			// Call the transfer function driver
 			transferFunctionDriver(curPP);
 
@@ -375,6 +379,7 @@ public class SetUpAnalysis {
 
 			workingList.remove(0);
 		}
+		System.out.println("\n\n");
 		d.display();
 	}
 
@@ -396,8 +401,10 @@ public class SetUpAnalysis {
 		// Get the markings present at the current program point
 		HashMap<Integer, Boolean> markings = d.getColumnMarkings(pPoint);
 
+		// System.out.println("TrasferFUnction driver");
 		// Iterate ONLY over the set of columns which are marked
 		for (Map.Entry<Integer, Boolean> entry : markings.entrySet()) {
+			// System.out.println("TrasferFUnction Loop");
 			Integer column = entry.getKey();
 			Boolean mark = entry.getValue();
 
@@ -419,26 +426,53 @@ public class SetUpAnalysis {
 			while (iSSA.hasNext()) {
 				SSAInstruction inst = iSSA.next();
 
-				if (inst instanceof SSANewInstruction)
-					newTransferFunction((SSANewInstruction) inst, propagatedValue);
-				else if (inst instanceof SSAConditionalBranchInstruction)
+				if (inst instanceof SSANewInstruction) {
+					System.out.println("Before Transfer Function");
+					System.out.println(propagatedValue);
+					newTransferFunction(methodName, (SSANewInstruction) inst, propagatedValue);
+					System.out.println("After Transfer Function");
+					System.out.println(propagatedValue);
+				} else if (inst instanceof SSAInvokeInstruction)
 					callTransferFunction();
 				else if (inst instanceof SSAPhiInstruction)
 					phiTransferFunction();
 				else if (inst instanceof SSAReturnInstruction)
 					returnTransferFunction();
+				else if (inst instanceof SSAConditionalBranchInstruction)
+					branchTransferFunction();
 
+				// Iterate over the successor basicBlocks to JOIN the
+				// propagatedValue
+				for (ISSABasicBlock succ : succBB) {
+					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+					d.join(succPP, column, propagatedValue);
+				}
 			}
-
-			// // Iterate over the successor basicBlocks to transfer the
-			// for (ISSABasicBlock succ : succBB) {
-			//
-			// }
 		}
 
 	}
 
-	public void returnTransferFunction() {
+	public void newTransferFunction(String methodName, SSANewInstruction inst,
+			HashMap<String, ArrayList<String>> propagatedValue) {
+		String varNum = Integer.toString(inst.getDef());
+
+		String allocationName = methodName + ".new" + inst.iindex;
+
+		// Get the mapping for this variable in the map. If mapping not present,
+		// create a mapping
+		ArrayList<String> pointsTo = propagatedValue.get(varNum);
+		if (pointsTo == null) {
+			pointsTo = new ArrayList<String>();
+			propagatedValue.put(varNum, pointsTo);
+		}
+
+		// DO a STRONG UPDATE to the points to set of the current variable
+		pointsTo.add(allocationName);
+
+		return;
+	}
+
+	public void callTransferFunction() {
 
 	}
 
@@ -446,11 +480,11 @@ public class SetUpAnalysis {
 
 	}
 
-	public void callTransferFunction() {
+	public void returnTransferFunction() {
 
 	}
 
-	public void newTransferFunction(SSANewInstruction inst, HashMap<String, ArrayList<String>> propagatedValue) {
-		
+	public void branchTransferFunction() {
+
 	}
 }
