@@ -450,7 +450,7 @@ public class SetUpAnalysis {
 				SSAInstruction inst = iSSA.next();
 
 				if (inst instanceof SSANewInstruction) {
-					newTransferFunction(methodName, (SSANewInstruction) inst, propagatedValue);
+					newTransferFunction(pPoint, column, (SSANewInstruction) inst, propagatedValue);
 				} else if (inst instanceof SSAInvokeInstruction)
 					callTransferFunction();
 				else if (inst instanceof SSAPhiInstruction)
@@ -459,19 +459,22 @@ public class SetUpAnalysis {
 					returnTransferFunction();
 				else if (inst instanceof SSAConditionalBranchInstruction)
 					branchTransferFunction(methodName, (SSAConditionalBranchInstruction) inst, propagatedValue);
-
-				// Iterate over the successor basicBlocks to JOIN the
-				// propagatedValue
-				for (ISSABasicBlock succ : succBB) {
-					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					d.propagate(succPP, column, propagatedValue);
-				}
 			}
 		}
 	}
 
-	public void newTransferFunction(String methodName, SSANewInstruction inst,
+	public void newTransferFunction(String pPoint, int column, SSANewInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
+
+		// Extract info from the program point
+		String methodName = pPoint.split("[.]")[0];
+		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
+		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
+
+		CGNode node = hashGlobalMethods.get(methodName);
+		SSACFG cfg = node.getIR().getControlFlowGraph();
+		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
+
 		String varNum = Integer.toString(inst.getDef());
 
 		String allocationName = methodName + ".new" + inst.iindex;
@@ -486,6 +489,18 @@ public class SetUpAnalysis {
 
 		// DO a STRONG UPDATE to the points to set of the current variable
 		pointsTo.add(allocationName);
+
+		// Get the list of all the successor basicBlocks
+		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
+
+		// Iterate over the successor basicBlocks to JOIN the
+		// propagatedValue
+		System.out.println("before propagate" + propagatedValue);
+		for (ISSABasicBlock succ : succBB) {
+			String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+			d.propagate(succPP, column, propagatedValue);
+			d.displayProgramPoint(succPP,column) ;
+		}
 
 		return;
 	}
@@ -504,19 +519,30 @@ public class SetUpAnalysis {
 
 	public void branchTransferFunction(String methodName, SSAConditionalBranchInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
+
+		// Get the variable numbers
 		int var1 = inst.getUse(0);
 		int var2 = inst.getUse(1);
 
-		DefUse defUse = target.getDU() ;
-		SSAInstruction def1 = defUse.getDef(var1) ;
-		SSAInstruction def2 = defUse.getDef(var2);
-		
+		// Operator used on the conditional
+		String op = inst.getOperator().toString();
+
+		// Check if the second variable is a constant.
+		// ONLY SECOND variable can be a constant
+		// TODO
+		if (target.getIR().getSymbolTable().isNullConstant(var2)) {
+			// Add this NULL Constant into the propagated value
+			propagatedValue.put(Integer.toString(var2), new ArrayList<String>(Arrays.asList("null")));
+		}
+
+		DefUse defUse = target.getDU();
+		// SSAInstruction def2 = defUse.getDef(var2);
+
 		System.out.println(inst.toString());
 		System.out.println(inst.getUse(0) + " " + inst.getUse(1));
-		String op = inst.getOperator().toString();
 		System.out.println(op);
 
-		System.out.println(def1 + " " + def2);
+		// System.out.println(t1 + " " + t2);
 		Boolean a = target.getIR().getSymbolTable().isNullConstant(var2);
 
 		// System.out.println(inst.getUse(0) + " " + inst.getUse(1));
