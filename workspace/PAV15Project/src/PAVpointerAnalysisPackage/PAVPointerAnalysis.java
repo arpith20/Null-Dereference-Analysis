@@ -1,7 +1,7 @@
 package PAVpointerAnalysisPackage;
 
 /**
- * @author Arpith K, Sridhar G
+ * @authors Arpith K, Sridhar G
  * Program Analysis and Verification, 2015
  *
  */
@@ -54,6 +54,7 @@ public class PAVPointerAnalysis {
 		 * to perform analysis Print out analysis results to file, in the format
 		 * specified.
 		 */
+		
 
 		// START: NO CHANGE REGION
 		setup.buildScope();
@@ -76,20 +77,30 @@ public class PAVPointerAnalysis {
 		 * Create appropriate objects/make appropriate function calls here to
 		 * begin the analysis
 		 */
-		System.out.println("Printing...");
-		setup.getAllCallSites();
-		setup.getDirectCallSites("startTest()V");
-		for (String s : SetUpAnalysis.callsites) {
-			System.out.println(s);
-			//IR t = setup.getIR(s);
-			//System.out.println(t.toString());
-		}
+		// System.out.println("Printing...");
+		// setup.getAllCallSites();
+		// setup.getDirectCallSites("startTest()V");
+		// for (String s : SetUpAnalysis.callsites) {
+		// System.out.println(s);
+		// //IR t = setup.getIR(s);
+		// //System.out.println(t.toString());
+		// }
 		// setup.getAllCallSites();
 		 //setup.printIRForAllMethods();
-		System.out.println(setup.getIR("phiTest(LTestCases/PublicTests;LTestCases/PublicTests;)LTestCases/PublicTests;").toString());
+		//System.out.println(setup.getIR("phiTest(LTestCases/PublicTests;LTestCases/PublicTests;)LTestCases/PublicTests;").toString());
 		//NullDereference n = new NullDereference();
 		//n.entry();
 		
+		setup.init() ;
+		//setup.getProgramPoints();
+		
+		//setup.setD0() ;
+		
+		//setup.kildall();
+		ArrayList<CGNode> cg = setup.getTransitiveCallSites();
+		for(CGNode c : cg){
+			System.out.println(c.toString());
+		}
 	}
 
 	// START: NO CHANGE REGION

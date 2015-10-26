@@ -12,6 +12,7 @@ import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.ibm.wala.cfg.IBasicBlock;
 import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
@@ -28,15 +29,22 @@ import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.ssa.IR;
+import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSACFG;
+import com.ibm.wala.ssa.SSACFG.BasicBlock;
+import com.ibm.wala.ssa.SSAConditionalBranchInstruction;
 import com.ibm.wala.ssa.SSAGetInstruction;
 import com.ibm.wala.ssa.SSAInstruction;
+import com.ibm.wala.ssa.SSAInvokeInstruction;
+import com.ibm.wala.ssa.SSANewInstruction;
+import com.ibm.wala.ssa.SSAPhiInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
+import com.ibm.wala.ssa.SSAReturnInstruction;
 import com.ibm.wala.types.FieldReference;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.config.AnalysisScopeReader;
-import com.ibm.wala.util.graph.dominators.GenericDominators;
 import com.ibm.wala.util.io.FileProvider;
+import com.ibm.wala.viz.viewer.IrAndSourceViewer;
 import com.ibm.wala.ssa.analysis.ExplodedControlFlowGraph;
 
 public class SetUpAnalysis {
@@ -45,6 +53,26 @@ public class SetUpAnalysis {
 	private String mainClass;
 	private String analysisClass;
 	private String analysisMethod;
+
+	// CGNODE of the method which we are analyzing
+	private CGNode target;
+
+	// List of CGNODEs of all the methods which are present in the class
+	private ArrayList<CGNode> globalMethods = new ArrayList<CGNode>();
+
+	// HashMap which maps the names of the methods to its corresponding CGNodes
+	private HashMap<String, CGNode> hashGlobalMethods = new HashMap<String, CGNode>();
+
+	// Main DATA class to store the analysis results
+	private Data d;
+
+	// List of all the program points to analyze. End analysis when this list
+	// becomes empty
+	private ArrayList<String> workingList = new ArrayList<String>();
+
+	// HashMap which contains the list of all program points corresponding to
+	// each method in the program
+	private HashMap<String, ArrayList<String>> programPoints = new HashMap<String, ArrayList<String>>();
 
 	// START: NO CHANGE REGION
 	private AnalysisScope scope; // scope defines the set of files to be
@@ -111,13 +139,355 @@ public class SetUpAnalysis {
 	public void generateCallGraph() throws Exception {
 		cg = builder.makeCallGraph(options, null);
 	}
+
 	// END: NO CHANGE REGION
 
-	/**
-	 * These are methods for testing purposes. You can call to these to check
-	 * whether Wala is setup properly. This method prints the nodes of the call
-	 * graph.
-	 */
+	// Method to initialize a few things before the analysis starts
+	public void init() {
+		if (!setTarget()) {
+			System.out.println("Set Target Failed");
+			System.exit(-1);
+		}
+		setGlobalMethods();
+
+		d = new Data();
+	}
+
+	// Method to store the CGNODE of the method which we are analyzing in the
+	// data member TARGET
+	public boolean setTarget() {
+		Iterator<CGNode> nodes = cg.iterator();
+		CGNode target = null;
+		while (nodes.hasNext()) {
+			CGNode node = nodes.next();
+			String nodeInfo = node.toString();
+
+			// Check if the signature of the method contains the string. This is
+			// sufficient to say that it is the method we are searching for
+			if (nodeInfo.contains(analysisClass) && nodeInfo.contains(analysisMethod)) {
+				target = node;
+				break;
+			}
+		}
+		if (target != null) {
+			this.target = target;
+			return true;
+		} else {
+			this.target = null;
+			return false;
+		}
+	}
+
+	// Method to store all the methods present in the class in the data member
+	// GLOBALMETHODS and also add a hash mapping from the shorthand name of the
+	// method to their CGNode
+	public void setGlobalMethods() {
+
+		// Iterate over all the methods present in the CALLGRAPH and check if
+		// the name of the method has APPLICATION as the third word in it.
+		// This can be done better! TODO
+		Iterator<CGNode> nodes = cg.iterator();
+		while (nodes.hasNext()) {
+			CGNode node = nodes.next();
+			String nodeInfo = node.toString();
+			if (nodeInfo.contains("Application")) {
+				String[] s = nodeInfo.split("[ ]");
+				if (s[2].contains("Application")) {
+
+					// Add the CGNode to the GLOBALMETHODS
+					// Do not add the Constructor i.e init to the array list or
+					// to the hashMap
+					if (!nodeInfo.contains("<init>()V")) {
+						globalMethods.add(node);
+
+						// Get shorthand name of the method and add it to the
+						// hashMap
+						String methodName = node.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
+						hashGlobalMethods.put(methodName, node);
+					}
+				}
+			}
+		}
+		return;
+	}
+
+	// Prints the program point names of the methods we are analyzing
+	public void getProgramPoints() {
+
+		// Get the list of all the methods reachable directly or transitively
+		// from the method which we are analyzing
+		ArrayList<CGNode> methods = getTransitiveCallSites();
+		for (CGNode cgnode : methods) {
+
+			// Get just the name of the method from the method signature. This
+			// follows the structure of the WALA method signature
+			String methodName = cgnode.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
+
+			// Iterate over the basicBlocks present in the CFG
+			SSACFG cfg = cgnode.getIR().getControlFlowGraph();
+			Iterator<ISSABasicBlock> ibb = cfg.iterator();
+			while (ibb.hasNext()) {
+				ISSABasicBlock bb = ibb.next();
+
+				// Get all the normal successors of the current basicBlock. This
+				// will exclude the exception edges.
+				Collection<ISSABasicBlock> succSet = cfg.getNormalSuccessors(bb);
+				for (ISSABasicBlock succ : succSet) {
+					// The unique number assigned to each basicBlock and method
+					// name is used as a program point.
+					// Example: main.1.2 foo.9.10 bar.10.23
+					String pp = methodName + "." + bb.getNumber() + "." + succ.getNumber();
+
+					// Add the program point to the WORKINGLIST
+					// TODO
+					if (methodName.equals("main"))
+						workingList.add(pp);
+
+					d.addProgramPoint(pp);
+
+					// Add the program point to the hash map containing the set
+					// of all program points present in a particular method
+					//
+					// Check if the method is already present in the
+					// programPoints hashMap
+					if (!programPoints.containsKey(methodName)) {
+						// List of programPoints doesn't exist. Create a new one
+						ArrayList<String> list = new ArrayList<String>();
+						list.add(pp);
+						programPoints.put(methodName, list);
+					} else {
+						// Add the programPoint to the existing arrayList
+						ArrayList<String> list = programPoints.get(methodName);
+						list.add(pp);
+					}
+				}
+			}
+		}
+	}
+
+	// Returns the list of all the methods which are called directly or
+	// transitively by the TARGET method
+	public ArrayList<CGNode> getTransitiveCallSites() {
+		ArrayList<CGNode> callSites = new ArrayList<CGNode>();
+		ArrayList<CGNode> workingList = new ArrayList<CGNode>();
+
+		// Add the method which we are currently analyzing to working list.
+		// We want transitive callSites from the method which we are analyzing
+		callSites.add(target);
+		workingList.add(target);
+		while (!workingList.isEmpty()) {
+			CGNode cur = workingList.get(0);
+
+			// Get the direct callSites from CUR
+			ArrayList<CGNode> directSites = getDirectCallSites(cur);
+			if (!directSites.isEmpty()) {
+				for (CGNode add : directSites) {
+
+					// Add the direct callSites to the workingList and callSites
+					// if NOT already present
+					if (!callSites.contains(add))
+						callSites.add(add);
+					if (!workingList.contains(add))
+						workingList.add(add);
+				}
+			}
+			// Reduce the size of the workingList
+			workingList.remove(cur);
+		}
+		return callSites;
+	}
+
+	// Returns the list of all the methods which are called directly by the ROOT
+	// method
+	public ArrayList<CGNode> getDirectCallSites(CGNode root) {
+		ArrayList<CGNode> callSites = new ArrayList<CGNode>();
+
+		// Iterate over all the call sites in ROOT
+		Iterator<CallSiteReference> icsr = root.getIR().iterateCallSites();
+		while (icsr.hasNext()) {
+			CallSiteReference csr = icsr.next();
+			if (!csr.isSpecial()) {
+
+				// Get the CGNode of the target method. This is a singleton set
+				Set<CGNode> nodes = cg.getPossibleTargets(root, csr);
+				if (nodes.size() == 1) {
+					Iterator<CGNode> i = nodes.iterator();
+					CGNode temp = i.next();
+
+					// Check if the method is a class method and not library
+					// function
+					if (globalMethods.contains(temp))
+						callSites.add(temp);
+				} else {
+					// Currently exit the code if more than one possible target
+					// is found for a callSite. Can do better!
+					System.out.println("GetPossibleTargets returned more than 1 CGNode!!");
+					System.exit(-1);
+				}
+			}
+		}
+		return callSites;
+	}
+
+	// Method to set the initial value for the analysis
+	public void setD0() {
+		// Get the name of the method we are analyzing
+		String methodName = target.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
+
+		// Get the initial program point
+		String pp = methodName + ".0.1";
+
+		// Open column 0 in all programPoints in target method
+		openColumnsDriver(methodName, 0);
+
+		// Add D0 to DATA
+		d.add(pp, 0, "", "");
+
+		return;
+	}
+
+	public void openColumnsDriver(String methodName, int column) {
+		ArrayList<String> pPoints = programPoints.get(methodName);
+		for (String pp : pPoints) {
+			d.openColumn(pp, column);
+		}
+	}
+
+	// Main kildall algorithm. This will do the analysis and will return once
+	// the WORKINGLIST is empty
+	public void kildall() {
+		System.out.println("Working List is:" + workingList);
+		while (!workingList.isEmpty()) {
+			String curPP = workingList.get(0);
+
+			System.out.println("PP:" + curPP);
+
+			// Check if all the columns in the program point are unmarked.
+			// If true, continue
+			if (d.checkAllColumnsUnmarked(curPP)) {
+				workingList.remove(0);
+				continue;
+			}
+
+			// System.out.println("kildall");
+			// Call the transfer function driver
+			transferFunctionDriver(curPP);
+
+			String methodName = curPP.split("[.]")[0];
+			int srcBB = Integer.parseInt(curPP.split("[.]")[2]);
+			CGNode node = hashGlobalMethods.get(methodName);
+
+			workingList.remove(0);
+		}
+		System.out.println("\n\n");
+		d.display();
+	}
+
+	public void transferFunctionDriver(String pPoint) {
+
+		// Extract info from the program point
+		String methodName = pPoint.split("[.]")[0];
+		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
+		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
+
+		CGNode node = hashGlobalMethods.get(methodName);
+		SSACFG cfg = node.getIR().getControlFlowGraph();
+		BasicBlock prevBB = cfg.getBasicBlock(prevBBNum);
+		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
+
+		// Get the list of all the successor basicBlocks
+		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
+
+		// Get the markings present at the current program point
+		HashMap<Integer, Boolean> markings = d.getColumnMarkings(pPoint);
+
+		// System.out.println("TrasferFUnction driver");
+		// Iterate ONLY over the set of columns which are marked
+		for (Map.Entry<Integer, Boolean> entry : markings.entrySet()) {
+			// System.out.println("TrasferFUnction Loop");
+			Integer column = entry.getKey();
+			Boolean mark = entry.getValue();
+
+			// Unmarked
+			if (mark == false)
+				continue;
+
+			// Create a new hashMap and initialize it to the value present at
+			// the current program point. This value will be propagated to the
+			// successors
+			HashMap<String, ArrayList<String>> propagatedValue = new HashMap<String, ArrayList<String>>();
+			propagatedValue = d.retrieve(pPoint, column);
+
+			// Apply transfer function to the data present in COLUMN for the
+			// instructions in the basicBlock
+			// The output will be a new HashMap<String,ArrayList<String>>. This
+			// value will be propagated to the successors
+			Iterator<SSAInstruction> iSSA = srcBB.iterateNormalInstructions();
+			while (iSSA.hasNext()) {
+				SSAInstruction inst = iSSA.next();
+
+				if (inst instanceof SSANewInstruction) {
+					System.out.println("Before Transfer Function");
+					System.out.println(propagatedValue);
+					newTransferFunction(methodName, (SSANewInstruction) inst, propagatedValue);
+					System.out.println("After Transfer Function");
+					System.out.println(propagatedValue);
+				} else if (inst instanceof SSAInvokeInstruction)
+					callTransferFunction();
+				else if (inst instanceof SSAPhiInstruction)
+					phiTransferFunction();
+				else if (inst instanceof SSAReturnInstruction)
+					returnTransferFunction();
+				else if (inst instanceof SSAConditionalBranchInstruction)
+					branchTransferFunction();
+
+				// Iterate over the successor basicBlocks to JOIN the
+				// propagatedValue
+				for (ISSABasicBlock succ : succBB) {
+					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+					d.propagate(succPP, column, propagatedValue);
+				}
+			}
+		}
+
+	}
+
+	public void newTransferFunction(String methodName, SSANewInstruction inst,
+			HashMap<String, ArrayList<String>> propagatedValue) {
+		String varNum = Integer.toString(inst.getDef());
+
+		String allocationName = methodName + ".new" + inst.iindex;
+
+		// Get the mapping for this variable in the map. If mapping not present,
+		// create a mapping
+		ArrayList<String> pointsTo = propagatedValue.get(varNum);
+		if (pointsTo == null) {
+			pointsTo = new ArrayList<String>();
+			propagatedValue.put(varNum, pointsTo);
+		}
+
+		// DO a STRONG UPDATE to the points to set of the current variable
+		pointsTo.add(allocationName);
+
+		return;
+	}
+
+	public void callTransferFunction() {
+
+	}
+
+	public void phiTransferFunction() {
+
+	}
+
+	public void returnTransferFunction() {
+
+	}
+
+	public void branchTransferFunction() {
+
+	}
+
 	public void printNodes() {
 		System.out.println("Displaying Application's Call Graph nodes: ");
 		Iterator<CGNode> nodes = cg.iterator();
@@ -129,10 +499,7 @@ public class SetUpAnalysis {
 				System.out.println(nodeInfo);
 		}
 	}
-
-	/**
-	 * This method prints the IR of the analysisMethod
-	 */
+	
 	public void printIR() {
 		System.out.println("\n\n");
 		Iterator<CGNode> nodes = cg.iterator();
@@ -140,7 +507,7 @@ public class SetUpAnalysis {
 		while (nodes.hasNext()) {
 			CGNode node = nodes.next();
 			String nodeInfo = node.toString();
-			if (nodeInfo.contains(analysisClass) && nodeInfo.contains(analysisMethod)) {
+			if (nodeInfo.contains(analysisClass) && nodeInfo.contains("phiTest(LTestCases/PublicTests;LTestCases/PublicTests;)LTestCases/PublicTests;")) {
 				target = node;
 				break;
 			}
@@ -153,131 +520,4 @@ public class SetUpAnalysis {
 		}
 	}
 
-	/**
-	 * Here, you need to fill in code to complete the rest of the analysis
-	 * workflow. see project presentation and the write-up for details
-	 */
-
-	public IR getIR(String analysisMethod) {
-		Iterator<CGNode> nodes = cg.iterator();
-		CGNode target = null;
-		while (nodes.hasNext()) {
-			CGNode node = nodes.next();
-			String nodeInfo = node.toString();
-			if (nodeInfo.contains(analysisClass) && nodeInfo.contains(analysisMethod)) {
-				target = node;
-				break;
-			}
-		}
-		if (target != null) {
-			return target.getIR();
-		} else {
-			return null;
-		}
-	}
-
-	public ArrayList<String> getAllCallSites() {
-		ArrayList<String> al = new ArrayList<String>();
-		Iterator<CGNode> nodes = cg.iterator();
-
-		// Printout the nodes in the call-graph
-		while (nodes.hasNext()) {
-			String nodeInfo = nodes.next().toString();
-			if (nodeInfo.contains("Application")) {
-				String[] s = nodeInfo.split("[ ]");
-				if (s[2].contains("Application")) {
-					al.add(s[4]);
-					if (!allcallsites.contains(s[4]))
-						allcallsites.add(s[4]);
-					// System.out.println(s[4]);
-				}
-			}
-			// System.out.println(nodeInfo);
-		}
-		return al;
-	}
-
-	public ArrayList<String> getCallSites(String analysisMethod) {
-		ArrayList<String> callSites = new ArrayList<String>();
-		Iterator<CGNode> nodes = cg.iterator();
-		CGNode target = null;
-		while (nodes.hasNext()) {
-			CGNode node = nodes.next();
-			String nodeInfo = node.toString();
-			if (nodeInfo.contains(analysisClass) && nodeInfo.contains(analysisMethod)) {
-				target = node;
-				break;
-			}
-		}
-		if (target != null) {
-			Iterator<CallSiteReference> m = target.getIR().iterateCallSites();
-			while (m.hasNext()) {
-				CallSiteReference csr = m.next();
-
-				String[] s = csr.getDeclaredTarget().toString().split("[,]");
-				callSites.add(s[2].substring(1, s[2].length() - 2));
-			}
-			return callSites;
-		} else {
-			return null;
-		}
-	}
-
-	public void printIRForAllMethods() {
-		ArrayList<String> al = new ArrayList<String>();
-		// al = getCallSites("name of analysis method here");
-		al = getAllCallSites();
-		if (al == null)
-			return;
-		for (String s : al) {
-			System.out.println(getIR(s).toString());
-		}
-	}
-
-	public void printIRForSomeMethods(String am) {
-		ArrayList<String> al = new ArrayList<String>();
-		al = getCallSites(am);
-		if (al == null)
-			return;
-		for (String s : al) {
-			System.out.println(s);
-		}
-	}
-
-	static ArrayList<String> visited = new ArrayList<String>();
-	static ArrayList<String> callsites = new ArrayList<String>();
-	static ArrayList<String> allcallsites = new ArrayList<String>();
-
-	public void getDirectCallSites(String analysisMethod) {
-		// REMEMBER to use setup.getAllCallSites(); before calling this function
-		if (visited.contains(analysisMethod))
-			return;
-		visited.add(analysisMethod);
-		Iterator<CGNode> nodes = cg.iterator();
-		CGNode target = null;
-		while (nodes.hasNext()) {
-			CGNode node = nodes.next();
-			String nodeInfo = node.toString();
-			if (nodeInfo.contains(analysisClass) && nodeInfo.contains(analysisMethod)) {
-				target = node;
-				break;
-			}
-		}
-		if (target != null) {
-			Iterator<CallSiteReference> m = target.getIR().iterateCallSites();
-			while (m.hasNext()) {
-				CallSiteReference csr = m.next();
-
-				String[] s = csr.getDeclaredTarget().toString().split("[,]");
-				String str = s[2].substring(1, s[2].length() - 2);
-				if (!callsites.contains(str) && allcallsites.contains(str) && !str.equals("<init>()V"))
-					callsites.add(str);
-				// System.out.println(str);
-				getDirectCallSites(str);
-			}
-			return;
-		} else {
-			return;
-		}
-	}
 }
