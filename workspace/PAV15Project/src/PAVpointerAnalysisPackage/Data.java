@@ -162,7 +162,6 @@ public class Data {
 	}
 
 	public void display() {
-		System.out.println("inside display");
 		String s_pointsto = "";
 		if (pp == null)
 			return;
@@ -360,24 +359,24 @@ public class Data {
 	// Method to make a column at a particular program point to be mapped to BOT
 	public void setToBOT(String pPoint, Integer col) {
 		verifyPPAndCol(pPoint, col, "setToBot");
-		
-		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col) ;
-		
+
+		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
+
 		map.clear();
-		map.put("bot", new ArrayList<String>(Arrays.asList("bot"))) ;
-		
-		return ;
+		map.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+
+		return;
 	}
 
 	// This method checks if the COLUMN and a PROGRAM PONIT BOTh exists in DATA
 	private void verifyPPAndCol(String pPoint, Integer col, String methodName) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> newPP = pp.get(pPoint);
-		if ( newPP == null )
+		if (newPP == null)
 			throw new NullPointerException(methodName + ": " + pPoint + " programPoint NOT present");
-		
-		if ( !newPP.containsKey(col) )
+
+		if (!newPP.containsKey(col))
 			throw new NullPointerException(methodName + ": " + pPoint + " column NOT present");
-		
-		return ;
+
+		return;
 	}
 }

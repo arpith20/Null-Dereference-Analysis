@@ -28,6 +28,8 @@ import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
+import com.ibm.wala.shrikeBT.IConditionalBranchInstruction;
+import com.ibm.wala.ssa.DefUse;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSACFG;
@@ -240,10 +242,10 @@ public class SetUpAnalysis {
 
 					// Add the program point to the WORKINGLIST
 					// TODO
-					if (methodName.equals("main"))
+					if (methodName.equals("ifTest")) {
 						workingList.add(pp);
-
-					d.addProgramPoint(pp);
+						d.addProgramPoint(pp);
+					}
 
 					// Add the program point to the hash map containing the set
 					// of all program points present in a particular method
@@ -286,9 +288,9 @@ public class SetUpAnalysis {
 					// Add the direct callSites to the workingList and callSites
 					// if NOT already present
 					if (!callSites.contains(add))
-						callSites.addAll(directSites);
+						callSites.add(add);
 					if (!workingList.contains(add))
-						workingList.addAll(directSites);
+						workingList.add(add);
 				}
 			}
 			// Reduce the size of the workingList
@@ -356,11 +358,10 @@ public class SetUpAnalysis {
 	// Main kildall algorithm. This will do the analysis and will return once
 	// the WORKINGLIST is empty
 	public void kildall() {
-		System.out.println("Working List is:" + workingList);
 		while (!workingList.isEmpty()) {
 			String curPP = workingList.get(0);
 
-			System.out.println("PP:" + curPP);
+			// System.out.println("PP:" + curPP);
 
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
@@ -379,7 +380,7 @@ public class SetUpAnalysis {
 
 			workingList.remove(0);
 		}
-		System.out.println("\n\n");
+		// System.out.println("\n\n");
 		d.display();
 	}
 
@@ -413,8 +414,8 @@ public class SetUpAnalysis {
 				continue;
 
 			// Un-mark the current column
-			d.unmark(pPoint, column) ;
-			
+			d.unmark(pPoint, column);
+
 			// Create a new hashMap and initialize it to the value present at
 			// the current program point. This value will be propagated to the
 			// successors
@@ -422,14 +423,22 @@ public class SetUpAnalysis {
 			propagatedValue = d.retrieve(pPoint, column);
 
 			// Check if the value is BOT. If so, propagate BOT and continue
-			if ( propagatedValue.containsKey("bot"))
-			{
+			if (propagatedValue.containsKey("bot")) {
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					d.setToBOT(succPP,column) ;
+					d.setToBOT(succPP, column);
 				}
-				
-				continue ;
+				continue;
+			}
+
+			// Check if there are no instructions in the basic block. If so,
+			// then propagate the same value to the successors
+			if (srcBB.getAllInstructions().isEmpty()) {
+				for (ISSABasicBlock succ : succBB) {
+					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+					d.propagate(succPP, column, propagatedValue);
+				}
+				continue;
 			}
 
 			// Apply transfer function to the data present in COLUMN for the
@@ -441,11 +450,7 @@ public class SetUpAnalysis {
 				SSAInstruction inst = iSSA.next();
 
 				if (inst instanceof SSANewInstruction) {
-					System.out.println("Before Transfer Function");
-					System.out.println(propagatedValue);
 					newTransferFunction(methodName, (SSANewInstruction) inst, propagatedValue);
-					System.out.println("After Transfer Function");
-					System.out.println(propagatedValue);
 				} else if (inst instanceof SSAInvokeInstruction)
 					callTransferFunction();
 				else if (inst instanceof SSAPhiInstruction)
@@ -453,7 +458,7 @@ public class SetUpAnalysis {
 				else if (inst instanceof SSAReturnInstruction)
 					returnTransferFunction();
 				else if (inst instanceof SSAConditionalBranchInstruction)
-					branchTransferFunction();
+					branchTransferFunction(methodName, (SSAConditionalBranchInstruction) inst, propagatedValue);
 
 				// Iterate over the successor basicBlocks to JOIN the
 				// propagatedValue
@@ -497,7 +502,24 @@ public class SetUpAnalysis {
 
 	}
 
-	public void branchTransferFunction() {
+	public void branchTransferFunction(String methodName, SSAConditionalBranchInstruction inst,
+			HashMap<String, ArrayList<String>> propagatedValue) {
+		int var1 = inst.getUse(0);
+		int var2 = inst.getUse(1);
 
+		DefUse defUse = target.getDU() ;
+		SSAInstruction def1 = defUse.getDef(var1) ;
+		SSAInstruction def2 = defUse.getDef(var2);
+		
+		System.out.println(inst.toString());
+		System.out.println(inst.getUse(0) + " " + inst.getUse(1));
+		String op = inst.getOperator().toString();
+		System.out.println(op);
+
+		System.out.println(def1 + " " + def2);
+		Boolean a = target.getIR().getSymbolTable().isNullConstant(var2);
+
+		// System.out.println(inst.getUse(0) + " " + inst.getUse(1));
+		// System.out.println("Cond:" + inst.toString());
 	}
 }
