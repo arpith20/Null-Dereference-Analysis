@@ -302,7 +302,7 @@ public class Data {
 		if (al_col1 != null) {
 			HashMap<String, ArrayList<String>> h = al_col1.get(col);
 			if (h != null) {
-				return h;
+				return new HashMap<String, ArrayList<String>>(h);
 			}
 		}
 		return null;

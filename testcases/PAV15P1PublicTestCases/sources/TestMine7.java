@@ -49,4 +49,5 @@ public class SampleTests {
 		foo(10);
 		bar(null);
 	}
+
 }

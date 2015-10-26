@@ -94,7 +94,7 @@ public class NullDereference {
 		d.add("1", 0, "1", "2");
 		d.add("1", 0, "1", "3");
 		d.display();
-		d.checkAllColumnsUnmarked("BB#");
+		//d.checkAllColumnsUnmarked("BB#");
 		//d.contains(pp1, col1, pp2, col2)
 		System.out.println(d.contains("1",0, "0",0));
 		HashMap<String, ArrayList<Integer>> hm = new HashMap<String, ArrayList<Integer>>();
