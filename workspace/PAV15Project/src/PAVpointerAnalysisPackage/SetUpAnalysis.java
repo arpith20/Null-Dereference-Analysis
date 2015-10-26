@@ -242,7 +242,7 @@ public class SetUpAnalysis {
 					// TODO
 					if (methodName.equals("main"))
 						workingList.add(pp);
-					
+
 					d.addProgramPoint(pp);
 
 					// Add the program point to the hash map containing the set
@@ -412,11 +412,25 @@ public class SetUpAnalysis {
 			if (mark == false)
 				continue;
 
+			// Un-mark the current column
+			d.unmark(pPoint, column) ;
+			
 			// Create a new hashMap and initialize it to the value present at
 			// the current program point. This value will be propagated to the
 			// successors
 			HashMap<String, ArrayList<String>> propagatedValue = new HashMap<String, ArrayList<String>>();
 			propagatedValue = d.retrieve(pPoint, column);
+
+			// Check if the value is BOT. If so, propagate BOT and continue
+			if ( propagatedValue.containsKey("bot"))
+			{
+				for (ISSABasicBlock succ : succBB) {
+					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+					d.setToBOT(succPP,column) ;
+				}
+				
+				continue ;
+			}
 
 			// Apply transfer function to the data present in COLUMN for the
 			// instructions in the basicBlock
@@ -445,11 +459,10 @@ public class SetUpAnalysis {
 				// propagatedValue
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					d.join(succPP, column, propagatedValue);
+					d.propagate(succPP, column, propagatedValue);
 				}
 			}
 		}
-
 	}
 
 	public void newTransferFunction(String methodName, SSANewInstruction inst,

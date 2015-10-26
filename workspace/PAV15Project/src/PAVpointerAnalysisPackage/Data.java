@@ -1,6 +1,7 @@
 package PAVpointerAnalysisPackage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -243,7 +244,7 @@ public class Data {
 		return true;
 	}
 
-	public void join(String ppoint, Integer col, HashMap<String, ArrayList<String>> h) {
+	public void propagate(String ppoint, Integer col, HashMap<String, ArrayList<String>> h) {
 		if (h != null) {
 			for (Map.Entry<String, ArrayList<String>> entry : h.entrySet()) {
 				String var = entry.getKey();
@@ -354,5 +355,29 @@ public class Data {
 		} else {
 			throw new NullPointerException("addProgramPoint: " + pPoint + "programPoint already present");
 		}
+	}
+
+	// Method to make a column at a particular program point to be mapped to BOT
+	public void setToBOT(String pPoint, Integer col) {
+		verifyPPAndCol(pPoint, col, "setToBot");
+		
+		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col) ;
+		
+		map.clear();
+		map.put("bot", new ArrayList<String>(Arrays.asList("bot"))) ;
+		
+		return ;
+	}
+
+	// This method checks if the COLUMN and a PROGRAM PONIT BOTh exists in DATA
+	private void verifyPPAndCol(String pPoint, Integer col, String methodName) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> newPP = pp.get(pPoint);
+		if ( newPP == null )
+			throw new NullPointerException(methodName + ": " + pPoint + " programPoint NOT present");
+		
+		if ( !newPP.containsKey(col) )
+			throw new NullPointerException(methodName + ": " + pPoint + " column NOT present");
+		
+		return ;
 	}
 }
