@@ -459,7 +459,7 @@ public class SetUpAnalysis {
 				} else if (inst instanceof SSAInvokeInstruction)
 					callTransferFunction();
 				else if (inst instanceof SSAPhiInstruction) {
-					phiTransferFunction();
+					phiTransferFunction(pPoint, column, (SSAPhiInstruction) inst, propagatedValue);
 				} else if (inst instanceof SSAReturnInstruction)
 					returnTransferFunction();
 				else if (inst instanceof SSAConditionalBranchInstruction) {
@@ -517,8 +517,68 @@ public class SetUpAnalysis {
 
 	}
 
-	public void phiTransferFunction() {
+	public void phiTransferFunction(String pPoint, Integer column, SSAPhiInstruction inst,
+			HashMap<String, ArrayList<String>> toPropagate) {
 
+		String methodName = pPoint.split("[.]")[0];
+		Integer currentBlockNumber = Integer.parseInt(pPoint.split("[.]")[2]);
+
+		CGNode node = hashGlobalMethods.get(methodName);
+		SSACFG cfg = node.getIR().getControlFlowGraph();
+
+		ISSABasicBlock bb = cfg.getBasicBlock(currentBlockNumber);
+
+		Iterator<ISSABasicBlock> predNodes = cfg.getPredNodes(bb);
+
+		Collection<ISSABasicBlock> succNodes = cfg.getNormalSuccessors(bb);
+		if (succNodes.size() > 1)
+			throw new NullPointerException("The number of successors is assumed to be one");
+
+		ArrayList<Integer> predBBNumbers = new ArrayList<Integer>();
+		while (predNodes.hasNext()) {
+			ISSABasicBlock pred_bb = predNodes.next();
+			predBBNumbers.add(pred_bb.getNumber());
+		}
+
+		for (int i = 0; i < inst.getNumberOfUses(); i++) {
+			String pp_pred = "";
+
+			int var_rhs = inst.getUse(i);
+			int var_lhs = inst.getDef();
+			pp_pred = methodName + "." + predBBNumbers.get(i) + "." + currentBlockNumber;
+
+			ArrayList<String> valuesInVar_rhs = d.retrieve(pp_pred, column, var_rhs + "");
+			if (valuesInVar_rhs != null) {
+				for (String value : valuesInVar_rhs) {
+					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs);
+					if (al_var_lhs == null) {
+						ArrayList<String> temp = new ArrayList<String>();
+						temp.add(value);
+						toPropagate.put(var_lhs + "", temp);
+					} else {
+						if (!al_var_lhs.contains(value))
+							al_var_lhs.add(value);
+					}
+				}
+			} else {
+				// check for null constants
+				String null_constant = "v" + var_rhs + ":#null";
+				if (inst.toString().contains(null_constant)) {
+					// add var_lhs -> null mapping
+					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs);
+					if (al_var_lhs == null) {
+						ArrayList<String> temp = new ArrayList<String>();
+						temp.add("null");
+						toPropagate.put(var_lhs + "", temp);
+					} else {
+						if (!al_var_lhs.contains("null"))
+							al_var_lhs.add("null");
+					}
+				}
+			}
+		}
+
+		predBBNumbers.clear();
 	}
 
 	public void returnTransferFunction() {
