@@ -243,7 +243,7 @@ public class SetUpAnalysis {
 
 					// Add the program point to the WORKINGLIST
 					// TODO
-					if (methodName.equals("phiTest")) {
+					if (methodName.equals("loopTest")) {
 						workingList.add(pp);
 						d.addProgramPoint(pp);
 					}
@@ -456,7 +456,7 @@ public class SetUpAnalysis {
 					callTransferFunction();
 				else if (inst instanceof SSAPhiInstruction) {
 					System.out.println("this: " + inst.toString() + "");
-					phiTransferFunction(pPoint, column, (SSAPhiInstruction) inst);
+					phiTransferFunction(pPoint, column, (SSAPhiInstruction) inst, propagatedValue);
 				}
 
 				else if (inst instanceof SSAReturnInstruction)
@@ -513,7 +513,8 @@ public class SetUpAnalysis {
 
 	}
 
-	public void phiTransferFunction(String pPoint, int column, SSAPhiInstruction inst) {
+	public void phiTransferFunction_old(String pPoint, int column, SSAPhiInstruction inst,
+			HashMap<String, ArrayList<String>> toPropagate) {
 
 		// used to keep track of the bot values of predecessors
 		// this will remain false if all predecessors are bot
@@ -556,24 +557,92 @@ public class SetUpAnalysis {
 			pp_succ = methodName + "." + currentBlockNumber + "." + bb_successor.getNumber();
 
 			// Do not erase
-			// System.out.println("-----");
-			// System.out.println(pp_pred);
-			// System.out.println("v" + var_rhs + " of predBB" +
-			// predBBNumbers.get(i) + " goes into v" + var_lhs);
-			// System.out.println(pp_succ);
-			// System.out.println(">>>>>>");
+			System.out.println("-----");
+			System.out.println(pp_pred);
+			System.out.println("v" + var_rhs + " of predBB" + predBBNumbers.get(i) + " goes into v" + var_lhs);
+			System.out.println(pp_succ);
+			System.out.println(">>>>>>");
 
-			// TODO check whether the following logic is correct
 			ArrayList<String> valuesInVar_rhs = d.retrieve(pp_pred, column, var_rhs + "");
 			if (valuesInVar_rhs != null) {
 				for (String value : valuesInVar_rhs) {
 					d.add(pp_succ, column, var_lhs + "", value);
 				}
+			} else {
+				String temp = "v" + var_lhs + ":#null";
+				if (inst.toString().contains(temp))
+					d.add(pp_succ, column, var_lhs + "", "null");
 			}
 			if ((!d.retrieve(pp_pred, column).containsKey("bot"))
 					|| ((i == inst.getNumberOfUses() - 1) && (flag == false))) {
 				d.join(pp_succ, column, pp_pred, column);
 				flag = true;
+			}
+		}
+
+		predBBNumbers.clear();
+	}
+
+	public void phiTransferFunction(String pPoint, int column, SSAPhiInstruction inst,
+			HashMap<String, ArrayList<String>> toPropagate) {
+
+		String methodName = pPoint.split("[.]")[0];
+		Integer currentBlockNumber = Integer.parseInt(pPoint.split("[.]")[2]);
+
+		CGNode node = hashGlobalMethods.get(methodName);
+		SSACFG cfg = node.getIR().getControlFlowGraph();
+
+		ISSABasicBlock bb = cfg.getBasicBlock(currentBlockNumber);
+		ISSABasicBlock bb_successor = cfg.getBasicBlock(currentBlockNumber);
+
+		Iterator<ISSABasicBlock> predNodes = cfg.getPredNodes(bb);
+
+		Collection<ISSABasicBlock> succNodes = cfg.getNormalSuccessors(bb);
+		if (succNodes.size() > 1)
+			throw new NullPointerException("The number of successors is assumed to be one");
+		for (ISSABasicBlock b : succNodes) {
+			bb_successor = b;
+		}
+
+		ArrayList<Integer> predBBNumbers = new ArrayList<Integer>();
+		while (predNodes.hasNext()) {
+			ISSABasicBlock pred_bb = predNodes.next();
+			predBBNumbers.add(pred_bb.getNumber());
+		}
+
+		for (int i = 0; i < inst.getNumberOfUses(); i++) {
+			String pp_pred = "";
+
+			int var_rhs = inst.getUse(i);
+			int var_lhs = inst.getDef();
+			pp_pred = methodName + "." + predBBNumbers.get(i) + "." + currentBlockNumber;
+
+			ArrayList<String> valuesInVar_rhs = d.retrieve(pp_pred, column, var_rhs + "");
+			if (valuesInVar_rhs != null) {
+				for (String value : valuesInVar_rhs) {
+					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs);
+					if (al_var_lhs == null) {
+						ArrayList<String> temp = new ArrayList<String>();
+						temp.add(value);
+						toPropagate.put(var_lhs + "", temp);
+					} else {
+						al_var_lhs.add(value);
+					}
+				}
+			} else {
+				// check for null constants
+				String null_constant = "v" + var_rhs + ":#null";
+				if (inst.toString().contains(null_constant)) {
+					// add var_lhs -> null mapping
+					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs);
+					if (al_var_lhs == null) {
+						ArrayList<String> temp = new ArrayList<String>();
+						temp.add("null");
+						toPropagate.put(var_lhs + "", temp);
+					} else {
+						al_var_lhs.add("null");
+					}
+				}
 			}
 		}
 
