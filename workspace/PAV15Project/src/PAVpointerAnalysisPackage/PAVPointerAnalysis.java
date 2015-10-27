@@ -92,11 +92,11 @@ public class PAVPointerAnalysis {
 		//n.entry();
 		
 		setup.init() ;
-		//setup.getProgramPoints();
+		setup.getProgramPoints();
 		
-		//setup.setD0() ;
+		setup.setD0() ;
 		
-		//setup.kildall();
+		setup.kildall();
 		ArrayList<CGNode> cg = setup.getTransitiveCallSites();
 		for(CGNode c : cg){
 			System.out.println(c.toString());
