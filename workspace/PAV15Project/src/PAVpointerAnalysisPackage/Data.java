@@ -155,7 +155,6 @@ public class Data {
 	}
 
 	public void display() {
-		System.out.println("inside display");
 		String s_pointsto = "";
 		if (pp == null)
 			throw new NullPointerException("How is this even possible?");
@@ -323,29 +322,29 @@ public class Data {
 		}
 	}
 
-	public ArrayList<String> retrieve(String pp1, Integer col, String var) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
-		if (al_col1 != null) {
-			HashMap<String, ArrayList<String>> h = al_col1.get(col);
-			if (h != null) {
-				ArrayList<String> a = h.get(var);
-				// for(String s: a)
-				// System.out.println(s);
-				return a;
-			}
-		}
-		return null;
+	// Retrieves the pointsTo set of the variable VAR under the column COL at
+	// the
+	// program point PPOINT
+	// If the pointsTo set is empty, return NULL
+	// Else, return a COPY of the ArrayList
+	public ArrayList<String> retrieve(String pPoint, Integer col, String var) {
+		verifyPPAndCol(pPoint, col, "retrieve ArrayList");
+
+		// Check if the pointsTo set of VAR is empty
+		ArrayList<String> map = pp.get(pPoint).get(col).get(var);
+		if (map == null)
+			return null;
+		else
+			return new ArrayList<String>(pp.get(pPoint).get(col).get(var));
 	}
 
-	public HashMap<String, ArrayList<String>> retrieve(String pp1, Integer col) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
-		if (al_col1 != null) {
-			HashMap<String, ArrayList<String>> h = al_col1.get(col);
-			if (h != null) {
-				return new HashMap<String, ArrayList<String>>(h);
-			}
-		}
-		return null;
+	// Retrieves the mappings of all the variables under the column COL at the
+	// program point PPOINT
+	// This is a COPY of the HashMap
+	public HashMap<String, ArrayList<String>> retrieve(String pPoint, Integer col) {
+		verifyPPAndCol(pPoint, col, "retrieve HashMap");
+
+		return new HashMap<String, ArrayList<String>>(pp.get(pPoint).get(col));
 	}
 
 	public HashMap<Integer, Boolean> getColumnMarkings(String pPoint) {
@@ -409,22 +408,21 @@ public class Data {
 
 	public void displayProgramPoint(String pPoint, Integer col) {
 		verifyPPAndCol(pPoint, col, "displayProgramPoint");
-		
+
 		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
-		displayMap(map) ;
+		displayMap(map);
 	}
-	
-	public void displayMap ( HashMap<String,ArrayList<String>> map )
-	{
-		if ( map == null )
+
+	public void displayMap(HashMap<String, ArrayList<String>> map) {
+		if (map == null)
 			throw new NullPointerException("In DISPLAYMAP, map is null");
-		
+
 		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
 			String var = entry.getKey();
 			ArrayList<String> pointsto = entry.getValue();
-			System.out.print(var + " -> { " );
+			System.out.print(var + " -> { ");
 			for (String pt : pointsto) {
-				System.out.print(pt+", ");
+				System.out.print(pt + ", ");
 			}
 			System.out.print(" }\n");
 		}
