@@ -593,16 +593,12 @@ public class SetUpAnalysis {
 		SSACFG cfg = node.getIR().getControlFlowGraph();
 
 		ISSABasicBlock bb = cfg.getBasicBlock(currentBlockNumber);
-		ISSABasicBlock bb_successor = cfg.getBasicBlock(currentBlockNumber);
 
 		Iterator<ISSABasicBlock> predNodes = cfg.getPredNodes(bb);
 
 		Collection<ISSABasicBlock> succNodes = cfg.getNormalSuccessors(bb);
 		if (succNodes.size() > 1)
 			throw new NullPointerException("The number of successors is assumed to be one");
-		for (ISSABasicBlock b : succNodes) {
-			bb_successor = b;
-		}
 
 		ArrayList<Integer> predBBNumbers = new ArrayList<Integer>();
 		while (predNodes.hasNext()) {
@@ -626,7 +622,8 @@ public class SetUpAnalysis {
 						temp.add(value);
 						toPropagate.put(var_lhs + "", temp);
 					} else {
-						al_var_lhs.add(value);
+						if (!al_var_lhs.contains(value))
+							al_var_lhs.add(value);
 					}
 				}
 			} else {
@@ -640,7 +637,8 @@ public class SetUpAnalysis {
 						temp.add("null");
 						toPropagate.put(var_lhs + "", temp);
 					} else {
-						al_var_lhs.add("null");
+						if (!al_var_lhs.contains("null"))
+							al_var_lhs.add("null");
 					}
 				}
 			}
