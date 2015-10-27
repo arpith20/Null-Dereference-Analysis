@@ -424,13 +424,13 @@ public class SetUpAnalysis {
 			propagatedValue = d.retrieve(pPoint, column);
 
 			// Check if the value is BOT. If so, propagate BOT and continue
-			if (propagatedValue.containsKey("bot")) {
-				System.out.println("In BOT");
+			if (d.isBOT(pPoint, column)) {
+				// System.out.println("In BOT");
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
 					d.propagate(succPP, column, propagatedValue);
-					System.out.println(succPP + ":");
-					d.displayProgramPoint(succPP, column);
+					// System.out.println(succPP + ":");
+					// d.displayProgramPoint(succPP, column);
 				}
 				continue;
 			}
@@ -559,7 +559,7 @@ public class SetUpAnalysis {
 			// Add this NULL Constant into the propagated value
 			propagatedValue.put(var2Str, new ArrayList<String>(Arrays.asList("null")));
 		}
-		System.out.println(inst.toString());
+		// System.out.println(inst.toString());
 
 		HashMap<String, ArrayList<String>> trueBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
 		HashMap<String, ArrayList<String>> falseBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
@@ -567,7 +567,7 @@ public class SetUpAnalysis {
 		// Check if it is an object comparison. If TRUE, then Deterministic IF,
 		// else Non-Deterministic IF
 		if (inst.isObjectComparison()) {
-			System.out.println(propagatedValue);
+			// System.out.println(propagatedValue);
 			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
 			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
 
@@ -588,31 +588,33 @@ public class SetUpAnalysis {
 				if (succ != trueBB)
 					falseBB = succ;
 			}
-			
+
 			String trueSuccPP = methodName + "." + srcBB.getNumber() + "." + trueBB.getNumber();
 			String falseSuccPP = methodName + "." + srcBB.getNumber() + "." + falseBB.getNumber();
 
-			System.out.println("Before singleton");
+			// System.out.println("Before singleton");
 			// When the pointsTo set is singleton
 			if (v1PointsTo.size() == 1 && v2PointsTo.size() == 1) {
-				System.out.println("both are single");
+				// System.out.println("both are single");
 				boolean contains = propagatedValue.get(var1Str).containsAll(propagatedValue.get(var2Str));
 
 				// Check if the condition is satisfied
-				System.out.println(contains);
+				// System.out.println(contains);
 				if (((op.equals("ne") && contains == false)) || (op.equals("eq") && contains == true)) {
 					// Condition is satisfied
 					// Set false branch to BOT
-//					falseBranch.clear();
-//					falseBranch.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+					// falseBranch.clear();
+					// falseBranch.put("bot", new
+					// ArrayList<String>(Arrays.asList("bot")));
 					d.setToBOT(falseSuccPP, column);
 					d.propagate(trueSuccPP, column, trueBranch);
 				} else {
-					System.out.println("In true");
+					// System.out.println("In true");
 					// Condition failed
 					// Set true branch to BOT
-//					trueBranch.clear();
-//					trueBranch.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+					// trueBranch.clear();
+					// trueBranch.put("bot", new
+					// ArrayList<String>(Arrays.asList("bot")));
 					// System.out.println(trueBranch);
 					d.setToBOT(trueSuccPP, column);
 					d.propagate(falseSuccPP, column, falseBranch);
@@ -629,8 +631,9 @@ public class SetUpAnalysis {
 
 					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
 					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
-//						falseBranch.clear();
-//						falseBranch.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+						// falseBranch.clear();
+						// falseBranch.put("bot", new
+						// ArrayList<String>(Arrays.asList("bot")));
 						d.setToBOT(falseSuccPP, column);
 						d.propagate(trueSuccPP, column, trueBranch);
 					} else
@@ -644,8 +647,9 @@ public class SetUpAnalysis {
 
 					// Check if the INTERSECTION is NULL. If TRUE, make it BOT
 					if (trueBranch.get(var1Str).size() == 0 && trueBranch.get(var2Str).size() == 0) {
-//						trueBranch.clear();
-//						trueBranch.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+						// trueBranch.clear();
+						// trueBranch.put("bot", new
+						// ArrayList<String>(Arrays.asList("bot")));
 						d.setToBOT(trueSuccPP, column);
 						d.propagate(falseSuccPP, column, falseBranch);
 					} else
@@ -654,20 +658,22 @@ public class SetUpAnalysis {
 				}
 			}
 
-//			// Propagate to TRUE and FALSE branches
-//			String succPP = methodName + "." + srcBB.getNumber() + "." + trueBB.getNumber();
-//			d.propagate(succPP, column, trueBranch);
-//			d.displayProgramPoint(succPP, column);
-//
-//			succPP = methodName + "." + srcBB.getNumber() + "." + falseBB.getNumber();
-//			d.propagate(succPP, column, falseBranch);
+			// // Propagate to TRUE and FALSE branches
+			// String succPP = methodName + "." + srcBB.getNumber() + "." +
+			// trueBB.getNumber();
+			// d.propagate(succPP, column, trueBranch);
+			// d.displayProgramPoint(succPP, column);
+			//
+			// succPP = methodName + "." + srcBB.getNumber() + "." +
+			// falseBB.getNumber();
+			// d.propagate(succPP, column, falseBranch);
 		} else {
 			for (ISSABasicBlock succ : succBB) {
 				String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
 				d.propagate(succPP, column, propagatedValue);
 			}
 		}
-		
+
 		return;
 	}
 }
