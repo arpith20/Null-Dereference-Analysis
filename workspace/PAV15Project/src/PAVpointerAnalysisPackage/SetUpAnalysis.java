@@ -52,6 +52,18 @@ import com.ibm.wala.ssa.analysis.ExplodedControlFlowGraph;
 
 public class SetUpAnalysis {
 
+	class callSitePair {
+		public String ppoint;
+		public Integer col;
+
+		public callSitePair(String a, int b) {
+			this.ppoint = a;
+			this.col = b;
+		}
+	}
+
+	Deque<callSitePair> stack = new ArrayDeque<callSitePair>();
+
 	private String classpath;
 	private String mainClass;
 	private String analysisClass;
@@ -459,9 +471,11 @@ public class SetUpAnalysis {
 					phiTransferFunction(pPoint, column, (SSAPhiInstruction) inst, propagatedValue);
 				}
 
-				else if (inst instanceof SSAReturnInstruction)
-					returnTransferFunction();
-				else if (inst instanceof SSAConditionalBranchInstruction)
+				else if (inst instanceof SSAReturnInstruction) {
+					System.out.println("Returrrrrrrrrrrrrrrrrrrn");
+					System.out.println(inst);
+					returnTransferFunction(pPoint, (SSAReturnInstruction) inst, propagatedValue);
+				} else if (inst instanceof SSAConditionalBranchInstruction)
 					branchTransferFunction(methodName, (SSAConditionalBranchInstruction) inst, propagatedValue);
 			}
 		}
@@ -647,7 +661,19 @@ public class SetUpAnalysis {
 		predBBNumbers.clear();
 	}
 
-	public void returnTransferFunction() {
+	public void returnTransferFunction(String pPoint, SSAReturnInstruction inst,
+			HashMap<String, ArrayList<String>> propagatedValue) {
+		String callSitePP;
+		Integer callSitecol;
+
+		callSitePair callSite = stack.pop();
+		if (callSite == null)
+			throw new NoSuchElementException("Error in return transfer finction. Check your stack contents");
+		callSitePP = callSite.ppoint;
+		callSitecol = callSite.col;
+
+		// TODO check
+		propagatedValue = returnTransferFunctionHelper(callSitePP, callSitecol, pPoint);
 
 	}
 
@@ -693,6 +719,34 @@ public class SetUpAnalysis {
 			if (nodeInfo.contains("Application"))
 				System.out.println(nodeInfo);
 		}
+	}
+
+	public HashMap<String, ArrayList<String>> returnTransferFunctionHelper(String callSitePP, Integer callSitecol,
+			String pPoint) {
+		// following stores the column number where the hash maps match.
+		Integer col = null;
+
+		String methodName = pPoint.split("[.]")[0];
+		String toCheckPP = methodName + ".0.1";
+
+		// we need to do this because we don't know the number of columns at the
+		// program point (toCheckPP)
+		HashMap<Integer, HashMap<String, ArrayList<String>>> methodName_FirstPP = d.retrieve(toCheckPP);
+		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : methodName_FirstPP.entrySet()) {
+			Integer col_temp = entry.getKey();
+			if (d.equals(callSitePP, callSitecol, toCheckPP, col_temp)) {
+				col = col_temp;
+				break;
+			}
+		}
+
+		if (col == null) {
+			// TODO valid assumption?
+			throw new NullPointerException("No matching columns found");
+		}
+		if (col != null)
+			return d.retrieve(pPoint, col);
+		return null;
 	}
 
 	/**

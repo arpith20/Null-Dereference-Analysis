@@ -347,6 +347,12 @@ public class Data {
 
 		return new HashMap<String, ArrayList<String>>(pp.get(pPoint).get(col));
 	}
+	
+	// Retrieves the mappings of all the columns under the program point pPoint
+	// This is a COPY of the HashMap
+	public HashMap<Integer, HashMap<String, ArrayList<String>>> retrieve(String pPoint) {
+		return new HashMap<Integer, HashMap<String, ArrayList<String>>> (pp.get(pPoint));
+	}
 
 	public HashMap<Integer, Boolean> getColumnMarkings(String pPoint) {
 		if (marked.get(pPoint) != null)
@@ -428,4 +434,33 @@ public class Data {
 			System.out.print(" }\n");
 		}
 	}
+	
+	// Returns TRUE if a particular column under a program point is BOT
+		public boolean isBOT(String pPoint, Integer col) {
+			verifyPPAndCol(pPoint, col, "isBOT");
+
+			HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
+			if (map.size() != 1)
+				return false;
+
+			ArrayList<String> pointsTo = map.get("bot");
+			if (pointsTo == null)
+				return false;
+			return true;
+		}
+
+		// Returns TRUE if a particular column under a program point is NOT mapped
+		// to anything
+		public boolean isNullMap(String pPoint, Integer col) {
+			verifyPPAndCol(pPoint, col, "isNullMap");
+
+			HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
+			if (map.size() != 1)
+				return false;
+
+			ArrayList<String> pointsTo = map.get("");
+			if (pointsTo == null)
+				return false;
+			return true;
+		}
 }

@@ -70,8 +70,8 @@ public class PAVPointerAnalysis {
 		 * will compute the call graph for the given program, and print out the
 		 * nodes. Feel free to erase this call, or use it otherwise.
 		 */
-		setup.printNodes();
-		setup.printIR();
+		//setup.printNodes();
+		//setup.printIR();
 
 		/*
 		 * Create appropriate objects/make appropriate function calls here to
