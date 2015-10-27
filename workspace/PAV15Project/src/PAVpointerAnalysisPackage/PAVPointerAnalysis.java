@@ -63,11 +63,11 @@ public class PAVPointerAnalysis {
 		setup.generateCallGraph();
 		// END: NO CHANGE REGION
 
-		setup.init() ;
+		setup.init();
 		setup.getProgramPoints();
-		
-		setup.setD0() ;
-		
+
+		setup.setD0();
+
 		setup.kildall();
 	}
 

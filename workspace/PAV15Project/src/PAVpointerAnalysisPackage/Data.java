@@ -144,14 +144,28 @@ public class Data {
 		} else {
 			if (!al_pointsto.contains(pointsTo)) {
 				al_pointsto.add(pointsTo);
-
-				// Why SORT? TODO
-				// sort(al_pointsto);
-
 				return true;
 			} else
 				return false;
 		}
+	}
+
+	public void copyEntireMap(String pPoint, Integer col, HashMap<String, ArrayList<String>> map) {
+		verifyPPAndCol(pPoint, col, "copyEntireMap");
+		
+		HashMap<String, ArrayList<String>> originalMap = pp.get(pPoint).get(col);
+		if ( originalMap == null )
+		{
+			// No Mapping exists. Create mapping for the first time
+			originalMap = new HashMap<String, ArrayList<String>>(map) ;
+		}
+		else
+		{
+			// Clear the old HashMap and copy the new one
+			originalMap.clear();
+			originalMap.putAll(map);
+		}
+		return ;
 	}
 
 	public void display() {
@@ -249,36 +263,27 @@ public class Data {
 		return true;
 	}
 
-	// This will propagate the the hashMap MAP to the column COL at the program
-	// point PPOINT
-	// If MAP is BOT: If no mappings are there at PPOINT under COL, then set it
-	// to BOT
-	// Else, DO NOT change the mappings already present
-	public Boolean propagate(String pPoint, Integer col, HashMap<String, ArrayList<String>> map) {
-		verifyPPAndCol(pPoint, col, "propagate");
+	public Boolean propagate(String ppoint, Integer col, HashMap<String, ArrayList<String>> h) {
 
 		Boolean flag = false;
-		if (map.size() == 1 && map.containsKey("bot")) {
-
-			// Check if the COL under PPOINT is NULL
-			if (isNullMap(pPoint, col)) {
-				setToBOT(pPoint, col);
-				mark(pPoint, col);
-				return true;
+		if (h != null) {
+			if (h.containsKey("bot")) {
+				return true; // TODO
 			}
-		}
-
-		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
-			String var = entry.getKey();
-			ArrayList<String> pointsto = entry.getValue();
-			for (String pt : pointsto) {
-				if (add(pPoint, col, var, pt)) {
-					mark(pPoint, col);
-					flag = true;
+			for (Map.Entry<String, ArrayList<String>> entry : h.entrySet()) {
+				String var = entry.getKey();
+				ArrayList<String> pointsto = entry.getValue();
+				for (String pt : pointsto) {
+					if (add(ppoint, col, var, pt)) {
+						mark(ppoint, col);
+						flag = true;
+					}
 				}
 			}
+			return flag;
+		} else {
+			throw new NullPointerException("H is null here");
 		}
-		return flag;
 	}
 
 	// pp1 = pp1 union pp2
@@ -354,6 +359,12 @@ public class Data {
 		verifyPPAndCol(pPoint, col, "retrieve HashMap");
 
 		return new HashMap<String, ArrayList<String>>(pp.get(pPoint).get(col));
+	}
+
+	// Retrieves the mappings of all the columns under the program point pPoint
+	// This is a COPY of the HashMap
+	public HashMap<Integer, HashMap<String, ArrayList<String>>> retrieve(String pPoint) {
+		return new HashMap<Integer, HashMap<String, ArrayList<String>>>(pp.get(pPoint));
 	}
 
 	public HashMap<Integer, Boolean> getColumnMarkings(String pPoint) {
@@ -466,4 +477,25 @@ public class Data {
 		return true;
 	}
 
+	public boolean columnMapExists(String pPoint, HashMap<String, ArrayList<String>> map) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> columnMap = pp.get(pPoint);
+		if (pp == null)
+			throw new NullPointerException("columnMapExists: " + pPoint + " programPoint NOT present");
+
+		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : columnMap.entrySet()) {
+			HashMap<String, ArrayList<String>> pointsToMap = entry.getValue();
+
+			if (pointsToMap.equals(map))
+				return true;
+		}
+		return false;
+	}
+
+	public int getNewColumnNum(String pPoint) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> columnMap = pp.get(pPoint);
+		if (pp == null)
+			throw new NullPointerException("getNewColumnNum: " + pPoint + " programPoint NOT present");
+
+		return columnMap.size();
+	}
 }
