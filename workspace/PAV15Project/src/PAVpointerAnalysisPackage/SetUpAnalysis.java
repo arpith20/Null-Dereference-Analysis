@@ -343,7 +343,8 @@ public class SetUpAnalysis {
 		openColumnsDriver(methodName, 0);
 
 		// Add D0 to DATA
-		d.add(pp, 0, "", "");
+		// TODO. REMOVE THIS
+		d.add(pp, 0, "2", "null");
 
 		return;
 	}
@@ -361,7 +362,7 @@ public class SetUpAnalysis {
 		while (!workingList.isEmpty()) {
 			String curPP = workingList.get(0);
 
-			// System.out.println("PP:" + curPP);
+			System.out.println("PP:" + curPP);
 
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
@@ -424,9 +425,12 @@ public class SetUpAnalysis {
 
 			// Check if the value is BOT. If so, propagate BOT and continue
 			if (propagatedValue.containsKey("bot")) {
+				System.out.println("In BOT");
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					d.setToBOT(succPP, column);
+					d.propagate(succPP, column, propagatedValue);
+					System.out.println(succPP + ":");
+					d.displayProgramPoint(succPP, column);
 				}
 				continue;
 			}
@@ -445,7 +449,8 @@ public class SetUpAnalysis {
 			// instructions in the basicBlock
 			// The output will be a new HashMap<String,ArrayList<String>>. This
 			// value will be propagated to the successors
-			Iterator<SSAInstruction> iSSA = srcBB.iterateNormalInstructions();
+			boolean condStmt = false;
+			Iterator<SSAInstruction> iSSA = srcBB.iterator();
 			while (iSSA.hasNext()) {
 				SSAInstruction inst = iSSA.next();
 
@@ -453,14 +458,26 @@ public class SetUpAnalysis {
 					newTransferFunction(pPoint, column, (SSANewInstruction) inst, propagatedValue);
 				} else if (inst instanceof SSAInvokeInstruction)
 					callTransferFunction();
-				else if (inst instanceof SSAPhiInstruction)
+				else if (inst instanceof SSAPhiInstruction) {
 					phiTransferFunction();
-				else if (inst instanceof SSAReturnInstruction)
+				} else if (inst instanceof SSAReturnInstruction)
 					returnTransferFunction();
-				else if (inst instanceof SSAConditionalBranchInstruction)
-					branchTransferFunction(methodName, (SSAConditionalBranchInstruction) inst, propagatedValue);
+				else if (inst instanceof SSAConditionalBranchInstruction) {
+					branchTransferFunction(pPoint, column, (SSAConditionalBranchInstruction) inst, propagatedValue);
+					condStmt = true;
+					break;
+				}
+			}
+			if (!condStmt) {
+				// Iterate over the successor basicBlocks to JOIN the
+				// propagatedValue
+				for (ISSABasicBlock succ : succBB) {
+					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+					d.propagate(succPP, column, propagatedValue);
+				}
 			}
 		}
+		return;
 	}
 
 	public void newTransferFunction(String pPoint, int column, SSANewInstruction inst,
@@ -493,15 +510,6 @@ public class SetUpAnalysis {
 		// Get the list of all the successor basicBlocks
 		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
-		// Iterate over the successor basicBlocks to JOIN the
-		// propagatedValue
-		System.out.println("before propagate" + propagatedValue);
-		for (ISSABasicBlock succ : succBB) {
-			String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-			d.propagate(succPP, column, propagatedValue);
-			d.displayProgramPoint(succPP,column) ;
-		}
-
 		return;
 	}
 
@@ -517,35 +525,149 @@ public class SetUpAnalysis {
 
 	}
 
-	public void branchTransferFunction(String methodName, SSAConditionalBranchInstruction inst,
+	public void branchTransferFunction(String pPoint, int column, SSAConditionalBranchInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
+
+		// Extract info from the program point
+		String methodName = pPoint.split("[.]")[0];
+		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
+		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
+
+		CGNode node = hashGlobalMethods.get(methodName);
+		SSACFG cfg = node.getIR().getControlFlowGraph();
+		BasicBlock prevBB = cfg.getBasicBlock(prevBBNum);
+		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
+
+		// Get the list of all the successor basicBlocks
+		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
 		// Get the variable numbers
 		int var1 = inst.getUse(0);
 		int var2 = inst.getUse(1);
+		String var1Str = Integer.toString(var1);
+		String var2Str = Integer.toString(var2);
 
 		// Operator used on the conditional
 		String op = inst.getOperator().toString();
 
-		// Check if the second variable is a constant.
-		// ONLY SECOND variable can be a constant
-		// TODO
+		// Check if any of the two variables are a constant.
+		if (target.getIR().getSymbolTable().isNullConstant(var1)) {
+			// Add this NULL Constant into the propagated value
+			propagatedValue.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
+		}
 		if (target.getIR().getSymbolTable().isNullConstant(var2)) {
 			// Add this NULL Constant into the propagated value
-			propagatedValue.put(Integer.toString(var2), new ArrayList<String>(Arrays.asList("null")));
+			propagatedValue.put(var2Str, new ArrayList<String>(Arrays.asList("null")));
 		}
-
-		DefUse defUse = target.getDU();
-		// SSAInstruction def2 = defUse.getDef(var2);
-
 		System.out.println(inst.toString());
-		System.out.println(inst.getUse(0) + " " + inst.getUse(1));
-		System.out.println(op);
 
-		// System.out.println(t1 + " " + t2);
-		Boolean a = target.getIR().getSymbolTable().isNullConstant(var2);
+		HashMap<String, ArrayList<String>> trueBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
+		HashMap<String, ArrayList<String>> falseBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
 
-		// System.out.println(inst.getUse(0) + " " + inst.getUse(1));
-		// System.out.println("Cond:" + inst.toString());
+		// Check if it is an object comparison. If TRUE, then Deterministic IF,
+		// else Non-Deterministic IF
+		if (inst.isObjectComparison()) {
+			System.out.println(propagatedValue);
+			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
+			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
+
+			// Get TRUE and FALSE basicBlocks
+			int trueInst = inst.getTarget();
+			BasicBlock trueBB = node.getIR().getControlFlowGraph().getBlockForInstruction(trueInst);
+			int trueBBNum = trueBB.getNumber();
+			ISSABasicBlock falseBB = null;
+
+			// Only 2 Successors should be there for a basicBlock
+			if (succBB.size() != 2) {
+				System.out.println("Conditional statement has more than 2 successors\n" + inst);
+				System.exit(-1);
+			}
+
+			// Get the False BasicBlock
+			for (ISSABasicBlock succ : succBB) {
+				if (succ != trueBB)
+					falseBB = succ;
+			}
+			
+			String trueSuccPP = methodName + "." + srcBB.getNumber() + "." + trueBB.getNumber();
+			String falseSuccPP = methodName + "." + srcBB.getNumber() + "." + falseBB.getNumber();
+
+			System.out.println("Before singleton");
+			// When the pointsTo set is singleton
+			if (v1PointsTo.size() == 1 && v2PointsTo.size() == 1) {
+				System.out.println("both are single");
+				boolean contains = propagatedValue.get(var1Str).containsAll(propagatedValue.get(var2Str));
+
+				// Check if the condition is satisfied
+				System.out.println(contains);
+				if (((op.equals("ne") && contains == false)) || (op.equals("eq") && contains == true)) {
+					// Condition is satisfied
+					// Set false branch to BOT
+//					falseBranch.clear();
+//					falseBranch.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+					d.setToBOT(falseSuccPP, column);
+					d.propagate(trueSuccPP, column, trueBranch);
+				} else {
+					System.out.println("In true");
+					// Condition failed
+					// Set true branch to BOT
+//					trueBranch.clear();
+//					trueBranch.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+					// System.out.println(trueBranch);
+					d.setToBOT(trueSuccPP, column);
+					d.propagate(falseSuccPP, column, falseBranch);
+				}
+			} else {
+
+				// If not singleton, then send the INTERSECTION to the == branch
+				// and ID to != branch
+				if (op.equals("ne")) {
+
+					// Intersection of v1 and v2 in FALSEBRANCH
+					falseBranch.get(var1Str).retainAll(falseBranch.get(var2Str));
+					falseBranch.get(var2Str).retainAll(falseBranch.get(var1Str));
+
+					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
+					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
+//						falseBranch.clear();
+//						falseBranch.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+						d.setToBOT(falseSuccPP, column);
+						d.propagate(trueSuccPP, column, trueBranch);
+					} else
+						throw new NullPointerException(
+								"Intersection of ArrayList<> is not same. Branch transfer function: NE");
+				} else if (op.equals("eq")) {
+
+					// Intersection of v1 and v2 in TRUEBRANCH
+					trueBranch.get(var1Str).retainAll(trueBranch.get(var2Str));
+					trueBranch.get(var2Str).retainAll(trueBranch.get(var1Str));
+
+					// Check if the INTERSECTION is NULL. If TRUE, make it BOT
+					if (trueBranch.get(var1Str).size() == 0 && trueBranch.get(var2Str).size() == 0) {
+//						trueBranch.clear();
+//						trueBranch.put("bot", new ArrayList<String>(Arrays.asList("bot")));
+						d.setToBOT(trueSuccPP, column);
+						d.propagate(falseSuccPP, column, falseBranch);
+					} else
+						throw new NullPointerException(
+								"Intersection of ArrayList<> is not same. Branch transfer function: EQ");
+				}
+			}
+
+//			// Propagate to TRUE and FALSE branches
+//			String succPP = methodName + "." + srcBB.getNumber() + "." + trueBB.getNumber();
+//			d.propagate(succPP, column, trueBranch);
+//			d.displayProgramPoint(succPP, column);
+//
+//			succPP = methodName + "." + srcBB.getNumber() + "." + falseBB.getNumber();
+//			d.propagate(succPP, column, falseBranch);
+		} else {
+			for (ISSABasicBlock succ : succBB) {
+				String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+				d.propagate(succPP, column, propagatedValue);
+			}
+		}
+		
+		return;
 	}
 }
