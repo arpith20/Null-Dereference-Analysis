@@ -77,6 +77,15 @@ public class SetUpAnalysis {
 	// each method in the program
 	private HashMap<String, ArrayList<String>> programPoints = new HashMap<String, ArrayList<String>>();
 
+	class callSiteData {
+		public String pPoint ;
+		public int varNum ;
+		public HashMap<Integer,Integer> columnsOpened ;
+	} ;
+	
+	HashMap<String,ArrayList<callSiteData>> mapToCallSiteData = new HashMap<String,ArrayList<callSiteData>>() ; 
+	
+	
 	// START: NO CHANGE REGION
 	private AnalysisScope scope; // scope defines the set of files to be
 									// analyzed
@@ -468,7 +477,7 @@ public class SetUpAnalysis {
 			// The output will be a new HashMap<String,ArrayList<String>>. This
 			// value will be propagated to the successors
 			boolean propagate = false;
-			Iterator<SSAInstruction> iSSA = srcBB.iterateNormalInstructions();
+			Iterator<SSAInstruction> iSSA = srcBB.iterator();
 			while (iSSA.hasNext()) {
 				SSAInstruction inst = iSSA.next();
 
@@ -577,14 +586,14 @@ public class SetUpAnalysis {
 
 		HashMap<String, ArrayList<String>> callSiteValue = new HashMap<String, ArrayList<String>>();
 
-		System.out.println("PointsTo:\n" + propagatedValue);
+		// System.out.println("PointsTo:\n" + propagatedValue);
 		int start;
 		if (inst.isStatic()) {
 			// Static, variables will be set from 0
 			start = 0;
 		} else
 			start = 1;
-		
+
 		for (int i = start; i < inst.getNumberOfParameters(); i++) {
 			int var = inst.getUse(i);
 			String varStr = Integer.toString(var);
@@ -597,9 +606,9 @@ public class SetUpAnalysis {
 			for (String point : pointsTo)
 				callSitePointsTo.add(point);
 
-			callSiteValue.put(Integer.toString(i+1), callSitePointsTo);
+			callSiteValue.put(Integer.toString(i + 1), callSitePointsTo);
 		}
-		System.out.println("CallsiteValue:\n" + callSiteValue);
+		// System.out.println("CallsiteValue:\n" + callSiteValue);
 		String targetPP = targetMethodName + ".0.1";
 
 		// Check if propagatedValue already exists in the TARGETMETHOD
@@ -610,7 +619,7 @@ public class SetUpAnalysis {
 			d.copyEntireMap(targetPP, newCol, callSiteValue);
 		}
 
-		d.display();
+		// d.display();
 		return;
 	}
 
