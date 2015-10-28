@@ -429,7 +429,7 @@ public class Data {
 
 		HashMap<Integer, HashMap<String, ArrayList<String>>> map = pp.get(pPoint);
 
-		System.out.println("PP:" + pPoint);
+		System.out.println("BB" + pPoint.split("[.]")[1] + " -> BB" + pPoint.split("[.]")[2]+":");
 		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : map.entrySet()) {
 			Integer col = entry.getKey();
 			displayProgramPointUnderCol(pPoint, col);
@@ -440,6 +440,7 @@ public class Data {
 		verifyPPAndCol(pPoint, col, "displayProgramPointUnderCol");
 
 		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
+		System.out.println("C" + col + ":");
 		displayMap(map);
 	}
 
@@ -447,15 +448,36 @@ public class Data {
 		if (map == null)
 			throw new NullPointerException("In DISPLAYMAP, map is null");
 
+		if (map.containsKey("") && map.size() == 1) {
+			System.out.println("{}\n");
+			return;
+		}
+
+		if (map.containsKey("bot")) {
+			System.out.println("bot\n");
+			return;
+		}
+
+		String op = "";
+		System.out.print("{");
+		Boolean flag = true;
 		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
 			String var = entry.getKey();
+			if (var.equals(""))
+				continue;
 			ArrayList<String> pointsto = entry.getValue();
-			System.out.print(var + " -> { ");
+			if (flag) {
+				op = "v" + var + " -> " + "{";
+				flag = false;
+			} else
+				op = "\n v" + var + " -> " + "{";
 			for (String pt : pointsto) {
-				System.out.print(pt + ", ");
+				op = op + pt + ", ";
 			}
-			System.out.print(" }\n");
+			op = op.substring(0, op.length() - 2);
+			System.out.print(op + "}");
 		}
+		System.out.println("}\n");
 	}
 
 	// Returns TRUE if a particular column under a program point is BOT

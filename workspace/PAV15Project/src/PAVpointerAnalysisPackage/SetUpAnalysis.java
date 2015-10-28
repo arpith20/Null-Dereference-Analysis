@@ -440,7 +440,10 @@ public class SetUpAnalysis {
 		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
 			String method = entry.getKey();
 			ArrayList<String> iterate = entry.getValue();
-			System.out.println("METHOD:" + method);
+			System.out.println("\n\n\n" + method + "");
+			for(int i=0;i<method.length();i++)
+				System.out.print("=");
+			System.out.println("\n");
 			for (String pPoint : iterate)
 				d.displayProgramPoint(pPoint);
 		}
@@ -521,7 +524,7 @@ public class SetUpAnalysis {
 					newTransferFunction(pPoint, column, (SSANewInstruction) inst, propagatedValue);
 					propagate = true;
 				} else if (inst instanceof SSAInvokeInstruction) {
-					System.out.println("In Invoke instruction");
+					// System.out.println("In Invoke instruction");
 					if (((SSAInvokeInstruction) inst).isSpecial()) {
 						propagate = true;
 						continue;
@@ -559,11 +562,11 @@ public class SetUpAnalysis {
 			if (propagate) {
 				// Iterate over the successor basicBlocks to JOIN the
 				// propagatedValue
-				boolean changed = false ;
+				boolean changed = false;
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
 					changed = d.propagate(succPP, column, propagatedValue);
-					if ( changed )
+					if (changed)
 						workingList.add(succPP);
 				}
 			}
@@ -703,11 +706,11 @@ public class SetUpAnalysis {
 				throw new NullPointerException("CallData with column mapping not correct:\n" + inst + "\n");
 
 		}
-		// System.out.println("CallSiteData after CallInstructionis:");
+		System.out.println("CallSiteData after CallInstructionis:");
 		// mapToCallSiteData.get(targetMethodName).get(0).display();
 		// System.out.println("ThiCallSiteData:\n");
 		// System.out.println("Disp");
-		// thisCallSite.display();
+		thisCallSite.display();
 		// d.display();
 		return;
 	}
@@ -800,19 +803,32 @@ public class SetUpAnalysis {
 		// System.out.println(pPoint);
 		ArrayList<String> pointsTo = propagatedValue.get(Integer.toString(var));
 
-		// System.out.println("callSiteData is:\n");
-		// System.out.println(mapToCallSiteData);
+		// Variable mapping is not there in the method. What will you propagate?
+		// Just return.
+		if (pointsTo == null)
+			return;
+
+		System.out.println("callSiteData is:\n");
+		System.out.println(mapToCallSiteData);
 
 		ArrayList<callSiteData> al_csd = mapToCallSiteData.get(methodName);
 		if (al_csd == null)
 			throw new NullPointerException("al_csd inside return is null");
 
+		// System.out.println("Propagated Value is\n");
+		// System.out.println(propagatedValue);
+		// System.out.println("CallSiteData ");
+
 		boolean changed = false;
 		String returnPP = null;
 		int returnColumn = -1;
 		for (callSiteData csd : al_csd) {
-			int col_original = csd.columnsOpened.get(column);
-			if (csd.columnsOpened.get(column) == null)
+			System.out.println("Current callSiteData");
+			csd.display();
+			if ( csd.columnsOpened == null )
+				System.out.println("CSD.columndsOPned is nULL");
+			Integer col_original = csd.columnsOpened.get(column);
+			if ( col_original == null )
 				// This column was not opened by this call. Continue searching
 				continue;
 			returnColumn = col_original;
