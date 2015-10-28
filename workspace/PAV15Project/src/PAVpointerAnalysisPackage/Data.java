@@ -549,7 +549,7 @@ public class Data {
 		return true;
 	}
 
-	public boolean columnMapExists(String pPoint, HashMap<String, ArrayList<String>> map) {
+	public int columnMapExists(String pPoint, HashMap<String, ArrayList<String>> map) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> columnMap = pp.get(pPoint);
 		if (pp == null)
 			throw new NullPointerException("columnMapExists: " + pPoint + " programPoint NOT present");
@@ -558,9 +558,9 @@ public class Data {
 			HashMap<String, ArrayList<String>> pointsToMap = entry.getValue();
 
 			if (pointsToMap.equals(map))
-				return true;
+				return entry.getKey();
 		}
-		return false;
+		return -1;
 	}
 
 	public int getNewColumnNum(String pPoint) {

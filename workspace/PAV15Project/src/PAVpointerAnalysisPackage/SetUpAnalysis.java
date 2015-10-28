@@ -670,8 +670,8 @@ public class SetUpAnalysis {
 		String targetPP = targetMethodName + ".0.1";
 
 		// Check if propagatedValue already exists in the TARGETMETHOD
-		int newCol = -1;
-		if (!d.columnMapExists(targetPP, callSiteValue)) {
+		int newCol = d.columnMapExists(targetPP, callSiteValue);
+		if (newCol == -1) {
 			// Does not exist. Get the new column number
 			newCol = d.getNewColumnNum(targetPP);
 			openColumnsDriver(targetMethodName, newCol);
@@ -848,12 +848,14 @@ public class SetUpAnalysis {
 				check = d.add(csd.pPoint, col_original, Integer.toString(csd.varNum), v);
 				if (check == true)
 					changed = true;
-				break;
 			}
-		}
-		if (changed) {
-			workingList.add(returnPP);
-			d.mark(returnPP, returnColumn);
+			if (changed) {
+				// System.out.println("added to working list");
+				workingList.add(returnPP);
+				d.mark(returnPP, returnColumn);
+			}
+			// System.out.println("Return Data:");
+			// d.displayProgramPointUnderCol(returnPP, returnColumn);
 		}
 
 		// System.out.println("\npropagated value after return:");
