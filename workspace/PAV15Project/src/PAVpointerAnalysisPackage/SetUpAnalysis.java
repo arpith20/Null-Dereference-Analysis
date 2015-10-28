@@ -440,7 +440,10 @@ public class SetUpAnalysis {
 		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
 			String method = entry.getKey();
 			ArrayList<String> iterate = entry.getValue();
-			System.out.println("\n\n\n" + method + "\n");
+			System.out.println("\n\n\n" + method + "");
+			for(int i=0;i<method.length();i++)
+				System.out.print("=");
+			System.out.println("\n");
 			for (String pPoint : iterate)
 				d.displayProgramPoint(pPoint);
 		}
