@@ -495,9 +495,9 @@ public class SetUpAnalysis {
 				// System.out.println("In BOT");
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					boolean changed = false ;
+					boolean changed = false;
 					changed = d.propagate(succPP, column, propagatedValue);
-					if ( changed )
+					if (changed)
 						workingList.add(succPP);
 					// System.out.println(succPP + ":");
 					// d.displayProgramPoint(succPP, column);
@@ -510,9 +510,9 @@ public class SetUpAnalysis {
 			if (srcBB.getAllInstructions().isEmpty()) {
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					boolean changed = false ;
+					boolean changed = false;
 					changed = d.propagate(succPP, column, propagatedValue);
-					if ( changed )
+					if (changed)
 						workingList.add(succPP);
 				}
 				continue;
@@ -884,16 +884,16 @@ public class SetUpAnalysis {
 		// Operator used on the conditional
 		String op = inst.getOperator().toString();
 
-		// Check if any of the two variables are a constant.
-		if (node.getIR().getSymbolTable().isNullConstant(var1)) {
-			// System.out.println("V1 null constant");
-			// Add this NULL Constant into the propagated value
-			propagatedValue.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
-		}
-		if (node.getIR().getSymbolTable().isNullConstant(var2)) {
-			// System.out.println("V2 null constant");
-			// Add this NULL Constant into the propagated value
-			propagatedValue.put(var2Str, new ArrayList<String>(Arrays.asList("null")));
+		// Iterate over all the variables to check if NULL
+		int numOfUses = inst.getNumberOfUses();
+		for (int i = 0; i < numOfUses; i++) {
+			int varNum = inst.getUse(i);
+			String varStr = Integer.toString(varNum);
+
+			if (node.getIR().getSymbolTable().isNullConstant(varNum)) {
+				// Add this NULL Constant into the propagated value
+				propagatedValue.put(varStr, new ArrayList<String>(Arrays.asList("null")));
+			}
 		}
 		// System.out.println(inst.toString());
 
@@ -907,6 +907,7 @@ public class SetUpAnalysis {
 			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
 			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
 
+			//if ( pPoint.equals("))
 			// Get TRUE and FALSE basicBlocks
 			int trueInst = inst.getTarget();
 			BasicBlock trueBB = node.getIR().getControlFlowGraph().getBlockForInstruction(trueInst);
@@ -943,9 +944,9 @@ public class SetUpAnalysis {
 					// falseBranch.put("bot", new
 					// ArrayList<String>(Arrays.asList("bot")));
 					d.setToBOT(falseSuccPP, column);
-					boolean changed = false ;
+					boolean changed = false;
 					changed = d.propagate(trueSuccPP, column, trueBranch);
-					if ( changed )
+					if (changed)
 						workingList.add(trueSuccPP);
 				} else {
 					// System.out.println("In true");
@@ -956,9 +957,9 @@ public class SetUpAnalysis {
 					// ArrayList<String>(Arrays.asList("bot")));
 					// System.out.println(trueBranch);
 					d.setToBOT(trueSuccPP, column);
-					boolean changed = false ;
+					boolean changed = false;
 					changed = d.propagate(falseSuccPP, column, falseBranch);
-					if ( changed )
+					if (changed)
 						workingList.add(falseSuccPP);
 				}
 			} else {
@@ -977,9 +978,9 @@ public class SetUpAnalysis {
 						// falseBranch.put("bot", new
 						// ArrayList<String>(Arrays.asList("bot")));
 						d.setToBOT(falseSuccPP, column);
-						boolean changed = false ;
+						boolean changed = false;
 						changed = d.propagate(trueSuccPP, column, trueBranch);
-						if ( changed )
+						if (changed)
 							workingList.add(trueSuccPP);
 					} else
 						throw new NullPointerException(
@@ -996,9 +997,9 @@ public class SetUpAnalysis {
 						// trueBranch.put("bot", new
 						// ArrayList<String>(Arrays.asList("bot")));
 						d.setToBOT(trueSuccPP, column);
-						boolean changed = false ;
+						boolean changed = false;
 						changed = d.propagate(falseSuccPP, column, falseBranch);
-						if ( changed )
+						if (changed)
 							workingList.add(falseSuccPP);
 					} else
 						throw new NullPointerException(
@@ -1018,9 +1019,9 @@ public class SetUpAnalysis {
 		} else {
 			for (ISSABasicBlock succ : succBB) {
 				String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-				boolean changed = false ;
+				boolean changed = false;
 				changed = d.propagate(succPP, column, propagatedValue);
-				if ( changed )
+				if (changed)
 					workingList.add(succPP);
 			}
 		}
