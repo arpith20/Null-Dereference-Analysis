@@ -767,8 +767,8 @@ public class SetUpAnalysis {
 				}
 			} else {
 				// check for null constants
-				String null_constant = "v" + var_rhs + ":#null";
-				if (inst.toString().contains(null_constant)) {
+				// String null_constant = "v" + var_rhs + ":#null";
+				if (node.getIR().getSymbolTable().isNullConstant(var_rhs)) {
 					// add var_lhs -> null mapping
 					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs);
 					if (al_var_lhs == null) {
@@ -779,6 +779,9 @@ public class SetUpAnalysis {
 						if (!al_var_lhs.contains("null"))
 							al_var_lhs.add("null");
 					}
+					ArrayList<String> temp = new ArrayList<String>();
+					temp.add("null");
+					toPropagate.put(var_rhs + "", temp);
 				}
 			}
 		}
@@ -907,7 +910,7 @@ public class SetUpAnalysis {
 			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
 			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
 
-			//if ( pPoint.equals("))
+			// if ( pPoint.equals("))
 			// Get TRUE and FALSE basicBlocks
 			int trueInst = inst.getTarget();
 			BasicBlock trueBB = node.getIR().getControlFlowGraph().getBlockForInstruction(trueInst);
