@@ -421,7 +421,10 @@ public class SetUpAnalysis {
 			workingList.remove(0);
 		}
 		// System.out.println("\n\n");
-		d.display();
+		if (PAVPointerAnalysis.displayJoinedResult)
+			d.displayJoined();
+		else
+			d.display();
 		System.out.println(mapToCallSiteData);
 	}
 
@@ -523,8 +526,8 @@ public class SetUpAnalysis {
 					phiTransferFunction(pPoint, column, (SSAPhiInstruction) inst, propagatedValue);
 					propagate = true;
 				} else if (inst instanceof SSAReturnInstruction) {
-					returnTransferFunction(methodName, column, (SSAReturnInstruction)inst, propagatedValue);
-					propagate = true ;
+					returnTransferFunction(methodName, column, (SSAReturnInstruction) inst, propagatedValue);
+					propagate = true;
 					break;
 				} else if (inst instanceof SSAConditionalBranchInstruction) {
 					branchTransferFunction(pPoint, column, (SSAConditionalBranchInstruction) inst, propagatedValue);

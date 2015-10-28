@@ -43,6 +43,7 @@ public class PAVPointerAnalysis {
 
 	private SetUpAnalysis setup; // Object to setup (check presentation)
 	public NullDereference nulldereference;
+	static Boolean displayJoinedResult;
 
 	public PAVPointerAnalysis(String classpath, String mainClass, String analysisClass, String analysisMethod) {
 		setup = new SetUpAnalysis(classpath, mainClass, analysisClass, analysisMethod);
@@ -68,6 +69,7 @@ public class PAVPointerAnalysis {
 
 		setup.setD0();
 
+		displayJoinedResult = false;
 		setup.kildall();
 	}
 

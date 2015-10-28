@@ -10,6 +10,7 @@ public class Data {
 
 	private HashMap<String, HashMap<Integer, Boolean>> marked = new HashMap<String, HashMap<Integer, Boolean>>();
 	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
+	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> joined_pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
 
 	// pp1 contains pp2, ie, pp2 is a subset of pp1
 	public Boolean contains(String pp1, String pp2) {
@@ -152,20 +153,17 @@ public class Data {
 
 	public void copyEntireMap(String pPoint, Integer col, HashMap<String, ArrayList<String>> map) {
 		verifyPPAndCol(pPoint, col, "copyEntireMap");
-		
+
 		HashMap<String, ArrayList<String>> originalMap = pp.get(pPoint).get(col);
-		if ( originalMap == null )
-		{
+		if (originalMap == null) {
 			// No Mapping exists. Create mapping for the first time
-			originalMap = new HashMap<String, ArrayList<String>>(map) ;
-		}
-		else
-		{
+			originalMap = new HashMap<String, ArrayList<String>>(map);
+		} else {
 			// Clear the old HashMap and copy the new one
 			originalMap.clear();
 			originalMap.putAll(map);
 		}
-		return ;
+		return;
 	}
 
 	public void display() {
@@ -497,5 +495,118 @@ public class Data {
 			throw new NullPointerException("getNewColumnNum: " + pPoint + " programPoint NOT present");
 
 		return columnMap.size();
+	}
+
+	public void addJoin(String programpoint, Integer col, String variable, String pointsto) {
+		if (col != 0)
+			throw new Error("The column number can only be zero");
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col = joined_pp.get(programpoint);
+		if (al_col == null) {
+			al_col = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
+
+			HashMap<String, ArrayList<String>> var_hash = new HashMap<String, ArrayList<String>>();
+
+			ArrayList<String> al_pointsto = new ArrayList<String>();
+			al_pointsto.add(pointsto);
+			var_hash.put(variable, al_pointsto);
+			al_col.put(col, var_hash);
+
+			joined_pp.put(programpoint, al_col);
+		} else {
+			HashMap<String, ArrayList<String>> var_hash = al_col.get(col);
+			if (var_hash == null) {
+				var_hash = new HashMap<String, ArrayList<String>>();
+
+				ArrayList<String> al_pointsto = new ArrayList<String>();
+				al_pointsto.add(pointsto);
+				var_hash.put(variable, al_pointsto);
+				al_col.put(col, var_hash);
+			} else {
+				ArrayList<String> al_pointsto = var_hash.get(variable);
+				if (al_pointsto == null) {
+					al_pointsto = new ArrayList<String>();
+					al_pointsto.add(pointsto);
+
+					var_hash.put(variable, al_pointsto);
+				} else {
+					if (!al_pointsto.contains(pointsto)) {
+						al_pointsto.add(pointsto);
+						// sort(al_pointsto);
+					}
+				}
+			}
+		}
+	}
+
+	public void joinHelper(String pp1, String pp2, Integer col2) {
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		if (al_col2 != null) {
+			HashMap<String, ArrayList<String>> h = al_col2.get(col2);
+			if (h != null) {
+				for (Map.Entry<String, ArrayList<String>> entry : h.entrySet()) {
+					String var = entry.getKey();
+					ArrayList<String> pointsto = entry.getValue();
+					for (String pt : pointsto) {
+						addJoin(pp1, 0, var, pt);
+					}
+				}
+			}
+		}
+	}
+
+	// Function to join all values and store it into the hashmap named joined_pp
+	public void joinAllValues() {
+		for (Map.Entry<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> entry : pp.entrySet()) {
+			String pPoint = entry.getKey();
+			HashMap<Integer, HashMap<String, ArrayList<String>>> hm = entry.getValue();
+			for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> innerentry : hm.entrySet()) {
+				Integer col = innerentry.getKey();
+				joinHelper(pPoint, pPoint, col);
+			}
+		}
+	}
+
+	public void displayJoined() {
+		joinAllValues();
+		String s_pointsto = "";
+		if (pp == null)
+			throw new NullPointerException("How is this even possible?");
+		for (Map.Entry<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> entry : joined_pp.entrySet()) {
+			String programPoint = entry.getKey();
+			System.out.println("\n" + programPoint + ":  ");
+			HashMap<Integer, HashMap<String, ArrayList<String>>> al_cols = entry.getValue();
+			if (al_cols == null)
+				continue;
+			for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> middleentry : al_cols.entrySet()) {
+				HashMap<String, ArrayList<String>> var_hash = middleentry.getValue();
+				System.out.println(" " + middleentry.getKey() + ":  ");
+				if (var_hash == null)
+					continue;
+				if (var_hash.containsKey("bot")) {
+					System.out.println("bot");
+					continue;
+				}
+				if (var_hash.containsKey("") && var_hash.size() == 1) {
+					System.out.println("{}");
+					continue;
+				}
+				for (Map.Entry<String, ArrayList<String>> innerentry : var_hash.entrySet()) {
+					String variable = innerentry.getKey();
+					if (variable.equals(""))
+						continue;
+					s_pointsto = variable;
+					ArrayList<String> pointsto = innerentry.getValue();
+					if (pointsto == null)
+						continue;
+					s_pointsto += " -> {";
+					for (String s : pointsto) {
+						s_pointsto += s + ", ";
+					}
+					s_pointsto = s_pointsto.substring(0, s_pointsto.length() - 2);
+					s_pointsto += "}";
+					System.out.println(s_pointsto);
+				}
+			}
+		}
 	}
 }
