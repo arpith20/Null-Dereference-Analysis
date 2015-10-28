@@ -429,7 +429,7 @@ public class Data {
 
 		HashMap<Integer, HashMap<String, ArrayList<String>>> map = pp.get(pPoint);
 
-		System.out.println("BB" + pPoint.split("[.]")[1] + " -> BB" + pPoint.split("[.]")[2]+":");
+		System.out.println("BB" + pPoint.split("[.]")[1] + " -> BB" + pPoint.split("[.]")[2] + ":");
 		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : map.entrySet()) {
 			Integer col = entry.getKey();
 			displayProgramPointUnderCol(pPoint, col);
