@@ -81,6 +81,20 @@ public class SetUpAnalysis {
 		public String pPoint;
 		public int varNum;
 		public HashMap<Integer, Integer> columnsOpened;
+
+		public callSiteData(String succPPoint, int returnVar) {
+			pPoint = succPPoint;
+			varNum = returnVar;
+			columnsOpened = new HashMap<Integer, Integer>();
+			return;
+		}
+
+		public void display() {
+			System.out.println("PPoint: " + pPoint);
+			System.out.println("Variable: " + varNum);
+			System.out.println("HashMap:\n" + columnsOpened);
+			return;
+		}
 	};
 
 	HashMap<String, ArrayList<callSiteData>> mapToCallSiteData = new HashMap<String, ArrayList<callSiteData>>();
@@ -399,6 +413,7 @@ public class SetUpAnalysis {
 	// Main kildall algorithm. This will do the analysis and will return once
 	// the WORKINGLIST is empty
 	public void kildall() {
+		// System.out.println(programPoints);
 		// System.out.println(target.getIR());
 		// System.out.println(" WOrking list is:" + workingList + "\n");
 		// System.out.println(globalMethods);
@@ -421,11 +436,16 @@ public class SetUpAnalysis {
 			workingList.remove(0);
 		}
 		// System.out.println("\n\n");
-		if (PAVPointerAnalysis.displayJoinedResult)
-			d.displayJoined();
-		else
-			d.display();
-		System.out.println(mapToCallSiteData);
+		// d.display();
+		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
+			String method = entry.getKey();
+			ArrayList<String> iterate = entry.getValue();
+			System.out.println("\n\n\n" + method + "\n");
+			for (String pPoint : iterate)
+				d.displayProgramPoint(pPoint);
+		}
+
+		// System.out.println(mapToCallSiteData);
 	}
 
 	public void transferFunctionDriver(String pPoint) {
@@ -492,7 +512,7 @@ public class SetUpAnalysis {
 			// instructions in the basicBlock
 			// The output will be a new HashMap<String,ArrayList<String>>. This
 			// value will be propagated to the successors
-			boolean propagate = false;
+			boolean propagate = true;
 			Iterator<SSAInstruction> iSSA = srcBB.iterator();
 			while (iSSA.hasNext()) {
 				SSAInstruction inst = iSSA.next();
@@ -526,11 +546,12 @@ public class SetUpAnalysis {
 					phiTransferFunction(pPoint, column, (SSAPhiInstruction) inst, propagatedValue);
 					propagate = true;
 				} else if (inst instanceof SSAReturnInstruction) {
-					returnTransferFunction(methodName, column, (SSAReturnInstruction) inst, propagatedValue);
+					returnTransferFunction(pPoint, column, (SSAReturnInstruction) inst, propagatedValue);
 					propagate = true;
 					break;
 				} else if (inst instanceof SSAConditionalBranchInstruction) {
 					branchTransferFunction(pPoint, column, (SSAConditionalBranchInstruction) inst, propagatedValue);
+					propagate = false;
 					break;
 				}
 			}
@@ -586,7 +607,7 @@ public class SetUpAnalysis {
 			HashMap<String, ArrayList<String>> propagatedValue, String targetMethodName, String succPPoint) {
 
 		String rootMethodName = pPoint.split("[.]")[0];
-
+		CGNode node = hashGlobalMethods.get(analysisClass + rootMethodName);
 		// System.out.println(inst.getNumberOfReturnValues());
 
 		// // Get the variable numbers
@@ -601,7 +622,7 @@ public class SetUpAnalysis {
 			int varNum = inst.getUse(i);
 			String varStr = Integer.toString(varNum);
 
-			if (target.getIR().getSymbolTable().isNullConstant(varNum)) {
+			if (node.getIR().getSymbolTable().isNullConstant(varNum)) {
 				// Add this NULL Constant into the propagated value
 				propagatedValue.put(varStr, new ArrayList<String>(Arrays.asList("null")));
 			}
@@ -660,12 +681,16 @@ public class SetUpAnalysis {
 			}
 		}
 		if (thisCallSite == null) {
+			// System.out.println("inside NULL");
 			// No entry for this callSite. Add a new one
-			thisCallSite = new callSiteData();
-			thisCallSite.pPoint = succPPoint;
+			thisCallSite = new callSiteData(succPPoint, returnVar);
+			thisCallSite.pPoint = new String(succPPoint);
 			thisCallSite.varNum = returnVar;
 			thisCallSite.columnsOpened = new HashMap<Integer, Integer>();
 			thisCallSite.columnsOpened.put(newCol, column);
+			listCallSites.add(thisCallSite);
+			// System.out.println("Disp");
+			// thisCallSite.display();
 		} else {
 			Integer columnMapped = thisCallSite.columnsOpened.get(newCol);
 			if (columnMapped == null)
@@ -674,7 +699,11 @@ public class SetUpAnalysis {
 				throw new NullPointerException("CallData with column mapping not correct:\n" + inst + "\n");
 
 		}
-
+		// System.out.println("CallSiteData after CallInstructionis:");
+		// mapToCallSiteData.get(targetMethodName).get(0).display();
+		// System.out.println("ThiCallSiteData:\n");
+		// System.out.println("Disp");
+		// thisCallSite.display();
 		// d.display();
 		return;
 	}
@@ -749,19 +778,53 @@ public class SetUpAnalysis {
 			return;
 
 		String methodName = pPoint.split("[.]")[0];
+		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
+
+		// Iterate over all the variables to check if NULL
+		int numOfUses = inst.getNumberOfUses();
+		for (int i = 0; i < numOfUses; i++) {
+			int varNum = inst.getUse(i);
+			String varStr = Integer.toString(varNum);
+
+			if (node.getIR().getSymbolTable().isNullConstant(varNum)) {
+				// Add this NULL Constant into the propagated value
+				propagatedValue.put(varStr, new ArrayList<String>(Arrays.asList("null")));
+			}
+		}
 
 		int var = inst.getUse(0);
-		ArrayList<String> current_al = d.retrieve(pPoint, column, var + "");
+		// System.out.println(pPoint);
+		ArrayList<String> pointsTo = propagatedValue.get(Integer.toString(var));
+
+		// System.out.println("callSiteData is:\n");
+		// System.out.println(mapToCallSiteData);
 
 		ArrayList<callSiteData> al_csd = mapToCallSiteData.get(methodName);
+		if (al_csd == null)
+			throw new NullPointerException("al_csd inside return is null");
+
+		boolean changed = false;
+		String returnPP = null;
 		for (callSiteData csd : al_csd) {
 			int col_original = csd.columnsOpened.get(column);
 			if (csd.columnsOpened.get(column) == null)
+				// This column was not opened by this call. Continue searching
 				continue;
-			for (String v : current_al) {
-				d.add(csd.pPoint, col_original, csd.varNum + "", v);
+			boolean check;
+			returnPP = csd.pPoint;
+			for (String v : pointsTo) {
+				check = d.add(csd.pPoint, col_original, Integer.toString(csd.varNum), v);
+				if (check == true)
+					changed = true;
+				break;
 			}
 		}
+		if (changed)
+			workingList.add(returnPP);
+
+		// System.out.println("\npropagated value after return:");
+		// System.out.println(propagatedValue);
+		// System.out.println("Return site after return is:\n");
 		return;
 	}
 
