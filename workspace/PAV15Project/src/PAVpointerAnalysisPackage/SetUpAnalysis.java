@@ -521,6 +521,7 @@ public class SetUpAnalysis {
 					newTransferFunction(pPoint, column, (SSANewInstruction) inst, propagatedValue);
 					propagate = true;
 				} else if (inst instanceof SSAInvokeInstruction) {
+					System.out.println("In Invoke instruction");
 					if (((SSAInvokeInstruction) inst).isSpecial()) {
 						propagate = true;
 						continue;
@@ -558,9 +559,12 @@ public class SetUpAnalysis {
 			if (propagate) {
 				// Iterate over the successor basicBlocks to JOIN the
 				// propagatedValue
+				boolean changed = false ;
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					d.propagate(succPP, column, propagatedValue);
+					changed = d.propagate(succPP, column, propagatedValue);
+					if ( changed )
+						workingList.add(succPP);
 				}
 			}
 		}
@@ -805,11 +809,13 @@ public class SetUpAnalysis {
 
 		boolean changed = false;
 		String returnPP = null;
+		int returnColumn = -1;
 		for (callSiteData csd : al_csd) {
 			int col_original = csd.columnsOpened.get(column);
 			if (csd.columnsOpened.get(column) == null)
 				// This column was not opened by this call. Continue searching
 				continue;
+			returnColumn = col_original;
 			boolean check;
 			returnPP = csd.pPoint;
 			for (String v : pointsTo) {
@@ -819,8 +825,10 @@ public class SetUpAnalysis {
 				break;
 			}
 		}
-		if (changed)
+		if (changed) {
 			workingList.add(returnPP);
+			d.mark(returnPP, returnColumn);
+		}
 
 		// System.out.println("\npropagated value after return:");
 		// System.out.println(propagatedValue);
