@@ -437,11 +437,12 @@ public class SetUpAnalysis {
 		}
 		// System.out.println("\n\n");
 		// d.display();
+
 		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
 			String method = entry.getKey();
 			ArrayList<String> iterate = entry.getValue();
 			System.out.println("\n\n\n" + method + "");
-			for(int i=0;i<method.length();i++)
+			for (int i = 0; i < method.length(); i++)
 				System.out.print("=");
 			System.out.println("\n");
 			for (String pPoint : iterate)
@@ -494,7 +495,10 @@ public class SetUpAnalysis {
 				// System.out.println("In BOT");
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					d.propagate(succPP, column, propagatedValue);
+					boolean changed = false ;
+					changed = d.propagate(succPP, column, propagatedValue);
+					if ( changed )
+						workingList.add(succPP);
 					// System.out.println(succPP + ":");
 					// d.displayProgramPoint(succPP, column);
 				}
@@ -506,7 +510,10 @@ public class SetUpAnalysis {
 			if (srcBB.getAllInstructions().isEmpty()) {
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					d.propagate(succPP, column, propagatedValue);
+					boolean changed = false ;
+					changed = d.propagate(succPP, column, propagatedValue);
+					if ( changed )
+						workingList.add(succPP);
 				}
 				continue;
 			}
@@ -706,11 +713,11 @@ public class SetUpAnalysis {
 				throw new NullPointerException("CallData with column mapping not correct:\n" + inst + "\n");
 
 		}
-		System.out.println("CallSiteData after CallInstructionis:");
+		// System.out.println("CallSiteData after CallInstructionis:");
 		// mapToCallSiteData.get(targetMethodName).get(0).display();
 		// System.out.println("ThiCallSiteData:\n");
 		// System.out.println("Disp");
-		thisCallSite.display();
+		// thisCallSite.display();
 		// d.display();
 		return;
 	}
@@ -808,8 +815,8 @@ public class SetUpAnalysis {
 		if (pointsTo == null)
 			return;
 
-		System.out.println("callSiteData is:\n");
-		System.out.println(mapToCallSiteData);
+		// System.out.println("callSiteData is:\n");
+		// System.out.println(mapToCallSiteData);
 
 		ArrayList<callSiteData> al_csd = mapToCallSiteData.get(methodName);
 		if (al_csd == null)
@@ -823,12 +830,12 @@ public class SetUpAnalysis {
 		String returnPP = null;
 		int returnColumn = -1;
 		for (callSiteData csd : al_csd) {
-			System.out.println("Current callSiteData");
-			csd.display();
-			if ( csd.columnsOpened == null )
+			// System.out.println("Current callSiteData");
+			// csd.display();
+			if (csd.columnsOpened == null)
 				System.out.println("CSD.columndsOPned is nULL");
 			Integer col_original = csd.columnsOpened.get(column);
-			if ( col_original == null )
+			if (col_original == null)
 				// This column was not opened by this call. Continue searching
 				continue;
 			returnColumn = col_original;
@@ -936,7 +943,10 @@ public class SetUpAnalysis {
 					// falseBranch.put("bot", new
 					// ArrayList<String>(Arrays.asList("bot")));
 					d.setToBOT(falseSuccPP, column);
-					d.propagate(trueSuccPP, column, trueBranch);
+					boolean changed = false ;
+					changed = d.propagate(trueSuccPP, column, trueBranch);
+					if ( changed )
+						workingList.add(trueSuccPP);
 				} else {
 					// System.out.println("In true");
 					// Condition failed
@@ -946,7 +956,10 @@ public class SetUpAnalysis {
 					// ArrayList<String>(Arrays.asList("bot")));
 					// System.out.println(trueBranch);
 					d.setToBOT(trueSuccPP, column);
-					d.propagate(falseSuccPP, column, falseBranch);
+					boolean changed = false ;
+					changed = d.propagate(falseSuccPP, column, falseBranch);
+					if ( changed )
+						workingList.add(falseSuccPP);
 				}
 			} else {
 
@@ -964,7 +977,10 @@ public class SetUpAnalysis {
 						// falseBranch.put("bot", new
 						// ArrayList<String>(Arrays.asList("bot")));
 						d.setToBOT(falseSuccPP, column);
-						d.propagate(trueSuccPP, column, trueBranch);
+						boolean changed = false ;
+						changed = d.propagate(trueSuccPP, column, trueBranch);
+						if ( changed )
+							workingList.add(trueSuccPP);
 					} else
 						throw new NullPointerException(
 								"Intersection of ArrayList<> is not same. Branch transfer function: NE");
@@ -980,7 +996,10 @@ public class SetUpAnalysis {
 						// trueBranch.put("bot", new
 						// ArrayList<String>(Arrays.asList("bot")));
 						d.setToBOT(trueSuccPP, column);
-						d.propagate(falseSuccPP, column, falseBranch);
+						boolean changed = false ;
+						changed = d.propagate(falseSuccPP, column, falseBranch);
+						if ( changed )
+							workingList.add(falseSuccPP);
 					} else
 						throw new NullPointerException(
 								"Intersection of ArrayList<> is not same. Branch transfer function: EQ");
@@ -999,7 +1018,10 @@ public class SetUpAnalysis {
 		} else {
 			for (ISSABasicBlock succ : succBB) {
 				String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-				d.propagate(succPP, column, propagatedValue);
+				boolean changed = false ;
+				changed = d.propagate(succPP, column, propagatedValue);
+				if ( changed )
+					workingList.add(succPP);
 			}
 		}
 
