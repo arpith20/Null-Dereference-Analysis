@@ -1,7 +1,7 @@
 package PAVpointerAnalysisPackage;
 
 /**
- * @authors Arpith K, Sridhar G
+ * @author Arpith K, Sridhar G
  * Program Analysis and Verification, 2015
  *
  */
@@ -54,7 +54,6 @@ public class PAVPointerAnalysis {
 		 * to perform analysis Print out analysis results to file, in the format
 		 * specified.
 		 */
-		
 
 		// START: NO CHANGE REGION
 		setup.buildScope();
@@ -64,43 +63,12 @@ public class PAVPointerAnalysis {
 		setup.generateCallGraph();
 		// END: NO CHANGE REGION
 
-		/*
-		 * For demonstration purposes, and to help you check whether Wala is
-		 * setup properly, I am calling the setup.printNodes() function. This
-		 * will compute the call graph for the given program, and print out the
-		 * nodes. Feel free to erase this call, or use it otherwise.
-		 */
-		//setup.printNodes();
-		//setup.printIR();
-
-		/*
-		 * Create appropriate objects/make appropriate function calls here to
-		 * begin the analysis
-		 */
-		// System.out.println("Printing...");
-		// setup.getAllCallSites();
-		// setup.getDirectCallSites("startTest()V");
-		// for (String s : SetUpAnalysis.callsites) {
-		// System.out.println(s);
-		// //IR t = setup.getIR(s);
-		// //System.out.println(t.toString());
-		// }
-		// setup.getAllCallSites();
-		 //setup.printIRForAllMethods();
-		//System.out.println(setup.getIR("phiTest(LTestCases/PublicTests;LTestCases/PublicTests;)LTestCases/PublicTests;").toString());
-		//NullDereference n = new NullDereference();
-		//n.entry();
-		
-		setup.init() ;
+		setup.init();
 		setup.getProgramPoints();
-		
-		setup.setD0() ;
-		
+
+		setup.setD0();
+
 		setup.kildall();
-		ArrayList<CGNode> cg = setup.getTransitiveCallSites();
-		for(CGNode c : cg){
-			System.out.println(c.toString());
-		}
 	}
 
 	// START: NO CHANGE REGION

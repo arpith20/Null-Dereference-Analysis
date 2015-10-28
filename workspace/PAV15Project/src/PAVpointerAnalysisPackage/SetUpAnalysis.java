@@ -8,6 +8,7 @@ package PAVpointerAnalysisPackage;
 
 // Do NOT import the pointer analysis package
 import java.io.*;
+import java.lang.reflect.Method;
 import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
@@ -45,24 +46,11 @@ import com.ibm.wala.ssa.SSAReturnInstruction;
 import com.ibm.wala.types.FieldReference;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.config.AnalysisScopeReader;
-import com.ibm.wala.util.intset.IntSet;
 import com.ibm.wala.util.io.FileProvider;
 import com.ibm.wala.viz.viewer.IrAndSourceViewer;
 import com.ibm.wala.ssa.analysis.ExplodedControlFlowGraph;
 
 public class SetUpAnalysis {
-
-	class callSitePair {
-		public String ppoint;
-		public Integer col;
-
-		public callSitePair(String a, int b) {
-			this.ppoint = a;
-			this.col = b;
-		}
-	}
-
-	Deque<callSitePair> stack = new ArrayDeque<callSitePair>();
 
 	private String classpath;
 	private String mainClass;
@@ -88,6 +76,14 @@ public class SetUpAnalysis {
 	// HashMap which contains the list of all program points corresponding to
 	// each method in the program
 	private HashMap<String, ArrayList<String>> programPoints = new HashMap<String, ArrayList<String>>();
+
+	class callSiteData {
+		public String pPoint;
+		public int varNum;
+		public HashMap<Integer, Integer> columnsOpened;
+	};
+
+	HashMap<String, ArrayList<callSiteData>> mapToCallSiteData = new HashMap<String, ArrayList<callSiteData>>();
 
 	// START: NO CHANGE REGION
 	private AnalysisScope scope; // scope defines the set of files to be
@@ -184,6 +180,7 @@ public class SetUpAnalysis {
 				break;
 			}
 		}
+		// System.out.println(target);
 		if (target != null) {
 			this.target = target;
 			return true;
@@ -218,11 +215,14 @@ public class SetUpAnalysis {
 						// Get shorthand name of the method and add it to the
 						// hashMap
 						String methodName = node.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
-						hashGlobalMethods.put(methodName, node);
+						String className = node.getMethod().toString().split("[,]")[1].substring(1);
+						hashGlobalMethods.put(className + methodName, node);
 					}
 				}
 			}
 		}
+		// System.out.println("AnalysisClass: " + analysisClass);
+		// System.out.println("HashGlobal: \n" + hashGlobalMethods + "\n");
 		return;
 	}
 
@@ -255,10 +255,12 @@ public class SetUpAnalysis {
 
 					// Add the program point to the WORKINGLIST
 					// TODO
-					if (methodName.equals("loopTest")) {
-						workingList.add(pp);
-						d.addProgramPoint(pp);
-					}
+					// if (methodName.equals("startTest")) {
+					// workingList.add(pp);
+					// d.addProgramPoint(pp);
+					// }
+					workingList.add(pp);
+					d.addProgramPoint(pp);
 
 					// Add the program point to the hash map containing the set
 					// of all program points present in a particular method
@@ -278,6 +280,8 @@ public class SetUpAnalysis {
 				}
 			}
 		}
+		// System.out.println("Program Points: " + programPoints + "\n");
+		return;
 	}
 
 	// Returns the list of all the methods which are called directly or
@@ -309,6 +313,7 @@ public class SetUpAnalysis {
 			// Reduce the size of the workingList
 			workingList.remove(cur);
 		}
+		// System.out.println("Transitive sites are: " + callSites);
 		return callSites;
 	}
 
@@ -321,26 +326,35 @@ public class SetUpAnalysis {
 		Iterator<CallSiteReference> icsr = root.getIR().iterateCallSites();
 		while (icsr.hasNext()) {
 			CallSiteReference csr = icsr.next();
+
+			// invokeSpecial is for Constructors
+			// invokeVirtual is for method invocation including library methods
+			// invokeStatic is for invoking static methods
+			// Considering only invokeVirtual and invokeStatic
+			// TODO
 			if (!csr.isSpecial()) {
 
-				// Get the CGNode of the target method. This is a singleton set
-				Set<CGNode> nodes = cg.getPossibleTargets(root, csr);
-				if (nodes.size() == 1) {
-					Iterator<CGNode> i = nodes.iterator();
-					CGNode temp = i.next();
-
-					// Check if the method is a class method and not library
-					// function
-					if (globalMethods.contains(temp))
+				// Check if the Target of this is present in the CALL GRAPH
+				// If not present, DO NOT ADD
+				String signature = csr.getDeclaredTarget().getSignature();
+				String[] sigString = signature.split("[.]");
+				String methodName = sigString[2].split("[(]")[0];
+				String className = "L" + sigString[0] + "/" + sigString[1];
+				if (hashGlobalMethods.containsKey(className + methodName)) {
+					Set<CGNode> nodes = cg.getPossibleTargets(root, csr);
+					if (nodes.size() == 1) {
+						Iterator<CGNode> i = nodes.iterator();
+						CGNode temp = i.next();
 						callSites.add(temp);
+					} else {
+						System.out.println("size of possibletarget nodes not equal to 1");
+					}
 				} else {
-					// Currently exit the code if more than one possible target
-					// is found for a callSite. Can do better!
-					System.out.println("GetPossibleTargets returned more than 1 CGNode!!");
-					System.exit(-1);
+					// System.out.println(className+methodName +"not present");
 				}
 			}
 		}
+		// System.out.println("CallSites for " + root + ":\n" + callSites);
 		return callSites;
 	}
 
@@ -356,6 +370,7 @@ public class SetUpAnalysis {
 		openColumnsDriver(methodName, 0);
 
 		// Add D0 to DATA
+		// TODO. REMOVE THIS
 		d.add(pp, 0, "", "");
 
 		return;
@@ -371,10 +386,13 @@ public class SetUpAnalysis {
 	// Main kildall algorithm. This will do the analysis and will return once
 	// the WORKINGLIST is empty
 	public void kildall() {
+		// System.out.println(target.getIR());
+		// System.out.println(" WOrking list is:" + workingList + "\n");
+		// System.out.println(globalMethods);
 		while (!workingList.isEmpty()) {
 			String curPP = workingList.get(0);
 
-			// System.out.println("PP:" + curPP);
+			System.out.println("PP:" + curPP);
 
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
@@ -386,10 +404,6 @@ public class SetUpAnalysis {
 			// System.out.println("kildall");
 			// Call the transfer function driver
 			transferFunctionDriver(curPP);
-
-			String methodName = curPP.split("[.]")[0];
-			int srcBB = Integer.parseInt(curPP.split("[.]")[2]);
-			CGNode node = hashGlobalMethods.get(methodName);
 
 			workingList.remove(0);
 		}
@@ -404,7 +418,7 @@ public class SetUpAnalysis {
 		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
 		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
-		CGNode node = hashGlobalMethods.get(methodName);
+		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
 		BasicBlock prevBB = cfg.getBasicBlock(prevBBNum);
 		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
@@ -436,10 +450,13 @@ public class SetUpAnalysis {
 			propagatedValue = d.retrieve(pPoint, column);
 
 			// Check if the value is BOT. If so, propagate BOT and continue
-			if (propagatedValue.containsKey("bot")) {
+			if (d.isBOT(pPoint, column)) {
+				// System.out.println("In BOT");
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					d.setToBOT(succPP, column);
+					d.propagate(succPP, column, propagatedValue);
+					// System.out.println(succPP + ":");
+					// d.displayProgramPoint(succPP, column);
 				}
 				continue;
 			}
@@ -458,41 +475,72 @@ public class SetUpAnalysis {
 			// instructions in the basicBlock
 			// The output will be a new HashMap<String,ArrayList<String>>. This
 			// value will be propagated to the successors
+			boolean propagate = false;
 			Iterator<SSAInstruction> iSSA = srcBB.iterator();
 			while (iSSA.hasNext()) {
 				SSAInstruction inst = iSSA.next();
 
 				if (inst instanceof SSANewInstruction) {
 					newTransferFunction(pPoint, column, (SSANewInstruction) inst, propagatedValue);
-				} else if (inst instanceof SSAInvokeInstruction)
-					callTransferFunction();
-				else if (inst instanceof SSAPhiInstruction) {
-					System.out.println("this: " + inst.toString() + "");
+					propagate = true;
+				} else if (inst instanceof SSAInvokeInstruction) {
+					if (((SSAInvokeInstruction) inst).isSpecial()) {
+						propagate = true;
+						continue;
+					}
+					// Check if library methods are being called
+					CallSiteReference csr = ((SSAInvokeInstruction) inst).getCallSite();
+					String signature = csr.getDeclaredTarget().getSignature();
+					String[] sigString = signature.split("[.]");
+					String targetMethodName = sigString[2].split("[(]")[0];
+					String className = "L" + sigString[0] + "/" + sigString[1];
+					if (!hashGlobalMethods.containsKey(className + targetMethodName)) {
+						// System.out.println("LIBRARY");
+						propagate = true;
+						continue;
+					}
+					callTransferFunction(pPoint, column, (SSAInvokeInstruction) inst, propagatedValue,
+							targetMethodName);
+					propagate = true;
+					continue;
+				} else if (inst instanceof SSAPhiInstruction) {
 					phiTransferFunction(pPoint, column, (SSAPhiInstruction) inst, propagatedValue);
+					propagate = true;
+				} else if (inst instanceof SSAReturnInstruction) {
+					returnTransferFunction(pPoint, column, (SSAReturnInstruction) inst, propagatedValue);
+					break;
+				} else if (inst instanceof SSAConditionalBranchInstruction) {
+					branchTransferFunction(pPoint, column, (SSAConditionalBranchInstruction) inst, propagatedValue);
+					break;
 				}
-
-				else if (inst instanceof SSAReturnInstruction) {
-					System.out.println("Returrrrrrrrrrrrrrrrrrrn");
-					System.out.println(inst);
-					returnTransferFunction(pPoint, (SSAReturnInstruction) inst, propagatedValue);
-				} else if (inst instanceof SSAConditionalBranchInstruction)
-					branchTransferFunction(methodName, (SSAConditionalBranchInstruction) inst, propagatedValue);
+			}
+			if (propagate) {
+				// Iterate over the successor basicBlocks to JOIN the
+				// propagatedValue
+				for (ISSABasicBlock succ : succBB) {
+					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+					d.propagate(succPP, column, propagatedValue);
+				}
 			}
 		}
+		return;
 	}
 
 	public void newTransferFunction(String pPoint, int column, SSANewInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
+
+		System.out.println("Inside new: \n" + target + "\n" + inst);
 
 		// Extract info from the program point
 		String methodName = pPoint.split("[.]")[0];
 		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
 		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
-		CGNode node = hashGlobalMethods.get(methodName);
+		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
 		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
 
+		System.out.println(node);
 		String varNum = Integer.toString(inst.getDef());
 
 		String allocationName = methodName + ".new" + inst.iindex;
@@ -511,99 +559,76 @@ public class SetUpAnalysis {
 		// Get the list of all the successor basicBlocks
 		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
-		// Iterate over the successor basicBlocks to JOIN the
-		// propagatedValue
-		System.out.println("before propagate" + propagatedValue);
-		for (ISSABasicBlock succ : succBB) {
-			String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-			d.propagate(succPP, column, propagatedValue);
-			d.displayProgramPoint(succPP, column);
-		}
-
 		return;
 	}
 
-	public void callTransferFunction() {
+	public void callTransferFunction(String pPoint, Integer column, SSAInvokeInstruction inst,
+			HashMap<String, ArrayList<String>> propagatedValue, String targetMethodName) {
 
-	}
+		// // Get the variable numbers
+		// int var1 = inst.getUse(0);
+		// int var2 = inst.getUse(1);
+		// String var1Str = Integer.toString(var1);
+		// String var2Str = Integer.toString(var2);
 
-	public void phiTransferFunction_old(String pPoint, int column, SSAPhiInstruction inst,
-			HashMap<String, ArrayList<String>> toPropagate) {
+		// Iterate over all the variables to check if NULL
+		int numOfUses = inst.getNumberOfUses();
+		for (int i = 0; i < numOfUses; i++) {
+			int varNum = inst.getUse(i);
+			String varStr = Integer.toString(varNum);
 
-		// used to keep track of the bot values of predecessors
-		// this will remain false if all predecessors are bot
-		Boolean flag = false;
-
-		String methodName = pPoint.split("[.]")[0];
-		Integer currentBlockNumber = Integer.parseInt(pPoint.split("[.]")[2]);
-
-		CGNode node = hashGlobalMethods.get(methodName);
-		SSACFG cfg = node.getIR().getControlFlowGraph();
-
-		ISSABasicBlock bb = cfg.getBasicBlock(currentBlockNumber);
-		ISSABasicBlock bb_successor = cfg.getBasicBlock(currentBlockNumber);
-
-		Iterator<ISSABasicBlock> predNodes = cfg.getPredNodes(bb);
-
-		Collection<ISSABasicBlock> succNodes = cfg.getNormalSuccessors(bb);
-		if (succNodes.size() > 1)
-			throw new NullPointerException("The number of successors is assumed to be one");
-		for (ISSABasicBlock b : succNodes) {
-			bb_successor = b;
-		}
-
-		ArrayList<Integer> predBBNumbers = new ArrayList<Integer>();
-		while (predNodes.hasNext()) {
-			ISSABasicBlock pred_bb = predNodes.next();
-			System.out.println(pred_bb.getNumber());
-			predBBNumbers.add(pred_bb.getNumber());
-		}
-
-		System.out.println(methodName);
-		System.out.println(inst.getNumberOfUses());
-		for (int i = 0; i < inst.getNumberOfUses(); i++) {
-			String pp_pred = "";
-			String pp_succ = "";
-
-			int var_rhs = inst.getUse(i);
-			int var_lhs = inst.getDef();
-			pp_pred = methodName + "." + predBBNumbers.get(i) + "." + currentBlockNumber;
-			pp_succ = methodName + "." + currentBlockNumber + "." + bb_successor.getNumber();
-
-			// Do not erase
-			System.out.println("-----");
-			System.out.println(pp_pred);
-			System.out.println("v" + var_rhs + " of predBB" + predBBNumbers.get(i) + " goes into v" + var_lhs);
-			System.out.println(pp_succ);
-			System.out.println(">>>>>>");
-
-			ArrayList<String> valuesInVar_rhs = d.retrieve(pp_pred, column, var_rhs + "");
-			if (valuesInVar_rhs != null) {
-				for (String value : valuesInVar_rhs) {
-					d.add(pp_succ, column, var_lhs + "", value);
-				}
-			} else {
-				String temp = "v" + var_lhs + ":#null";
-				if (inst.toString().contains(temp))
-					d.add(pp_succ, column, var_lhs + "", "null");
-			}
-			if ((!d.retrieve(pp_pred, column).containsKey("bot"))
-					|| ((i == inst.getNumberOfUses() - 1) && (flag == false))) {
-				d.join(pp_succ, column, pp_pred, column);
-				flag = true;
+			if (target.getIR().getSymbolTable().isNullConstant(varNum)) {
+				// Add this NULL Constant into the propagated value
+				propagatedValue.put(varStr, new ArrayList<String>(Arrays.asList("null")));
 			}
 		}
 
-		predBBNumbers.clear();
+		HashMap<String, ArrayList<String>> callSiteValue = new HashMap<String, ArrayList<String>>();
+
+		// System.out.println("PointsTo:\n" + propagatedValue);
+		int start;
+		if (inst.isStatic()) {
+			// Static, variables will be set from 0
+			start = 0;
+		} else
+			start = 1;
+
+		for (int i = start; i < inst.getNumberOfParameters(); i++) {
+			int var = inst.getUse(i);
+			String varStr = Integer.toString(var);
+			ArrayList<String> pointsTo = propagatedValue.get(varStr);
+
+			if (pointsTo == null)
+				continue;
+
+			ArrayList<String> callSitePointsTo = new ArrayList<String>();
+			for (String point : pointsTo)
+				callSitePointsTo.add(point);
+
+			callSiteValue.put(Integer.toString(i + 1), callSitePointsTo);
+		}
+		// System.out.println("CallsiteValue:\n" + callSiteValue);
+		String targetPP = targetMethodName + ".0.1";
+
+		// Check if propagatedValue already exists in the TARGETMETHOD
+		if (!d.columnMapExists(targetPP, callSiteValue)) {
+			// Does not exist. Get the new column number
+			int newCol = d.getNewColumnNum(targetPP);
+			openColumnsDriver(targetMethodName, newCol);
+			d.copyEntireMap(targetPP, newCol, callSiteValue);
+		}
+
+		// d.display();
+		return;
 	}
 
-	public void phiTransferFunction(String pPoint, int column, SSAPhiInstruction inst,
+	public void phiTransferFunction(String pPoint, Integer column, SSAPhiInstruction inst,
 			HashMap<String, ArrayList<String>> toPropagate) {
 
 		String methodName = pPoint.split("[.]")[0];
 		Integer currentBlockNumber = Integer.parseInt(pPoint.split("[.]")[2]);
 
-		CGNode node = hashGlobalMethods.get(methodName);
+		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
 
 		ISSABasicBlock bb = cfg.getBasicBlock(currentBlockNumber);
@@ -661,114 +686,178 @@ public class SetUpAnalysis {
 		predBBNumbers.clear();
 	}
 
-	public void returnTransferFunction(String pPoint, SSAReturnInstruction inst,
+	public void returnTransferFunction(String pPoint, Integer column, SSAReturnInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
-		String callSitePP;
-		Integer callSitecol;
+		if (inst.getNumberOfUses() == 0)
+			return;
 
-		callSitePair callSite = stack.pop();
-		if (callSite == null)
-			throw new NoSuchElementException("Error in return transfer finction. Check your stack contents");
-		callSitePP = callSite.ppoint;
-		callSitecol = callSite.col;
+		String methodName = pPoint.split("[.]")[0];
 
-		// TODO check
-		propagatedValue = returnTransferFunctionHelper(callSitePP, callSitecol, pPoint);
+		int var = inst.getUse(0);
+		ArrayList<String> current_al = d.retrieve(pPoint, column, var + "");
 
+		ArrayList<callSiteData> al_csd = mapToCallSiteData.get(methodName);
+		for (callSiteData csd : al_csd) {
+			int col_original = csd.columnsOpened.get(column);
+			if (csd.columnsOpened.get(column) == null)
+				continue;
+			for (String v : current_al) {
+				d.add(csd.pPoint, col_original, csd.varNum + "", v);
+			}
+		}
 	}
 
-	public void branchTransferFunction(String methodName, SSAConditionalBranchInstruction inst,
+	public void branchTransferFunction(String pPoint, int column, SSAConditionalBranchInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
+
+		// Extract info from the program point
+		String methodName = pPoint.split("[.]")[0];
+		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
+		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
+
+		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
+		SSACFG cfg = node.getIR().getControlFlowGraph();
+		BasicBlock prevBB = cfg.getBasicBlock(prevBBNum);
+		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
+
+		// Get the list of all the successor basicBlocks
+		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
 		// Get the variable numbers
 		int var1 = inst.getUse(0);
 		int var2 = inst.getUse(1);
+		String var1Str = Integer.toString(var1);
+		String var2Str = Integer.toString(var2);
 
 		// Operator used on the conditional
 		String op = inst.getOperator().toString();
 
-		// Check if the second variable is a constant.
-		// ONLY SECOND variable can be a constant
-		// TODO
-		if (target.getIR().getSymbolTable().isNullConstant(var2)) {
+		// Check if any of the two variables are a constant.
+		if (node.getIR().getSymbolTable().isNullConstant(var1)) {
+			System.out.println("V1 null constant");
 			// Add this NULL Constant into the propagated value
-			propagatedValue.put(Integer.toString(var2), new ArrayList<String>(Arrays.asList("null")));
+			propagatedValue.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
 		}
-
-		DefUse defUse = target.getDU();
-		// SSAInstruction def2 = defUse.getDef(var2);
-
-		System.out.println(inst.toString());
-		System.out.println(inst.getUse(0) + " " + inst.getUse(1));
-		System.out.println(op);
-
-		// System.out.println(t1 + " " + t2);
-		Boolean a = target.getIR().getSymbolTable().isNullConstant(var2);
-
-		// System.out.println(inst.getUse(0) + " " + inst.getUse(1));
-		// System.out.println("Cond:" + inst.toString());
-	}
-
-	public void printNodes() {
-		System.out.println("Displaying Application's Call Graph nodes: ");
-		Iterator<CGNode> nodes = cg.iterator();
-
-		// Printout the nodes in the call-graph
-		while (nodes.hasNext()) {
-			String nodeInfo = nodes.next().toString();
-			if (nodeInfo.contains("Application"))
-				System.out.println(nodeInfo);
+		if (node.getIR().getSymbolTable().isNullConstant(var2)) {
+			System.out.println("V2 null constant");
+			// Add this NULL Constant into the propagated value
+			propagatedValue.put(var2Str, new ArrayList<String>(Arrays.asList("null")));
 		}
-	}
+		// System.out.println(inst.toString());
 
-	public HashMap<String, ArrayList<String>> returnTransferFunctionHelper(String callSitePP, Integer callSitecol,
-			String pPoint) {
-		// following stores the column number where the hash maps match.
-		Integer col = null;
+		HashMap<String, ArrayList<String>> trueBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
+		HashMap<String, ArrayList<String>> falseBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
 
-		String methodName = pPoint.split("[.]")[0];
-		String toCheckPP = methodName + ".0.1";
+		// Check if it is an object comparison. If TRUE, then Deterministic IF,
+		// else Non-Deterministic IF
+		if (inst.isObjectComparison()) {
+			System.out.println(propagatedValue);
+			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
+			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
 
-		// we need to do this because we don't know the number of columns at the
-		// program point (toCheckPP)
-		HashMap<Integer, HashMap<String, ArrayList<String>>> methodName_FirstPP = d.retrieve(toCheckPP);
-		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : methodName_FirstPP.entrySet()) {
-			Integer col_temp = entry.getKey();
-			if (d.equals(callSitePP, callSitecol, toCheckPP, col_temp)) {
-				col = col_temp;
-				break;
+			// Get TRUE and FALSE basicBlocks
+			int trueInst = inst.getTarget();
+			BasicBlock trueBB = node.getIR().getControlFlowGraph().getBlockForInstruction(trueInst);
+			int trueBBNum = trueBB.getNumber();
+			ISSABasicBlock falseBB = null;
+
+			// Only 2 Successors should be there for a basicBlock
+			if (succBB.size() != 2) {
+				System.out.println("Conditional statement has more than 2 successors\n" + inst);
+				System.exit(-1);
 			}
-		}
 
-		if (col == null) {
-			// TODO valid assumption?
-			throw new NullPointerException("No matching columns found");
-		}
-		if (col != null)
-			return d.retrieve(pPoint, col);
-		return null;
-	}
-
-	/**
-	 * This method prints the IR of the analysisMethod
-	 */
-	public void printIR() {
-		System.out.println("\n\n");
-		Iterator<CGNode> nodes = cg.iterator();
-		CGNode target = null;
-		while (nodes.hasNext()) {
-			CGNode node = nodes.next();
-			String nodeInfo = node.toString();
-			if (nodeInfo.contains(analysisClass) && nodeInfo.contains(analysisMethod)) {
-				target = node;
-				break;
+			// Get the False BasicBlock
+			for (ISSABasicBlock succ : succBB) {
+				if (succ != trueBB)
+					falseBB = succ;
 			}
-		}
-		if (target != null) {
-			System.out.println("The IR of method " + target.getMethod().getSignature() + " is:");
-			System.out.println(target.getIR().toString());
+
+			String trueSuccPP = methodName + "." + srcBB.getNumber() + "." + trueBB.getNumber();
+			String falseSuccPP = methodName + "." + srcBB.getNumber() + "." + falseBB.getNumber();
+
+			// System.out.println("Before singleton");
+			// When the pointsTo set is singleton
+			if (v1PointsTo.size() == 1 && v2PointsTo.size() == 1) {
+				// System.out.println("both are single");
+				boolean contains = propagatedValue.get(var1Str).containsAll(propagatedValue.get(var2Str));
+
+				// Check if the condition is satisfied
+				// System.out.println(contains);
+				if (((op.equals("ne") && contains == false)) || (op.equals("eq") && contains == true)) {
+					// Condition is satisfied
+					// Set false branch to BOT
+					// falseBranch.clear();
+					// falseBranch.put("bot", new
+					// ArrayList<String>(Arrays.asList("bot")));
+					d.setToBOT(falseSuccPP, column);
+					d.propagate(trueSuccPP, column, trueBranch);
+				} else {
+					// System.out.println("In true");
+					// Condition failed
+					// Set true branch to BOT
+					// trueBranch.clear();
+					// trueBranch.put("bot", new
+					// ArrayList<String>(Arrays.asList("bot")));
+					// System.out.println(trueBranch);
+					d.setToBOT(trueSuccPP, column);
+					d.propagate(falseSuccPP, column, falseBranch);
+				}
+			} else {
+
+				// If not singleton, then send the INTERSECTION to the == branch
+				// and ID to != branch
+				if (op.equals("ne")) {
+
+					// Intersection of v1 and v2 in FALSEBRANCH
+					falseBranch.get(var1Str).retainAll(falseBranch.get(var2Str));
+					falseBranch.get(var2Str).retainAll(falseBranch.get(var1Str));
+
+					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
+					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
+						// falseBranch.clear();
+						// falseBranch.put("bot", new
+						// ArrayList<String>(Arrays.asList("bot")));
+						d.setToBOT(falseSuccPP, column);
+						d.propagate(trueSuccPP, column, trueBranch);
+					} else
+						throw new NullPointerException(
+								"Intersection of ArrayList<> is not same. Branch transfer function: NE");
+				} else if (op.equals("eq")) {
+
+					// Intersection of v1 and v2 in TRUEBRANCH
+					trueBranch.get(var1Str).retainAll(trueBranch.get(var2Str));
+					trueBranch.get(var2Str).retainAll(trueBranch.get(var1Str));
+
+					// Check if the INTERSECTION is NULL. If TRUE, make it BOT
+					if (trueBranch.get(var1Str).size() == 0 && trueBranch.get(var2Str).size() == 0) {
+						// trueBranch.clear();
+						// trueBranch.put("bot", new
+						// ArrayList<String>(Arrays.asList("bot")));
+						d.setToBOT(trueSuccPP, column);
+						d.propagate(falseSuccPP, column, falseBranch);
+					} else
+						throw new NullPointerException(
+								"Intersection of ArrayList<> is not same. Branch transfer function: EQ");
+				}
+			}
+
+			// // Propagate to TRUE and FALSE branches
+			// String succPP = methodName + "." + srcBB.getNumber() + "." +
+			// trueBB.getNumber();
+			// d.propagate(succPP, column, trueBranch);
+			// d.displayProgramPoint(succPP, column);
+			//
+			// succPP = methodName + "." + srcBB.getNumber() + "." +
+			// falseBB.getNumber();
+			// d.propagate(succPP, column, falseBranch);
 		} else {
-			System.out.println("The given method in the given class could not be found");
+			for (ISSABasicBlock succ : succBB) {
+				String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
+				d.propagate(succPP, column, propagatedValue);
+			}
 		}
+
+		return;
 	}
 }
