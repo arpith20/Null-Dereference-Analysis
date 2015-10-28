@@ -152,20 +152,17 @@ public class Data {
 
 	public void copyEntireMap(String pPoint, Integer col, HashMap<String, ArrayList<String>> map) {
 		verifyPPAndCol(pPoint, col, "copyEntireMap");
-		
+
 		HashMap<String, ArrayList<String>> originalMap = pp.get(pPoint).get(col);
-		if ( originalMap == null )
-		{
+		if (originalMap == null) {
 			// No Mapping exists. Create mapping for the first time
-			originalMap = new HashMap<String, ArrayList<String>>(map) ;
-		}
-		else
-		{
+			originalMap = new HashMap<String, ArrayList<String>>(map);
+		} else {
 			// Clear the old HashMap and copy the new one
 			originalMap.clear();
 			originalMap.putAll(map);
 		}
-		return ;
+		return;
 	}
 
 	public void display() {
@@ -426,8 +423,21 @@ public class Data {
 		return;
 	}
 
-	public void displayProgramPoint(String pPoint, Integer col) {
-		verifyPPAndCol(pPoint, col, "displayProgramPoint");
+	public void displayProgramPoint(String pPoint) {
+		if (pp.get(pPoint) == null)
+			throw new NullPointerException("In DISPLAYprogramPoint program point is null");
+
+		HashMap<Integer, HashMap<String, ArrayList<String>>> map = pp.get(pPoint);
+
+		System.out.println("PP:" + pPoint);
+		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : map.entrySet()) {
+			Integer col = entry.getKey();
+			displayProgramPointUnderCol(pPoint, col);
+		}
+	}
+
+	public void displayProgramPointUnderCol(String pPoint, Integer col) {
+		verifyPPAndCol(pPoint, col, "displayProgramPointUnderCol");
 
 		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
 		displayMap(map);
