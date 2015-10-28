@@ -523,7 +523,8 @@ public class SetUpAnalysis {
 					phiTransferFunction(pPoint, column, (SSAPhiInstruction) inst, propagatedValue);
 					propagate = true;
 				} else if (inst instanceof SSAReturnInstruction) {
-					returnTransferFunction();
+					returnTransferFunction(methodName, column, (SSAReturnInstruction)inst, propagatedValue);
+					propagate = true ;
 					break;
 				} else if (inst instanceof SSAConditionalBranchInstruction) {
 					branchTransferFunction(pPoint, column, (SSAConditionalBranchInstruction) inst, propagatedValue);
@@ -545,7 +546,7 @@ public class SetUpAnalysis {
 	public void newTransferFunction(String pPoint, int column, SSANewInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
 
-//		System.out.println("Inside new: \n" + target + "\n" + inst);
+		// System.out.println("Inside new: \n" + target + "\n" + inst);
 
 		// Extract info from the program point
 		String methodName = pPoint.split("[.]")[0];
@@ -556,7 +557,7 @@ public class SetUpAnalysis {
 		SSACFG cfg = node.getIR().getControlFlowGraph();
 		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
 
-//		System.out.println(node);
+		// System.out.println(node);
 		String varNum = Integer.toString(inst.getDef());
 
 		String allocationName = methodName + ".new" + inst.iindex;
@@ -583,7 +584,7 @@ public class SetUpAnalysis {
 
 		String rootMethodName = pPoint.split("[.]")[0];
 
-//		System.out.println(inst.getNumberOfReturnValues());
+		// System.out.println(inst.getNumberOfReturnValues());
 
 		// // Get the variable numbers
 		// int var1 = inst.getUse(0);
@@ -739,8 +740,26 @@ public class SetUpAnalysis {
 		predBBNumbers.clear();
 	}
 
-	public void returnTransferFunction() {
+	public void returnTransferFunction(String pPoint, Integer column, SSAReturnInstruction inst,
+			HashMap<String, ArrayList<String>> propagatedValue) {
+		if (inst.getNumberOfUses() == 0)
+			return;
 
+		String methodName = pPoint.split("[.]")[0];
+
+		int var = inst.getUse(0);
+		ArrayList<String> current_al = d.retrieve(pPoint, column, var + "");
+
+		ArrayList<callSiteData> al_csd = mapToCallSiteData.get(methodName);
+		for (callSiteData csd : al_csd) {
+			int col_original = csd.columnsOpened.get(column);
+			if (csd.columnsOpened.get(column) == null)
+				continue;
+			for (String v : current_al) {
+				d.add(csd.pPoint, col_original, csd.varNum + "", v);
+			}
+		}
+		return;
 	}
 
 	public void branchTransferFunction(String pPoint, int column, SSAConditionalBranchInstruction inst,
@@ -770,12 +789,12 @@ public class SetUpAnalysis {
 
 		// Check if any of the two variables are a constant.
 		if (node.getIR().getSymbolTable().isNullConstant(var1)) {
-//			System.out.println("V1 null constant");
+			// System.out.println("V1 null constant");
 			// Add this NULL Constant into the propagated value
 			propagatedValue.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
 		}
 		if (node.getIR().getSymbolTable().isNullConstant(var2)) {
-//			System.out.println("V2 null constant");
+			// System.out.println("V2 null constant");
 			// Add this NULL Constant into the propagated value
 			propagatedValue.put(var2Str, new ArrayList<String>(Arrays.asList("null")));
 		}
@@ -787,7 +806,7 @@ public class SetUpAnalysis {
 		// Check if it is an object comparison. If TRUE, then Deterministic IF,
 		// else Non-Deterministic IF
 		if (inst.isObjectComparison()) {
-//			System.out.println(propagatedValue);
+			// System.out.println(propagatedValue);
 			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
 			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
 
