@@ -5,12 +5,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Data {
 
 	private HashMap<String, HashMap<Integer, Boolean>> marked = new HashMap<String, HashMap<Integer, Boolean>>();
 	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
 	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> joined_pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
+
+	private TreeMap<String, TreeMap<String, String>> disp = new TreeMap<String, TreeMap<String, String>>();
 
 	// pp1 contains pp2, ie, pp2 is a subset of pp1
 	public Boolean contains(String pp1, String pp2) {
@@ -170,43 +173,59 @@ public class Data {
 		String s_pointsto = "";
 		if (pp == null)
 			throw new NullPointerException("How is this even possible?");
+
+		ArrayList<String> methods = new ArrayList<String>();
 		for (Map.Entry<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> entry : pp.entrySet()) {
-			String programPoint = entry.getKey();
-			System.out.println("\n" + programPoint + ":  ");
-			HashMap<Integer, HashMap<String, ArrayList<String>>> al_cols = entry.getValue();
-			if (al_cols == null)
-				continue;
-			for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> middleentry : al_cols.entrySet()) {
-				HashMap<String, ArrayList<String>> var_hash = middleentry.getValue();
-				System.out.println(" " + middleentry.getKey() + ":  ");
-				if (var_hash == null)
+			String methodName = entry.getKey().split("[.]")[0];
+			if (!methods.contains(methodName)) {
+				methods.add(methodName);
+			}
+		}
+		for (String method : methods) {
+			System.out.println("----------------------------");
+			System.out.println(method);
+			System.out.println("======");
+			for (Map.Entry<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> entry : pp.entrySet()) {
+				String programPoint = entry.getKey();
+				if (!programPoint.contains(method))
 					continue;
-				if (var_hash.containsKey("bot")) {
-					System.out.println("bot");
+				System.out.println("\nBB" + programPoint.split("[.]")[1] + " -> BB" + programPoint.split("[.]")[2] + ":  ");
+				HashMap<Integer, HashMap<String, ArrayList<String>>> al_cols = entry.getValue();
+				if (al_cols == null)
 					continue;
-				}
-				if (var_hash.containsKey("") && var_hash.size() == 1) {
-					System.out.println("{}");
-					continue;
-				}
-				for (Map.Entry<String, ArrayList<String>> innerentry : var_hash.entrySet()) {
-					String variable = innerentry.getKey();
-					if (variable.equals(""))
+				for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> middleentry : al_cols.entrySet()) {
+					HashMap<String, ArrayList<String>> var_hash = middleentry.getValue();
+					System.out.println(" C" + middleentry.getKey() + ":  ");
+					if (var_hash == null)
 						continue;
-					s_pointsto = variable;
-					ArrayList<String> pointsto = innerentry.getValue();
-					if (pointsto == null)
+					if (var_hash.containsKey("bot")) {
+						System.out.println("bot");
 						continue;
-					s_pointsto += " -> {";
-					for (String s : pointsto) {
-						s_pointsto += s + ", ";
 					}
-					s_pointsto = s_pointsto.substring(0, s_pointsto.length() - 2);
-					s_pointsto += "}";
-					System.out.println(s_pointsto);
+					if (var_hash.containsKey("") && var_hash.size() == 1) {
+						System.out.println("{}");
+						continue;
+					}
+					for (Map.Entry<String, ArrayList<String>> innerentry : var_hash.entrySet()) {
+						String variable = innerentry.getKey();
+						if (variable.equals(""))
+							continue;
+						s_pointsto = "v"+variable;
+						ArrayList<String> pointsto = innerentry.getValue();
+						if (pointsto == null)
+							continue;
+						s_pointsto += " -> {";
+						for (String s : pointsto) {
+							s_pointsto += s + ", ";
+						}
+						s_pointsto = s_pointsto.substring(0, s_pointsto.length() - 2);
+						s_pointsto += "}";
+						System.out.println(s_pointsto);
+					}
 				}
 			}
 		}
+		System.out.println("----------------------------");
 
 	}
 
@@ -569,7 +588,7 @@ public class Data {
 	public void displayJoined() {
 		joinAllValues();
 		String s_pointsto = "";
-		if (pp == null)
+		if (joined_pp == null)
 			throw new NullPointerException("How is this even possible?");
 		for (Map.Entry<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> entry : joined_pp.entrySet()) {
 			String programPoint = entry.getKey();
@@ -579,7 +598,7 @@ public class Data {
 				continue;
 			for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> middleentry : al_cols.entrySet()) {
 				HashMap<String, ArrayList<String>> var_hash = middleentry.getValue();
-				System.out.println(" " + middleentry.getKey() + ":  ");
+				// System.out.println(" " + middleentry.getKey() + ": ");
 				if (var_hash == null)
 					continue;
 				if (var_hash.containsKey("bot")) {
