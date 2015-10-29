@@ -420,7 +420,7 @@ public class SetUpAnalysis {
 		while (!workingList.isEmpty()) {
 			String curPP = workingList.get(0);
 
-			// System.out.println("PP:" + curPP);
+			System.out.println("PP:" + curPP);
 
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
@@ -490,6 +490,9 @@ public class SetUpAnalysis {
 			HashMap<String, ArrayList<String>> propagatedValue = new HashMap<String, ArrayList<String>>();
 			propagatedValue = d.retrieve(pPoint, column);
 
+			System.out.println("Before entring blocks");
+			System.out.println(propagatedValue);
+			System.out.println("\n");
 			// Check if the value is BOT. If so, propagate BOT and continue
 			if (d.isBOT(pPoint, column)) {
 				// System.out.println("In BOT");
@@ -584,6 +587,8 @@ public class SetUpAnalysis {
 	public void newTransferFunction(String pPoint, int column, SSANewInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
 
+		System.out.println("Inside New");
+		System.out.println(inst);
 		// System.out.println("Inside new: \n" + target + "\n" + inst);
 
 		// Extract info from the program point
@@ -614,12 +619,15 @@ public class SetUpAnalysis {
 		// Get the list of all the successor basicBlocks
 		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
+		System.out.println("After new");
+		System.out.println(propagatedValue);
 		return;
 	}
 
 	public void callTransferFunction(String pPoint, Integer column, SSAInvokeInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue, String targetMethodName, String succPPoint) {
 
+		// System.out.println("inside ");
 		String rootMethodName = pPoint.split("[.]")[0];
 		CGNode node = hashGlobalMethods.get(analysisClass + rootMethodName);
 		// System.out.println(inst.getNumberOfReturnValues());
@@ -725,7 +733,7 @@ public class SetUpAnalysis {
 	public void phiTransferFunction(String pPoint, Integer column, SSAPhiInstruction inst,
 			HashMap<String, ArrayList<String>> toPropagate) {
 
-		// System.out.println("Before PHI:");
+		System.out.println("Before PHI:");
 		// System.out.println(toPropagate);
 		// System.out.println("\n");
 
@@ -752,9 +760,10 @@ public class SetUpAnalysis {
 
 		Iterator<ISSABasicBlock> predNodes = cfg.getPredNodes(bb);
 
-		Collection<ISSABasicBlock> succNodes = cfg.getNormalSuccessors(bb);
-		if (succNodes.size() > 1)
-			throw new NullPointerException("The number of successors is assumed to be one");
+		// Collection<ISSABasicBlock> succNodes = cfg.getNormalSuccessors(bb);
+		// if (succNodes.size() > 1)
+		// throw new NullPointerException("The number of successors is assumed
+		// to be one");
 
 		ArrayList<Integer> predBBNumbers = new ArrayList<Integer>();
 		while (predNodes.hasNext()) {
@@ -820,8 +829,8 @@ public class SetUpAnalysis {
 				throw new NullPointerException("ValuesInVar_RHS is NULL in phi transfer function");
 		}
 
-		// System.out.println("propagated Value is:");
-		// System.out.println(toPropagate);
+		System.out.println("propagated Value is:");
+		System.out.println(toPropagate);
 		// System.out.println("All_var_lhs is:");
 		// System.out.println(al_var_lhs);
 		// predBBNumbers.clear();
@@ -905,6 +914,8 @@ public class SetUpAnalysis {
 	public void branchTransferFunction(String pPoint, int column, SSAConditionalBranchInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
 
+		System.out.println("inside branch");
+		System.out.println(propagatedValue);
 		// Extract info from the program point
 		String methodName = pPoint.split("[.]")[0];
 		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
@@ -975,9 +986,11 @@ public class SetUpAnalysis {
 			// System.out.println("Before singleton");
 			// When the pointsTo set is singleton
 			if (v1PointsTo.size() == 1 && v2PointsTo.size() == 1) {
-				// System.out.println("both are single");
+				System.out.println("both are single");
+				System.out.println(propagatedValue.get(var1Str));
+				System.out.println(propagatedValue.get(var2Str));
 				boolean contains = propagatedValue.get(var1Str).containsAll(propagatedValue.get(var2Str));
-
+				System.out.println("Contains:" + contains);
 				// Check if the condition is satisfied
 				// System.out.println(contains);
 				if (((op.equals("ne") && contains == false)) || (op.equals("eq") && contains == true)) {
@@ -986,6 +999,7 @@ public class SetUpAnalysis {
 					// falseBranch.clear();
 					// falseBranch.put("bot", new
 					// ArrayList<String>(Arrays.asList("bot")));
+					System.out.println("propagated BOT. Cond = TRUE");
 					d.setToBOT(falseSuccPP, column);
 					boolean changed = false;
 					changed = d.propagate(trueSuccPP, column, trueBranch);
@@ -999,6 +1013,7 @@ public class SetUpAnalysis {
 					// trueBranch.put("bot", new
 					// ArrayList<String>(Arrays.asList("bot")));
 					// System.out.println(trueBranch);
+					System.out.println("propagated bot. cond = FALSE");
 					d.setToBOT(trueSuccPP, column);
 					boolean changed = false;
 					changed = d.propagate(falseSuccPP, column, falseBranch);
@@ -1009,12 +1024,44 @@ public class SetUpAnalysis {
 
 				// If not singleton, then send the INTERSECTION to the == branch
 				// and ID to != branch
+				System.out.println("Before Propagating:");
+				System.out.println("True:");
+				System.out.println(trueBranch);
+				System.out.println("false");
+				System.out.println(falseBranch);
+				falseBranch.put("sri", new ArrayList<String>(Arrays.asList("sri")));
+				// if (trueBranch.containsKey("9"))
+				// trueBranch.remove("9");
 				if (op.equals("ne")) {
 
-					// Intersection of v1 and v2 in FALSEBRANCH
-					falseBranch.get(var1Str).retainAll(falseBranch.get(var2Str));
-					falseBranch.get(var2Str).retainAll(falseBranch.get(var1Str));
+//					// Intersection of v1 and v2 in FALSEBRANCH
+//					ArrayList<String> work1 = falseBranch.get(var1Str);
+//					ArrayList<String> work2 = falseBranch.get(var2Str);
+//					for (int i = 0; i < work1.size(); i++) {
+//						String inter = work1.get(i);
+//						if (work2.contains(inter) == false) {
+//							work1.remove(inter);
+//							i--;
+//						}
+//					}
+//					for (int i = 0; i < work2.size(); i++) {
+//						String inter = work2.get(i);
+//						if (work1.contains(inter) == false) {
+//							work2.remove(inter);
+//							i--;
+//						}
+//					}
 
+					// falseBranch.get(var1Str).retainAll(falseBranch.get(var2Str));
+					 falseBranch.get(var2Str).retainAll(falseBranch.get(var1Str));
+
+					// System.out.println("1:" + falseBranch.get(var1Str));
+					// System.out.println("2:" + falseBranch.get(var2Str));
+					System.out.println("After intersection:");
+					System.out.println("True:");
+					System.out.println(trueBranch);
+					System.out.println("false");
+					System.out.println(falseBranch);
 					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
 					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
 						// falseBranch.clear();
@@ -1025,9 +1072,25 @@ public class SetUpAnalysis {
 						changed = d.propagate(trueSuccPP, column, trueBranch);
 						if (changed)
 							workingList.add(trueSuccPP);
-					} else
-						throw new NullPointerException(
-								"Intersection of ArrayList<> is not same. Branch transfer function: NE");
+					} else {
+						boolean changed = false;
+						changed = d.propagate(falseSuccPP, column, falseBranch);
+						if (changed)
+							workingList.add(falseSuccPP);
+						System.out.println("SUcc: " + falseSuccPP);
+						d.displayProgramPointUnderCol(falseSuccPP, column);
+
+						changed = false;
+						changed = d.propagate(trueSuccPP, column, trueBranch);
+						if (changed)
+							workingList.add(trueSuccPP);
+						System.out.println("SUcc: " + trueSuccPP);
+						d.displayProgramPointUnderCol(trueSuccPP, column);
+					}
+					//
+					// throw new NullPointerException(
+					// "Intersection of ArrayList<> is not same. Branch transfer
+					// function: NE");
 				} else if (op.equals("eq")) {
 
 					// Intersection of v1 and v2 in TRUEBRANCH
@@ -1044,9 +1107,21 @@ public class SetUpAnalysis {
 						changed = d.propagate(falseSuccPP, column, falseBranch);
 						if (changed)
 							workingList.add(falseSuccPP);
-					} else
-						throw new NullPointerException(
-								"Intersection of ArrayList<> is not same. Branch transfer function: EQ");
+					} else {
+						boolean changed = false;
+						changed = d.propagate(trueSuccPP, column, trueBranch);
+						if (changed)
+							workingList.add(trueSuccPP);
+
+						changed = false;
+						changed = d.propagate(falseSuccPP, column, falseBranch);
+						if (changed)
+							workingList.add(falseSuccPP);
+						System.out.println("SUcc: " + falseSuccPP);
+					}
+					// throw new NullPointerException(
+					// "Intersection of ArrayList<> is not same. Branch transfer
+					// function: EQ");
 				}
 			}
 
