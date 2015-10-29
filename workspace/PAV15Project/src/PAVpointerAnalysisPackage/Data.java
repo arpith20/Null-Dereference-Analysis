@@ -381,6 +381,8 @@ public class Data {
 	public ArrayList<String> retrieve(String pPoint, Integer col, String var) {
 		verifyPPAndCol(pPoint, col, "retrieve ArrayList");
 
+		if ( pp.get(pPoint).get(col) == null )
+			System.out.println("HashMap is null");
 		// Check if the pointsTo set of VAR is empty
 		ArrayList<String> map = pp.get(pPoint).get(col).get(var);
 		if (map == null)

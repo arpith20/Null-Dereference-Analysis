@@ -1,0 +1,52 @@
+startTest:
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB2:
+{v3 -> {null}}
+
+BB2 -> BB3:
+{v3 -> {null}}
+
+
+
+ifTest:
+
+BB0 -> BB1:
+{v2 -> {null}}
+
+BB1 -> BB2:
+{v2 -> {null},
+ v4 -> {null}}
+
+BB2 -> BB3:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3}}
+
+BB3 -> BB4:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3}}
+
+BB4 -> BB5:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3}}
+
+BB1 -> BB5:
+bot
+
+BB5 -> BB6:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3},
+ v7 -> {ifTest.new3}}
+
+BB6 -> BB7:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3},
+ v7 -> {ifTest.new3}}
+

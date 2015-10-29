@@ -1,0 +1,60 @@
+Columns:
+c0: 
+{}
+
+c1: 
+{v2 -> {null}}
+
+
+startTest:
+
+BB0 -> BB1: c0:
+{}
+
+BB1 -> BB2: c0:
+{v3 -> {null}}
+
+BB2 -> BB3: c0:
+{v3 -> {null}}
+
+
+
+ifTest:
+
+BB0 -> BB1: c1:
+{v2 -> {null}}
+
+BB1 -> BB2: c1:
+{v2 -> {null},
+ v4 -> {null}}
+
+BB2 -> BB3: c1:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3}}
+
+BB3 -> BB4: c1:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3}}
+
+BB4 -> BB5: c1:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3}}
+
+BB1 -> BB5: c1:
+bot
+
+BB5 -> BB6: c1:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3},
+ v7 -> {ifTest.new3}}
+
+BB6 -> BB6: c1:
+{v2 -> {null},
+ v4 -> {null},
+ v5 -> {ifTest.new3},
+ v7 -> {ifTest.new3}}
+

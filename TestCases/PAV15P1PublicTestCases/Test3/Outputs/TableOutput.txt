@@ -1,0 +1,129 @@
+Columns:
+c0: 
+{}
+
+c1:
+{v2 -> {startTest.new0}}
+
+
+startTest:
+
+BB0 -> BB1: c0:
+{}
+
+BB1 -> BB2: c0:
+{v3 -> {startTest.new0}}
+
+BB2 -> BB3: c0:
+{v3 -> {startTest.new0}}
+
+BB3 -> BB4: c0:
+{v3 -> {startTest.new0}}
+
+BB4 -> BB5: c0:
+{v3 -> {startTest.new0},
+ v7 -> {createNewClass.new6, createNewClass.new16, null}}
+
+BB5 -> BB6: c0:
+{v3 -> {startTest.new0},
+ v7 -> {createNewClass.new6, createNewClass.new16, null}}
+
+BB6 -> BB7: c0:
+{v3 -> {startTest.new0},
+ v7 -> {createNewClass.new6, createNewClass.new16, null}}
+
+
+loopTest:
+
+BB0 -> BB1: c1:
+{v2 -> {startTest.new0}}
+
+BB1 -> BB4: c1:
+{v2 -> {startTest.new0}}
+
+BB4 -> BB5: c1:
+{v2 -> {startTest.new0},
+ v4 -> {null},
+ v11 -> {null, createNewClass.new6, createNewClass.new16},
+ v8 -> {createNewClass.new6, createNewClass.new16, null}}
+
+BB5 -> BB2: c1:
+{v2 -> {startTest.new0},
+ v4 -> {null},
+ v11 -> {null, createNewClass.new6, createNewClass.new16},
+ v8 -> {createNewClass.new6, createNewClass.new16, null}}
+
+BB2 -> BB3: c1:
+{v2 -> {startTest.new0},
+ v4 -> {null},
+ v11 -> {null, createNewClass.new6, createNewClass.new16},
+ v8 -> {createNewClass.new6, createNewClass.new16, null}}
+
+BB3 -> BB4: c1:
+{v2 -> {startTest.new0},
+ v4 -> {null},
+ v11 -> {null, createNewClass.new6, createNewClass.new16},
+ v8 -> {createNewClass.new6, createNewClass.new16, null}}
+
+BB5 -> BB6: c1:
+{v2 -> {startTest.new0},
+ v4 -> {null},
+ v11 -> {null, createNewClass.new6, createNewClass.new16},
+ v8 -> {createNewClass.new6, createNewClass.new16, null}}
+
+BB6 -> BB7: c1:
+{v2 -> {startTest.new0},
+ v4 -> {null},
+ v11 -> {null, createNewClass.new6, createNewClass.new16},
+ v8 -> {createNewClass.new6, createNewClass.new16, null}}
+
+
+createNewClass:
+
+BB0 -> BB1: c0:
+{}
+
+BB1 -> BB2: c0:
+{}
+
+BB2 -> BB3: c0:
+{}
+
+BB3 -> BB4: c0:
+{v10 -> {createNewClass.new6}}
+
+BB4 -> BB5: c0:
+{v10 -> {createNewClass.new6}}
+
+BB5 -> BB12: c0:
+{v10 -> {createNewClass.new6}}
+
+BB2 -> BB6: c0:
+{}
+
+BB6 -> BB7: c0:
+{}
+
+BB7 -> BB8: c0:
+{}
+
+BB8 -> BB9: c0:
+{v8 -> {createNewClass.new16}}
+
+BB9 -> BB10: c0:
+{v8 -> {createNewClass.new16}}
+
+BB10 -> BB11: c0:
+{v8 -> {createNewClass.new16}}
+
+BB7 -> BB11: c0:
+{}
+
+BB11 -> BB12: c0:
+{v7 -> {null}}
+
+BB6 -> BB11: c0:
+{}
+
+BB1 -> BB6: c0:
+{}
