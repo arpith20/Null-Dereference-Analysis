@@ -268,58 +268,57 @@ public class Data {
 	public Boolean propagate(String pPoint, Integer col, HashMap<String, ArrayList<String>> map) {
 		verifyPPAndCol(pPoint, col, "propagate");
 
-//		if (pPoint.equals("phiTest.11.16")) {
-//			if (col == 0) {
-//				System.out.println("Map at 11.16 is \n");
-//
-//				System.out.println(map);
-//				System.out.println("PP is\n");
-//				displayProgramPointUnderCol(pPoint, col);
-//			}
-//		}
+		// if (pPoint.equals("phiTest.11.16")) {
+		// if (col == 0) {
+		// System.out.println("Map at 11.16 is \n");
+		//
+		// System.out.println(map);
+		// System.out.println("PP is\n");
+		// displayProgramPointUnderCol(pPoint, col);
+		// }
+		// }
 
 		Boolean flag = false;
-		if ( map.containsKey("bot")) {
+		if (map.containsKey("bot")) {
 
 			// Check if the COL under PPOINT is NULL
-			if (isNullMap(pPoint, col) || pp.get(pPoint).get(col).size() == 0 ) {
+			if (isNullMap(pPoint, col) || pp.get(pPoint).get(col).size() == 0) {
 				setToBOT(pPoint, col);
 				mark(pPoint, col);
 				return true;
-			}
-			else if ( !isBOT(pPoint,col))
-				return false ;
+			} else if (!isBOT(pPoint, col))
+				return false;
 		}
 
 		// Remove BOT entry from the next program point
 		// Also remove "" mapping if it is there
 		HashMap<String, ArrayList<String>> oldMap = retrieve(pPoint, col);
-//		if (oldMap.containsKey("bot"))
-//			remove(pPoint, col, "bot");
+		// if (oldMap.containsKey("bot"))
+		// remove(pPoint, col, "bot");
 
 		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
 			String var = entry.getKey();
 			ArrayList<String> pointsto = entry.getValue();
 
 			for (String pt : pointsto) {
-				if ( pt.equals(""))
-					continue ;
+				if (pt.equals(""))
+					continue;
 				if (add(pPoint, col, var, pt)) {
 					mark(pPoint, col);
 					flag = true;
 				}
 			}
 		}
-		
-//		if (pPoint.equals("phiTest.16.17")) {
-//			if (col == 0) {
-////				System.out.println("Map at 16.17 is \n");
-////
-////				System.out.println(map);
-////				System.out.println("\n");
-//				displayProgramPointUnderCol(pPoint, col);
-//			}
-//		}
+
+		// if (pPoint.equals("phiTest.16.17")) {
+		// if (col == 0) {
+		//// System.out.println("Map at 16.17 is \n");
+		////
+		//// System.out.println(map);
+		//// System.out.println("\n");
+		// displayProgramPointUnderCol(pPoint, col);
+		// }
+		// }
 		return flag;
 	}
 
@@ -381,7 +380,7 @@ public class Data {
 	public ArrayList<String> retrieve(String pPoint, Integer col, String var) {
 		verifyPPAndCol(pPoint, col, "retrieve ArrayList");
 
-		if ( pp.get(pPoint).get(col) == null )
+		if (pp.get(pPoint).get(col) == null)
 			System.out.println("HashMap is null");
 		// Check if the pointsTo set of VAR is empty
 		ArrayList<String> map = pp.get(pPoint).get(col).get(var);

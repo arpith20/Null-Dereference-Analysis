@@ -420,7 +420,7 @@ public class SetUpAnalysis {
 		while (!workingList.isEmpty()) {
 			String curPP = workingList.get(0);
 
-			System.out.println("PP:" + curPP);
+			// System.out.println("PP:" + curPP);
 
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
