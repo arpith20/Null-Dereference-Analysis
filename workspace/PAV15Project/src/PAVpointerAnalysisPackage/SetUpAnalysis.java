@@ -420,7 +420,7 @@ public class SetUpAnalysis {
 		while (!workingList.isEmpty()) {
 			String curPP = workingList.get(0);
 
-			System.out.println("PP:" + curPP);
+			// System.out.println("PP:" + curPP);
 
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
@@ -725,11 +725,28 @@ public class SetUpAnalysis {
 	public void phiTransferFunction(String pPoint, Integer column, SSAPhiInstruction inst,
 			HashMap<String, ArrayList<String>> toPropagate) {
 
+		// System.out.println("Before PHI:");
+		// System.out.println(toPropagate);
+		// System.out.println("\n");
+
 		String methodName = pPoint.split("[.]")[0];
 		Integer currentBlockNumber = Integer.parseInt(pPoint.split("[.]")[2]);
 
 		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
+
+		// Iterate over all the variables to check if NULL
+		int numOfUses = inst.getNumberOfUses();
+		for (int i = 0; i < numOfUses; i++) {
+			int varNum = inst.getUse(i);
+			String varStr = Integer.toString(varNum);
+
+			if (node.getIR().getSymbolTable().isNullConstant(varNum)) {
+				// Add this NULL Constant into the propagated value
+				if (toPropagate.containsKey(varStr) == false)
+					toPropagate.put(varStr, new ArrayList<String>(Arrays.asList("null")));
+			}
+		}
 
 		ISSABasicBlock bb = cfg.getBasicBlock(currentBlockNumber);
 
@@ -744,49 +761,70 @@ public class SetUpAnalysis {
 			ISSABasicBlock pred_bb = predNodes.next();
 			predBBNumbers.add(pred_bb.getNumber());
 		}
+		// System.out.println("PredNodes are:");
+		// System.out.println(predBBNumbers);
 
+		int var_lhs = inst.getDef();
+		ArrayList<String> al_var_lhs = toPropagate.get(Integer.toString(var_lhs));
 		for (int i = 0; i < inst.getNumberOfUses(); i++) {
 			String pp_pred = "";
 
 			int var_rhs = inst.getUse(i);
-			int var_lhs = inst.getDef();
 			pp_pred = methodName + "." + predBBNumbers.get(i) + "." + currentBlockNumber;
 
-			ArrayList<String> valuesInVar_rhs = d.retrieve(pp_pred, column, var_rhs + "");
-			if (valuesInVar_rhs != null) {
-				for (String value : valuesInVar_rhs) {
-					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs+"");
-					if (al_var_lhs == null) {
-						ArrayList<String> temp = new ArrayList<String>();
-						temp.add(value);
-						toPropagate.put(var_lhs + "", temp);
-					} else {
-						if (!al_var_lhs.contains(value))
-							al_var_lhs.add(value);
-					}
-				}
-			} else {
-				// check for null constants
-				// String null_constant = "v" + var_rhs + ":#null";
-				if (node.getIR().getSymbolTable().isNullConstant(var_rhs)) {
-					// add var_lhs -> null mapping
-					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs);
-					if (al_var_lhs == null) {
-						ArrayList<String> temp = new ArrayList<String>();
-						temp.add("null");
-						toPropagate.put(var_lhs + "", temp);
-					} else {
-						if (!al_var_lhs.contains("null"))
-							al_var_lhs.add("null");
-					}
-					ArrayList<String> temp = new ArrayList<String>();
-					temp.add("null");
-					toPropagate.put(var_rhs + "", temp);
-				}
+			// System.out.println("Predesessor: " + pp_pred);
+			ArrayList<String> valuesInVar_rhs;
+			if (pp_pred.equals(pPoint))
+				valuesInVar_rhs = toPropagate.get(Integer.toString(var_rhs));
+			else
+				valuesInVar_rhs = d.retrieve(pp_pred, column, Integer.toString(var_rhs));
+
+			if (node.getIR().getSymbolTable().isNullConstant(var_rhs)) {
+				// Add this NULL Constant into the propagated value
+				// if (toPropagate.containsKey(varStr) == false)
+				if (valuesInVar_rhs == null)
+					valuesInVar_rhs = new ArrayList<String>();
+				if (valuesInVar_rhs.contains("null") == false)
+					valuesInVar_rhs.add("null");
 			}
+
+			if (valuesInVar_rhs == null)
+				continue;
+
+			// System.out.println("From predessor: " + pp_pred);
+			// System.out.println(valuesInVar_rhs);
+
+			if (valuesInVar_rhs != null) {
+				if (al_var_lhs == null) {
+					// System.out.println(var_lhs + " not present");
+					al_var_lhs = new ArrayList<String>();
+					// for (String value : temp)
+					// // if ( )
+					// temp.addAll(valuesInVar_rhs);
+					toPropagate.put(Integer.toString(var_lhs), al_var_lhs);
+				}
+				for (String value : valuesInVar_rhs) {
+					if (al_var_lhs.contains(value) == false)
+						al_var_lhs.add(value);
+					// if (al_var_lhs == null) {
+					// ArrayList<String> temp = new ArrayList<String>();
+					// temp.add(value);
+					// toPropagate.put(var_lhs + "", temp);
+					// } else {
+					// if (!al_var_lhs.contains(value))
+					// al_var_lhs.add(value);
+					// }
+				}
+
+			} else
+				throw new NullPointerException("ValuesInVar_RHS is NULL in phi transfer function");
 		}
 
-		predBBNumbers.clear();
+		// System.out.println("propagated Value is:");
+		// System.out.println(toPropagate);
+		// System.out.println("All_var_lhs is:");
+		// System.out.println(al_var_lhs);
+		// predBBNumbers.clear();
 	}
 
 	public void returnTransferFunction(String pPoint, Integer column, SSAReturnInstruction inst,
