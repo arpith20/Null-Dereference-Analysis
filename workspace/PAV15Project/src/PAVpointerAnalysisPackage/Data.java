@@ -292,7 +292,7 @@ public class Data {
 
 		// Remove BOT entry from the next program point
 		// Also remove "" mapping if it is there
-		HashMap<String, ArrayList<String>> oldMap = retrieve(pPoint, col);
+		// HashMap<String, ArrayList<String>> oldMap = retrieve(pPoint, col);
 		// if (oldMap.containsKey("bot"))
 		// remove(pPoint, col, "bot");
 
@@ -468,13 +468,39 @@ public class Data {
 		if (pp.get(pPoint) == null)
 			throw new NullPointerException("In DISPLAYprogramPoint program point is null");
 
+		HashMap<String, ArrayList<String>> hm_joined;
 		HashMap<Integer, HashMap<String, ArrayList<String>>> map = pp.get(pPoint);
 
 		System.out.println("BB" + pPoint.split("[.]")[1] + " -> BB" + pPoint.split("[.]")[2] + ":");
+
+		hm_joined = new HashMap<String, ArrayList<String>>();
+
 		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : map.entrySet()) {
 			Integer col = entry.getKey();
-			displayProgramPointUnderCol(pPoint, col);
+			if (!SetUpAnalysis.displayJoinedOutput)
+				displayProgramPointUnderCol(pPoint, col);
+
+			HashMap<String, ArrayList<String>> hm_col = retrieve(pPoint, col);
+			for (Map.Entry<String, ArrayList<String>> e : hm_col.entrySet()) {
+				String var = e.getKey();
+				ArrayList<String> al_pointsto = e.getValue();
+				for (String pointsto : al_pointsto) {
+					ArrayList<String> al = hm_joined.get(var);
+					if (al == null) {
+						al = new ArrayList<String>();
+						al.add(pointsto);
+
+						hm_joined.put(var, al);
+					} else {
+						if (!al.contains(pointsto)) {
+							al.add(pointsto);
+						}
+					}
+				}
+			}
 		}
+		if (SetUpAnalysis.displayJoinedOutput)
+			displayMapJoin(hm_joined);
 	}
 
 	public void displayProgramPointUnderCol(String pPoint, Integer col) {
@@ -505,6 +531,45 @@ public class Data {
 		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
 			String var = entry.getKey();
 			if (var.equals(""))
+				continue;
+			ArrayList<String> pointsto = entry.getValue();
+			if (flag) {
+				op = "v" + var + " -> " + "{";
+				flag = false;
+			} else
+				op = "\n v" + var + " -> " + "{";
+			for (String pt : pointsto) {
+				op = op + pt + ", ";
+			}
+			op = op.substring(0, op.length() - 2);
+			System.out.print(op + "}");
+		}
+		System.out.println("}\n");
+	}
+
+	public void displayMapJoin(HashMap<String, ArrayList<String>> map) {
+		if (map == null)
+			throw new NullPointerException("In DISPLAYMAP, map is null");
+
+		if (map.containsKey("") && map.size() == 1) {
+			System.out.println("{}\n");
+			return;
+		}
+
+		if ((map.containsKey("bot") && map.size() == 1)
+				|| (map.containsKey("bot") && map.size() == 2 && map.containsKey(""))) {
+			System.out.println("bot\n");
+			return;
+		}
+
+		String op = "";
+		System.out.print("{");
+		Boolean flag = true;
+		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
+			String var = entry.getKey();
+			if (var.equals(""))
+				continue;
+			if (var.contains("bot"))
 				continue;
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {

@@ -1,0 +1,130 @@
+
+loopTest
+========
+
+BB0 -> BB1:
+{v2 -> {startTest.new0}}
+
+BB1 -> BB4:
+{v2 -> {startTest.new0}}
+
+BB2 -> BB3:
+{v2 -> {startTest.new0}
+ v4 -> {null}
+ v8 -> {createNewClass.new6, null, createNewClass.new16}
+ v11 -> {null, createNewClass.new6, createNewClass.new16}}
+
+BB3 -> BB4:
+{v2 -> {startTest.new0}
+ v4 -> {null}
+ v8 -> {createNewClass.new6, null, createNewClass.new16}
+ v11 -> {null, createNewClass.new6, createNewClass.new16}}
+
+BB4 -> BB5:
+{v2 -> {startTest.new0}
+ v4 -> {null}
+ v8 -> {createNewClass.new6, null, createNewClass.new16}
+ v11 -> {null, createNewClass.new6, createNewClass.new16}}
+
+BB5 -> BB2:
+{v2 -> {startTest.new0}
+ v4 -> {null}
+ v8 -> {createNewClass.new6, null, createNewClass.new16}
+ v11 -> {null, createNewClass.new6, createNewClass.new16}}
+
+BB5 -> BB6:
+{v2 -> {startTest.new0}
+ v4 -> {null}
+ v8 -> {createNewClass.new6, null, createNewClass.new16}
+ v11 -> {null, createNewClass.new6, createNewClass.new16}}
+
+BB6 -> BB7:
+{v2 -> {startTest.new0}
+ v4 -> {null}
+ v8 -> {createNewClass.new6, null, createNewClass.new16}
+ v11 -> {null, createNewClass.new6, createNewClass.new16}}
+
+
+
+
+createNewClass
+==============
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB6:
+{}
+
+BB1 -> BB2:
+{}
+
+BB2 -> BB6:
+{}
+
+BB2 -> BB3:
+{}
+
+BB3 -> BB4:
+{v10 -> {createNewClass.new6}}
+
+BB4 -> BB5:
+{v10 -> {createNewClass.new6}}
+
+BB5 -> BB12:
+{v10 -> {createNewClass.new6}}
+
+BB6 -> BB11:
+{}
+
+BB6 -> BB7:
+{}
+
+BB7 -> BB11:
+{}
+
+BB7 -> BB8:
+{}
+
+BB8 -> BB9:
+{v8 -> {createNewClass.new16}}
+
+BB9 -> BB10:
+{v8 -> {createNewClass.new16}}
+
+BB10 -> BB12:
+{v8 -> {createNewClass.new16}}
+
+BB11 -> BB12:
+{v7 -> {null}}
+
+
+
+
+startTest
+=========
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB2:
+{v3 -> {startTest.new0}}
+
+BB2 -> BB3:
+{v3 -> {startTest.new0}}
+
+BB3 -> BB4:
+{v3 -> {startTest.new0}}
+
+BB4 -> BB5:
+{v3 -> {startTest.new0}
+ v7 -> {null, createNewClass.new6, createNewClass.new16}}
+
+BB5 -> BB6:
+{v3 -> {startTest.new0}
+ v7 -> {null, createNewClass.new6, createNewClass.new16}}
+
+BB6 -> BB7:
+{v3 -> {startTest.new0}
+ v7 -> {null, createNewClass.new6, createNewClass.new16}}
+

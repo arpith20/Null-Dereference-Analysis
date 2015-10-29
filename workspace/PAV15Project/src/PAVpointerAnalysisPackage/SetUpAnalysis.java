@@ -120,6 +120,9 @@ public class SetUpAnalysis {
 	// Objects of CALLSITEDATA in the ArrayList one for each callSite
 	HashMap<String, ArrayList<callSiteData>> mapToCallSiteData = new HashMap<String, ArrayList<callSiteData>>();
 
+	// FLAG to display either JOIN output or TABLE output
+	public static boolean displayJoinedOutput;
+
 	// START: NO CHANGE REGION
 	private AnalysisScope scope; // scope defines the set of files to be
 									// analyzed
@@ -187,7 +190,17 @@ public class SetUpAnalysis {
 	// END: NO CHANGE REGION
 
 	// Method to initialize a few things before the analysis starts
-	public void init() {
+	public void init() throws FileNotFoundException {
+
+		// FLAG to display JOIN output or TABLE output
+		displayJoinedOutput = true;
+
+		boolean printToFile = true ;
+		if (printToFile == true) {
+			PrintStream out = new PrintStream(new FileOutputStream("output.txt"));
+			System.setOut(out);
+		}
+
 		// Set TARGET to point to the method which we are analyzing
 		if (!setTarget()) {
 			System.out.println("Set Target Failed");

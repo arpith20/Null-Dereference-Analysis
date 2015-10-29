@@ -1,0 +1,76 @@
+
+iterativeReturnTest
+===================
+
+BB0 -> BB1:
+{v3 -> {startTest.new4}
+ v2 -> {startTest.new0}}
+
+BB1 -> BB3:
+{v3 -> {startTest.new4}
+ v2 -> {startTest.new0}}
+
+BB1 -> BB2:
+{v3 -> {startTest.new4}
+ v2 -> {startTest.new0}}
+
+BB2 -> BB4:
+{v3 -> {startTest.new4}
+ v2 -> {startTest.new0}}
+
+BB3 -> BB4:
+{v3 -> {startTest.new4}
+ v2 -> {startTest.new0}}
+
+
+
+
+startTest
+=========
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB2:
+{v3 -> {startTest.new0}}
+
+BB2 -> BB3:
+{v3 -> {startTest.new0}}
+
+BB3 -> BB4:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new4}}
+
+BB4 -> BB5:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new4}}
+
+BB5 -> BB6:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new4}
+ v9 -> {startTest.new4, startTest.new0}}
+
+BB6 -> BB7:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new4}
+ v9 -> {startTest.new4, startTest.new0}
+ v12 -> {startTest.new4, startTest.new0}}
+
+BB7 -> BB8:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new4}
+ v9 -> {startTest.new4, startTest.new0}
+ v12 -> {startTest.new4, startTest.new0}}
+
+BB8 -> BB9:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new4}
+ v9 -> {startTest.new4, startTest.new0}
+ v12 -> {startTest.new4, startTest.new0}}
+
+BB9 -> BB10:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new4}
+ v9 -> {startTest.new4, startTest.new0}
+ v12 -> {startTest.new4, startTest.new0}}
+

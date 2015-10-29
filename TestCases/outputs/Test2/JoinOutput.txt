@@ -1,0 +1,61 @@
+
+returnTest
+==========
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB2:
+{}
+
+BB2 -> BB4:
+{}
+
+BB2 -> BB3:
+{}
+
+BB3 -> BB7:
+{v9 -> {null}}
+
+BB4 -> BB5:
+{v7 -> {returnTest.new7}}
+
+BB5 -> BB6:
+{v7 -> {returnTest.new7}}
+
+BB6 -> BB7:
+{v7 -> {returnTest.new7}}
+
+
+
+
+startTest
+=========
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB2:
+{v3 -> {startTest.new0}}
+
+BB2 -> BB3:
+{v3 -> {startTest.new0}}
+
+BB3 -> BB4:
+{v3 -> {startTest.new0}}
+
+BB4 -> BB5:
+{v3 -> {startTest.new0}}
+
+BB5 -> BB6:
+{v3 -> {startTest.new0}
+ v9 -> {null, returnTest.new7}}
+
+BB6 -> BB7:
+{v3 -> {startTest.new0}
+ v9 -> {null, returnTest.new7}}
+
+BB7 -> BB8:
+{v3 -> {startTest.new0}
+ v9 -> {null, returnTest.new7}}
+
