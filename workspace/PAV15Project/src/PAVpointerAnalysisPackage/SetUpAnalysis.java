@@ -1,8 +1,14 @@
 package PAVpointerAnalysisPackage;
 
 /**
- * @author Arpith K, Sridhar G
- * Program Analysis and Verification, 2015
+ * @authors Sridhar Gopinath	-	g.sridhar53@gmail.com
+ * @authors Arpith K			-	arpith@live.com		
+ *
+ * Null Pointer Dereference analysis,
+ * Program Analysis and Verification Course, Fall - 2015,
+ * Computer Science and Automation (CSA),
+ * Indian Institute of Science (IISc),
+ * Bangalore
  *
  */
 
@@ -60,26 +66,38 @@ public class SetUpAnalysis {
 	// CGNODE of the method which we are analyzing
 	private CGNode target;
 
-	// List of CGNODEs of all the methods which are present in the class
+	// List of CGNODEs of all the methods which are present in the given class
 	private ArrayList<CGNode> globalMethods = new ArrayList<CGNode>();
 
 	// HashMap which maps the names of the methods to its corresponding CGNodes
+	// Key = ClassName + MethodName
 	private HashMap<String, CGNode> hashGlobalMethods = new HashMap<String, CGNode>();
 
 	// Main DATA class to store the analysis results
-	private Data d;
+	private Data data;
 
 	// List of all the program points to analyze. End analysis when this list
 	// becomes empty
 	private ArrayList<String> workingList = new ArrayList<String>();
 
-	// HashMap which contains the list of all program points corresponding to
-	// each method in the program
+	// For all the Methods which are reachable directly or transitively from the
+	// analysis methods, this HashMap maps the name of the method with the
+	// ArrayList of all the program points present in that method
 	private HashMap<String, ArrayList<String>> programPoints = new HashMap<String, ArrayList<String>>();
 
+	// This class is used to keep data at each call site which is used in RETURN
+	// TRANSFER FUNCTION
 	class callSiteData {
+		// Return Site program point
 		public String pPoint;
+
+		// Return variable number, if any
 		public int varNum;
+
+		// If a call site under column col1 opens a column col2 at the target
+		// method, then this HashMap will have a mapping from col2 => col1
+		// Key is the column at the target method and the Value is the column at
+		// the call site
 		public HashMap<Integer, Integer> columnsOpened;
 
 		public callSiteData(String succPPoint, int returnVar) {
@@ -97,6 +115,9 @@ public class SetUpAnalysis {
 		}
 	};
 
+	// HashMap which keeps track of all the callSites of a particular Method
+	// If a function foo is being called by bar1 and bar2, then foo will have 2
+	// Objects of CALLSITEDATA in the ArrayList one for each callSite
 	HashMap<String, ArrayList<callSiteData>> mapToCallSiteData = new HashMap<String, ArrayList<callSiteData>>();
 
 	// START: NO CHANGE REGION
@@ -115,7 +136,6 @@ public class SetUpAnalysis {
 		this.mainClass = mainClass;
 		this.analysisClass = analysisClass;
 		this.analysisMethod = analysisMethod;
-
 	}
 
 	/**
@@ -164,18 +184,23 @@ public class SetUpAnalysis {
 	public void generateCallGraph() throws Exception {
 		cg = builder.makeCallGraph(options, null);
 	}
-
 	// END: NO CHANGE REGION
 
 	// Method to initialize a few things before the analysis starts
 	public void init() {
+		// Set TARGET to point to the method which we are analyzing
 		if (!setTarget()) {
 			System.out.println("Set Target Failed");
 			System.exit(-1);
 		}
+
+		// Initialize the GLOBALMETHODS ArrayList
 		setGlobalMethods();
 
-		d = new Data();
+		// New Object to hold all the data
+		data = new Data();
+
+		return;
 	}
 
 	// Method to store the CGNODE of the method which we are analyzing in the
@@ -194,7 +219,6 @@ public class SetUpAnalysis {
 				break;
 			}
 		}
-		// System.out.println(target);
 		if (target != null) {
 			this.target = target;
 			return true;
@@ -211,7 +235,7 @@ public class SetUpAnalysis {
 
 		// Iterate over all the methods present in the CALLGRAPH and check if
 		// the name of the method has APPLICATION as the third word in it.
-		// This can be done better! TODO
+		// This can be done better!
 		Iterator<CGNode> nodes = cg.iterator();
 		while (nodes.hasNext()) {
 			CGNode node = nodes.next();
@@ -226,8 +250,11 @@ public class SetUpAnalysis {
 					if (!nodeInfo.contains("<init>()V")) {
 						globalMethods.add(node);
 
-						// Get shorthand name of the method and add it to the
-						// hashMap
+						// Get shorthand name of the method and the className
+						// Use this as the KEY and add it to the HashMap
+						// IMPORTANT: Only methodName cannot be used as the KEY
+						// since multiple methods with same name is possible in
+						// a class
 						String methodName = node.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
 						String className = node.getMethod().toString().split("[,]")[1].substring(1);
 						hashGlobalMethods.put(className + methodName, node);
@@ -235,17 +262,16 @@ public class SetUpAnalysis {
 				}
 			}
 		}
-		// System.out.println("AnalysisClass: " + analysisClass);
-		// System.out.println("HashGlobal: \n" + hashGlobalMethods + "\n");
 		return;
 	}
 
-	// Prints the program point names of the methods we are analyzing
+	// Get all the program points in the methods which can be called directly or
+	// transitively from the ROOT method. Store this in PROGRAMPOINTS
 	public void getProgramPoints() {
 
 		// Get the list of all the methods reachable directly or transitively
 		// from the method which we are analyzing
-		ArrayList<CGNode> methods = getTransitiveCallSites();
+		ArrayList<CGNode> methods = getTransitiveCallSites(target);
 		for (CGNode cgnode : methods) {
 
 			// Get just the name of the method from the method signature. This
@@ -262,72 +288,68 @@ public class SetUpAnalysis {
 				// will exclude the exception edges.
 				Collection<ISSABasicBlock> succSet = cfg.getNormalSuccessors(bb);
 				for (ISSABasicBlock succ : succSet) {
+
 					// The unique number assigned to each basicBlock and method
 					// name is used as a program point.
 					// Example: main.1.2 foo.9.10 bar.10.23
 					String pp = methodName + "." + bb.getNumber() + "." + succ.getNumber();
 
 					// Add the program point to the WORKINGLIST
-					// TODO
-					// if (methodName.equals("startTest")) {
-					// workingList.add(pp);
-					// d.addProgramPoint(pp);
-					// }
 					workingList.add(pp);
-					d.addProgramPoint(pp);
+					data.addProgramPoint(pp);
 
 					// Add the program point to the hash map containing the set
 					// of all program points present in a particular method
 					//
 					// Check if the method is already present in the
 					// programPoints hashMap
-					if (!programPoints.containsKey(methodName)) {
+					if (programPoints.containsKey(methodName) == false) {
+
 						// List of programPoints doesn't exist. Create a new one
 						ArrayList<String> list = new ArrayList<String>();
 						list.add(pp);
 						programPoints.put(methodName, list);
 					} else {
-						// Add the programPoint to the existing arrayList
 						ArrayList<String> list = programPoints.get(methodName);
 						list.add(pp);
 					}
 				}
 			}
 		}
-		// System.out.println("Program Points: " + programPoints + "\n");
 		return;
 	}
 
 	// Returns the list of all the methods which are called directly or
 	// transitively by the TARGET method
-	public ArrayList<CGNode> getTransitiveCallSites() {
+	public ArrayList<CGNode> getTransitiveCallSites(CGNode node) {
 		ArrayList<CGNode> callSites = new ArrayList<CGNode>();
 		ArrayList<CGNode> workingList = new ArrayList<CGNode>();
 
 		// Add the method which we are currently analyzing to working list.
 		// We want transitive callSites from the method which we are analyzing
-		callSites.add(target);
-		workingList.add(target);
-		while (!workingList.isEmpty()) {
+		callSites.add(node);
+		workingList.add(node);
+
+		while (workingList.isEmpty() == false) {
 			CGNode cur = workingList.get(0);
 
 			// Get the direct callSites from CUR
 			ArrayList<CGNode> directSites = getDirectCallSites(cur);
-			if (!directSites.isEmpty()) {
+			if (directSites.isEmpty() == false) {
 				for (CGNode add : directSites) {
 
 					// Add the direct callSites to the workingList and callSites
 					// if NOT already present
-					if (!callSites.contains(add))
+					if (callSites.contains(add) == false)
 						callSites.add(add);
-					if (!workingList.contains(add))
+					if (workingList.contains(add) == false)
 						workingList.add(add);
 				}
 			}
+
 			// Reduce the size of the workingList
 			workingList.remove(cur);
 		}
-		// System.out.println("Transitive sites are: " + callSites);
 		return callSites;
 	}
 
@@ -335,11 +357,6 @@ public class SetUpAnalysis {
 	// method
 	public ArrayList<CGNode> getDirectCallSites(CGNode root) {
 		ArrayList<CGNode> callSites = new ArrayList<CGNode>();
-
-		String rootSignature = root.getMethod().getSignature();
-		String[] rootSigString = rootSignature.split("[.]");
-		String rootMethodName = rootSigString[2].split("[(]")[0];
-		String rootClassName = "L" + rootSigString[0] + "/" + rootSigString[1];
 
 		// Iterate over all the call sites in ROOT
 		Iterator<CallSiteReference> icsr = root.getIR().iterateCallSites();
@@ -353,17 +370,21 @@ public class SetUpAnalysis {
 			// TODO
 			if (!csr.isSpecial()) {
 
-				// Check if the Target of this is present in the CALL GRAPH
+				// Check if the target method of this call site is present in
+				// the HashMap containing all the Global Methods
 				// If not present, DO NOT ADD
 				String signature = csr.getDeclaredTarget().getSignature();
 				String[] sigString = signature.split("[.]");
 				String targetMethodName = sigString[2].split("[(]")[0];
 				String targetClassName = "L" + sigString[0] + "/" + sigString[1];
+
 				if (hashGlobalMethods.containsKey(targetClassName + targetMethodName)) {
 					Set<CGNode> nodes = cg.getPossibleTargets(root, csr);
 					if (nodes.size() == 1) {
 						Iterator<CGNode> i = nodes.iterator();
 						CGNode temp = i.next();
+
+						// Add this node to callSites
 						callSites.add(temp);
 
 						// Add this callSite to the CallSiteData class
@@ -373,20 +394,19 @@ public class SetUpAnalysis {
 							siteData = new ArrayList<callSiteData>();
 							mapToCallSiteData.put(targetMethodName, siteData);
 						}
-					} else {
-						System.out.println("size of possibletarget nodes not equal to 1");
-					}
-				} else {
-					// System.out.println(className+methodName +"not present");
-				}
+					} else
+						throw new NullPointerException(
+								"getDirectCallSites: size of possibletarget nodes not equal to 1");
+				} else
+					continue;
 			}
 		}
-		// System.out.println("CallSites for " + root + ":\n" + callSites);
 		return callSites;
 	}
 
 	// Method to set the initial value for the analysis
 	public void setD0() {
+
 		// Get the name of the method we are analyzing
 		String methodName = target.getMethod().toString().split("[,]")[2].split("[(]")[0].substring(1);
 
@@ -397,47 +417,41 @@ public class SetUpAnalysis {
 		openColumnsDriver(methodName, 0);
 
 		// Add D0 to DATA
-		// TODO. REMOVE THIS
-		d.add(pp, 0, "", "");
+		data.add(pp, 0, "", "");
 
 		return;
 	}
 
+	// Helper function to open new columns for an entire method
 	public void openColumnsDriver(String methodName, int column) {
 		ArrayList<String> pPoints = programPoints.get(methodName);
 		for (String pp : pPoints) {
-			d.openColumn(pp, column);
+			data.openColumn(pp, column);
 		}
+		return;
 	}
 
 	// Main kildall algorithm. This will do the analysis and will return once
 	// the WORKINGLIST is empty
 	public void kildall() {
-		// System.out.println(programPoints);
-		// System.out.println(target.getIR());
-		// System.out.println(" WOrking list is:" + workingList + "\n");
-		// System.out.println(globalMethods);
-		while (!workingList.isEmpty()) {
-			String curPP = workingList.get(0);
 
-			// System.out.println("PP:" + curPP);
+		while (workingList.isEmpty() == false) {
+			String curPP = workingList.get(0);
 
 			// Check if all the columns in the program point are unmarked.
 			// If true, continue
-			if (d.checkAllColumnsUnmarked(curPP)) {
+			if (data.checkAllColumnsUnmarked(curPP) == true) {
 				workingList.remove(0);
 				continue;
 			}
 
-			// System.out.println("kildall");
 			// Call the transfer function driver
 			transferFunctionDriver(curPP);
 
 			workingList.remove(0);
 		}
-		// System.out.println("\n\n");
-		// d.display();
 
+		// Display the output of the ENTIRE ANALYSIS
 		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
 			String method = entry.getKey();
 			ArrayList<String> iterate = entry.getValue();
@@ -446,34 +460,32 @@ public class SetUpAnalysis {
 				System.out.print("=");
 			System.out.println("\n");
 			for (String pPoint : iterate)
-				d.displayProgramPoint(pPoint);
+				data.displayProgramPoint(pPoint);
 		}
 
-		// System.out.println(mapToCallSiteData);
+		return;
 	}
 
+	// Helper function which is used to call the particular transfer function
+	// based on the type of instruction
 	public void transferFunctionDriver(String pPoint) {
 
 		// Extract info from the program point
 		String methodName = pPoint.split("[.]")[0];
-		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
 		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
 		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
-		BasicBlock prevBB = cfg.getBasicBlock(prevBBNum);
 		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
 
 		// Get the list of all the successor basicBlocks
 		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
 		// Get the markings present at the current program point
-		HashMap<Integer, Boolean> markings = d.getColumnMarkings(pPoint);
+		HashMap<Integer, Boolean> markings = data.getColumnMarkings(pPoint);
 
-		// System.out.println("TrasferFUnction driver");
 		// Iterate ONLY over the set of columns which are marked
 		for (Map.Entry<Integer, Boolean> entry : markings.entrySet()) {
-			// System.out.println("TrasferFUnction Loop");
 			Integer column = entry.getKey();
 			Boolean mark = entry.getValue();
 
@@ -482,25 +494,22 @@ public class SetUpAnalysis {
 				continue;
 
 			// Un-mark the current column
-			d.unmark(pPoint, column);
+			data.unmark(pPoint, column);
 
 			// Create a new hashMap and initialize it to the value present at
 			// the current program point. This value will be propagated to the
 			// successors
 			HashMap<String, ArrayList<String>> propagatedValue = new HashMap<String, ArrayList<String>>();
-			propagatedValue = d.retrieve(pPoint, column);
+			propagatedValue = data.retrieve(pPoint, column);
 
 			// Check if the value is BOT. If so, propagate BOT and continue
-			if (d.isBOT(pPoint, column)) {
-				// System.out.println("In BOT");
+			if (data.isBOT(pPoint, column)) {
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
 					boolean changed = false;
-					changed = d.propagate(succPP, column, propagatedValue);
+					changed = data.propagate(succPP, column, propagatedValue);
 					if (changed)
 						workingList.add(succPP);
-					// System.out.println(succPP + ":");
-					// d.displayProgramPoint(succPP, column);
 				}
 				continue;
 			}
@@ -511,7 +520,7 @@ public class SetUpAnalysis {
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
 					boolean changed = false;
-					changed = d.propagate(succPP, column, propagatedValue);
+					changed = data.propagate(succPP, column, propagatedValue);
 					if (changed)
 						workingList.add(succPP);
 				}
@@ -531,7 +540,6 @@ public class SetUpAnalysis {
 					newTransferFunction(pPoint, column, (SSANewInstruction) inst, propagatedValue);
 					propagate = true;
 				} else if (inst instanceof SSAInvokeInstruction) {
-					// System.out.println("In Invoke instruction");
 					if (((SSAInvokeInstruction) inst).isSpecial()) {
 						propagate = true;
 						continue;
@@ -543,7 +551,6 @@ public class SetUpAnalysis {
 					String targetMethodName = sigString[2].split("[(]")[0];
 					String className = "L" + sigString[0] + "/" + sigString[1];
 					if (!hashGlobalMethods.containsKey(className + targetMethodName)) {
-						// System.out.println("LIBRARY");
 						propagate = true;
 						continue;
 					}
@@ -572,7 +579,7 @@ public class SetUpAnalysis {
 				boolean changed = false;
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
-					changed = d.propagate(succPP, column, propagatedValue);
+					changed = data.propagate(succPP, column, propagatedValue);
 					if (changed)
 						workingList.add(succPP);
 				}
@@ -584,18 +591,9 @@ public class SetUpAnalysis {
 	public void newTransferFunction(String pPoint, int column, SSANewInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
 
-		// System.out.println("Inside new: \n" + target + "\n" + inst);
-
 		// Extract info from the program point
 		String methodName = pPoint.split("[.]")[0];
-		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
-		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
-		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
-		SSACFG cfg = node.getIR().getControlFlowGraph();
-		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
-
-		// System.out.println(node);
 		String varNum = Integer.toString(inst.getDef());
 
 		String allocationName = methodName + ".new" + inst.iindex;
@@ -611,9 +609,6 @@ public class SetUpAnalysis {
 		// DO a STRONG UPDATE to the points to set of the current variable
 		pointsTo.add(allocationName);
 
-		// Get the list of all the successor basicBlocks
-		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
-
 		return;
 	}
 
@@ -622,13 +617,6 @@ public class SetUpAnalysis {
 
 		String rootMethodName = pPoint.split("[.]")[0];
 		CGNode node = hashGlobalMethods.get(analysisClass + rootMethodName);
-		// System.out.println(inst.getNumberOfReturnValues());
-
-		// // Get the variable numbers
-		// int var1 = inst.getUse(0);
-		// int var2 = inst.getUse(1);
-		// String var1Str = Integer.toString(var1);
-		// String var2Str = Integer.toString(var2);
 
 		// Iterate over all the variables to check if NULL
 		int numOfUses = inst.getNumberOfUses();
@@ -644,7 +632,6 @@ public class SetUpAnalysis {
 
 		HashMap<String, ArrayList<String>> callSiteValue = new HashMap<String, ArrayList<String>>();
 
-		// System.out.println("PointsTo:\n" + propagatedValue);
 		int start;
 		if (inst.isStatic()) {
 			// Static, variables will be set from 0
@@ -666,16 +653,15 @@ public class SetUpAnalysis {
 
 			callSiteValue.put(Integer.toString(i + 1), callSitePointsTo);
 		}
-		// System.out.println("CallsiteValue:\n" + callSiteValue);
 		String targetPP = targetMethodName + ".0.1";
 
 		// Check if propagatedValue already exists in the TARGETMETHOD
-		int newCol = d.columnMapExists(targetPP, callSiteValue);
+		int newCol = data.columnMapExists(targetPP, callSiteValue);
 		if (newCol == -1) {
 			// Does not exist. Get the new column number
-			newCol = d.getNewColumnNum(targetPP);
+			newCol = data.getNewColumnNum(targetPP);
 			openColumnsDriver(targetMethodName, newCol);
-			d.copyEntireMap(targetPP, newCol, callSiteValue);
+			data.copyEntireMap(targetPP, newCol, callSiteValue);
 		}
 
 		if (inst.getNumberOfReturnValues() == 0)
@@ -695,7 +681,6 @@ public class SetUpAnalysis {
 			}
 		}
 		if (thisCallSite == null) {
-			// System.out.println("inside NULL");
 			// No entry for this callSite. Add a new one
 			thisCallSite = new callSiteData(succPPoint, returnVar);
 			thisCallSite.pPoint = new String(succPPoint);
@@ -703,8 +688,6 @@ public class SetUpAnalysis {
 			thisCallSite.columnsOpened = new HashMap<Integer, Integer>();
 			thisCallSite.columnsOpened.put(newCol, column);
 			listCallSites.add(thisCallSite);
-			// System.out.println("Disp");
-			// thisCallSite.display();
 		} else {
 			Integer columnMapped = thisCallSite.columnsOpened.get(newCol);
 			if (columnMapped == null)
@@ -713,21 +696,11 @@ public class SetUpAnalysis {
 				throw new NullPointerException("CallData with column mapping not correct:\n" + inst + "\n");
 
 		}
-		// System.out.println("CallSiteData after CallInstructionis:");
-		// mapToCallSiteData.get(targetMethodName).get(0).display();
-		// System.out.println("ThiCallSiteData:\n");
-		// System.out.println("Disp");
-		// thisCallSite.display();
-		// d.display();
 		return;
 	}
 
 	public void phiTransferFunction(String pPoint, Integer column, SSAPhiInstruction inst,
 			HashMap<String, ArrayList<String>> toPropagate) {
-
-		// System.out.println("Before PHI:");
-		// System.out.println(toPropagate);
-		// System.out.println("\n");
 
 		String methodName = pPoint.split("[.]")[0];
 		Integer currentBlockNumber = Integer.parseInt(pPoint.split("[.]")[2]);
@@ -761,8 +734,6 @@ public class SetUpAnalysis {
 			ISSABasicBlock pred_bb = predNodes.next();
 			predBBNumbers.add(pred_bb.getNumber());
 		}
-		// System.out.println("PredNodes are:");
-		// System.out.println(predBBNumbers);
 
 		int var_lhs = inst.getDef();
 		ArrayList<String> al_var_lhs = toPropagate.get(Integer.toString(var_lhs));
@@ -772,16 +743,14 @@ public class SetUpAnalysis {
 			int var_rhs = inst.getUse(i);
 			pp_pred = methodName + "." + predBBNumbers.get(i) + "." + currentBlockNumber;
 
-			// System.out.println("Predesessor: " + pp_pred);
 			ArrayList<String> valuesInVar_rhs;
 			if (pp_pred.equals(pPoint))
 				valuesInVar_rhs = toPropagate.get(Integer.toString(var_rhs));
 			else
-				valuesInVar_rhs = d.retrieve(pp_pred, column, Integer.toString(var_rhs));
+				valuesInVar_rhs = data.retrieve(pp_pred, column, Integer.toString(var_rhs));
 
 			if (node.getIR().getSymbolTable().isNullConstant(var_rhs)) {
 				// Add this NULL Constant into the propagated value
-				// if (toPropagate.containsKey(varStr) == false)
 				if (valuesInVar_rhs == null)
 					valuesInVar_rhs = new ArrayList<String>();
 				if (valuesInVar_rhs.contains("null") == false)
@@ -791,40 +760,15 @@ public class SetUpAnalysis {
 			if (valuesInVar_rhs == null)
 				continue;
 
-			// System.out.println("From predessor: " + pp_pred);
-			// System.out.println(valuesInVar_rhs);
-
-			if (valuesInVar_rhs != null) {
-				if (al_var_lhs == null) {
-					// System.out.println(var_lhs + " not present");
-					al_var_lhs = new ArrayList<String>();
-					// for (String value : temp)
-					// // if ( )
-					// temp.addAll(valuesInVar_rhs);
-					toPropagate.put(Integer.toString(var_lhs), al_var_lhs);
-				}
-				for (String value : valuesInVar_rhs) {
-					if (al_var_lhs.contains(value) == false)
-						al_var_lhs.add(value);
-					// if (al_var_lhs == null) {
-					// ArrayList<String> temp = new ArrayList<String>();
-					// temp.add(value);
-					// toPropagate.put(var_lhs + "", temp);
-					// } else {
-					// if (!al_var_lhs.contains(value))
-					// al_var_lhs.add(value);
-					// }
-				}
-
-			} else
-				throw new NullPointerException("ValuesInVar_RHS is NULL in phi transfer function");
+			if (al_var_lhs == null) {
+				al_var_lhs = new ArrayList<String>();
+				toPropagate.put(Integer.toString(var_lhs), al_var_lhs);
+			}
+			for (String value : valuesInVar_rhs) {
+				if (al_var_lhs.contains(value) == false)
+					al_var_lhs.add(value);
+			}
 		}
-
-		// System.out.println("propagated Value is:");
-		// System.out.println(toPropagate);
-		// System.out.println("All_var_lhs is:");
-		// System.out.println(al_var_lhs);
-		// predBBNumbers.clear();
 	}
 
 	public void returnTransferFunction(String pPoint, Integer column, SSAReturnInstruction inst,
@@ -848,7 +792,7 @@ public class SetUpAnalysis {
 		}
 
 		int var = inst.getUse(0);
-		// System.out.println(pPoint);
+
 		ArrayList<String> pointsTo = propagatedValue.get(Integer.toString(var));
 
 		// Variable mapping is not there in the method. What will you propagate?
@@ -856,23 +800,14 @@ public class SetUpAnalysis {
 		if (pointsTo == null)
 			return;
 
-		// System.out.println("callSiteData is:\n");
-		// System.out.println(mapToCallSiteData);
-
 		ArrayList<callSiteData> al_csd = mapToCallSiteData.get(methodName);
 		if (al_csd == null)
 			throw new NullPointerException("al_csd inside return is null");
-
-		// System.out.println("Propagated Value is\n");
-		// System.out.println(propagatedValue);
-		// System.out.println("CallSiteData ");
 
 		boolean changed = false;
 		String returnPP = null;
 		int returnColumn = -1;
 		for (callSiteData csd : al_csd) {
-			// System.out.println("Current callSiteData");
-			// csd.display();
 			if (csd.columnsOpened == null)
 				System.out.println("CSD.columndsOPned is nULL");
 			Integer col_original = csd.columnsOpened.get(column);
@@ -883,22 +818,15 @@ public class SetUpAnalysis {
 			boolean check;
 			returnPP = csd.pPoint;
 			for (String v : pointsTo) {
-				check = d.add(csd.pPoint, col_original, Integer.toString(csd.varNum), v);
+				check = data.add(csd.pPoint, col_original, Integer.toString(csd.varNum), v);
 				if (check == true)
 					changed = true;
 			}
 			if (changed) {
-				// System.out.println("added to working list");
 				workingList.add(returnPP);
-				d.mark(returnPP, returnColumn);
+				data.mark(returnPP, returnColumn);
 			}
-			// System.out.println("Return Data:");
-			// d.displayProgramPointUnderCol(returnPP, returnColumn);
 		}
-
-		// System.out.println("\npropagated value after return:");
-		// System.out.println(propagatedValue);
-		// System.out.println("Return site after return is:\n");
 		return;
 	}
 
@@ -907,12 +835,10 @@ public class SetUpAnalysis {
 
 		// Extract info from the program point
 		String methodName = pPoint.split("[.]")[0];
-		int prevBBNum = Integer.parseInt(pPoint.split("[.]")[1]);
 		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
 		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
-		BasicBlock prevBB = cfg.getBasicBlock(prevBBNum);
 		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
 
 		// Get the list of all the successor basicBlocks
@@ -938,7 +864,6 @@ public class SetUpAnalysis {
 				propagatedValue.put(varStr, new ArrayList<String>(Arrays.asList("null")));
 			}
 		}
-		// System.out.println(inst.toString());
 
 		HashMap<String, ArrayList<String>> trueBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
 		HashMap<String, ArrayList<String>> falseBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
@@ -946,15 +871,12 @@ public class SetUpAnalysis {
 		// Check if it is an object comparison. If TRUE, then Deterministic IF,
 		// else Non-Deterministic IF
 		if (inst.isObjectComparison()) {
-			// System.out.println(propagatedValue);
 			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
 			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
 
-			// if ( pPoint.equals("))
 			// Get TRUE and FALSE basicBlocks
 			int trueInst = inst.getTarget();
 			BasicBlock trueBB = node.getIR().getControlFlowGraph().getBlockForInstruction(trueInst);
-			int trueBBNum = trueBB.getNumber();
 			ISSABasicBlock falseBB = null;
 
 			// Only 2 Successors should be there for a basicBlock
@@ -972,10 +894,8 @@ public class SetUpAnalysis {
 			String trueSuccPP = methodName + "." + srcBB.getNumber() + "." + trueBB.getNumber();
 			String falseSuccPP = methodName + "." + srcBB.getNumber() + "." + falseBB.getNumber();
 
-			// System.out.println("Before singleton");
 			// When the pointsTo set is singleton
 			if (v1PointsTo.size() == 1 && v2PointsTo.size() == 1) {
-				// System.out.println("both are single");
 				boolean contains = propagatedValue.get(var1Str).containsAll(propagatedValue.get(var2Str));
 
 				// Check if the condition is satisfied
@@ -983,25 +903,17 @@ public class SetUpAnalysis {
 				if (((op.equals("ne") && contains == false)) || (op.equals("eq") && contains == true)) {
 					// Condition is satisfied
 					// Set false branch to BOT
-					// falseBranch.clear();
-					// falseBranch.put("bot", new
-					// ArrayList<String>(Arrays.asList("bot")));
-					d.setToBOT(falseSuccPP, column);
+					data.setToBOT(falseSuccPP, column);
 					boolean changed = false;
-					changed = d.propagate(trueSuccPP, column, trueBranch);
+					changed = data.propagate(trueSuccPP, column, trueBranch);
 					if (changed)
 						workingList.add(trueSuccPP);
 				} else {
-					// System.out.println("In true");
 					// Condition failed
 					// Set true branch to BOT
-					// trueBranch.clear();
-					// trueBranch.put("bot", new
-					// ArrayList<String>(Arrays.asList("bot")));
-					// System.out.println(trueBranch);
-					d.setToBOT(trueSuccPP, column);
+					data.setToBOT(trueSuccPP, column);
 					boolean changed = false;
-					changed = d.propagate(falseSuccPP, column, falseBranch);
+					changed = data.propagate(falseSuccPP, column, falseBranch);
 					if (changed)
 						workingList.add(falseSuccPP);
 				}
@@ -1017,12 +929,9 @@ public class SetUpAnalysis {
 
 					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
 					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
-						// falseBranch.clear();
-						// falseBranch.put("bot", new
-						// ArrayList<String>(Arrays.asList("bot")));
-						d.setToBOT(falseSuccPP, column);
+						data.setToBOT(falseSuccPP, column);
 						boolean changed = false;
-						changed = d.propagate(trueSuccPP, column, trueBranch);
+						changed = data.propagate(trueSuccPP, column, trueBranch);
 						if (changed)
 							workingList.add(trueSuccPP);
 					} else
@@ -1036,12 +945,9 @@ public class SetUpAnalysis {
 
 					// Check if the INTERSECTION is NULL. If TRUE, make it BOT
 					if (trueBranch.get(var1Str).size() == 0 && trueBranch.get(var2Str).size() == 0) {
-						// trueBranch.clear();
-						// trueBranch.put("bot", new
-						// ArrayList<String>(Arrays.asList("bot")));
-						d.setToBOT(trueSuccPP, column);
+						data.setToBOT(trueSuccPP, column);
 						boolean changed = false;
-						changed = d.propagate(falseSuccPP, column, falseBranch);
+						changed = data.propagate(falseSuccPP, column, falseBranch);
 						if (changed)
 							workingList.add(falseSuccPP);
 					} else
@@ -1049,26 +955,15 @@ public class SetUpAnalysis {
 								"Intersection of ArrayList<> is not same. Branch transfer function: EQ");
 				}
 			}
-
-			// // Propagate to TRUE and FALSE branches
-			// String succPP = methodName + "." + srcBB.getNumber() + "." +
-			// trueBB.getNumber();
-			// d.propagate(succPP, column, trueBranch);
-			// d.displayProgramPoint(succPP, column);
-			//
-			// succPP = methodName + "." + srcBB.getNumber() + "." +
-			// falseBB.getNumber();
-			// d.propagate(succPP, column, falseBranch);
 		} else {
 			for (ISSABasicBlock succ : succBB) {
 				String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
 				boolean changed = false;
-				changed = d.propagate(succPP, column, propagatedValue);
+				changed = data.propagate(succPP, column, propagatedValue);
 				if (changed)
 					workingList.add(succPP);
 			}
 		}
-
 		return;
 	}
 }
