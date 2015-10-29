@@ -477,7 +477,8 @@ public class Data {
 
 		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : map.entrySet()) {
 			Integer col = entry.getKey();
-			// displayProgramPointUnderCol(pPoint, col);
+			if (!PAVPointerAnalysis.displayJoinedOutput)
+				displayProgramPointUnderCol(pPoint, col);
 
 			HashMap<String, ArrayList<String>> hm_col = retrieve(pPoint, col);
 			for (Map.Entry<String, ArrayList<String>> e : hm_col.entrySet()) {
@@ -498,7 +499,8 @@ public class Data {
 				}
 			}
 		}
-		displayMap(hm_joined);
+		if (PAVPointerAnalysis.displayJoinedOutput)
+			displayMapJoin(hm_joined);
 	}
 
 	public void displayProgramPointUnderCol(String pPoint, Integer col) {
@@ -507,6 +509,45 @@ public class Data {
 		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
 		System.out.println("C" + col + ":");
 		displayMap(map);
+	}
+
+	public void displayMapJoin(HashMap<String, ArrayList<String>> map) {
+		if (map == null)
+			throw new NullPointerException("In DISPLAYMAP, map is null");
+
+		if (map.containsKey("") && map.size() == 1) {
+			System.out.println("{}\n");
+			return;
+		}
+
+		if ((map.containsKey("bot") && map.size() == 1)
+				|| (map.containsKey("bot") && map.size() == 2 && map.containsKey(""))) {
+			System.out.println("bot\n");
+			return;
+		}
+
+		String op = "";
+		System.out.print("{");
+		Boolean flag = true;
+		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
+			String var = entry.getKey();
+			if (var.equals(""))
+				continue;
+			if (var.contains("bot"))
+				continue;
+			ArrayList<String> pointsto = entry.getValue();
+			if (flag) {
+				op = "v" + var + " -> " + "{";
+				flag = false;
+			} else
+				op = "\n v" + var + " -> " + "{";
+			for (String pt : pointsto) {
+				op = op + pt + ", ";
+			}
+			op = op.substring(0, op.length() - 2);
+			System.out.print(op + "}");
+		}
+		System.out.println("}\n");
 	}
 
 	public void displayMap(HashMap<String, ArrayList<String>> map) {

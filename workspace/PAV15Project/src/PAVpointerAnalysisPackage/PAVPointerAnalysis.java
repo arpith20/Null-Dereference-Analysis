@@ -48,6 +48,8 @@ public class PAVPointerAnalysis {
 		setup = new SetUpAnalysis(classpath, mainClass, analysisClass, analysisMethod);
 	}
 
+	public static boolean displayJoinedOutput;
+
 	public void runAnalysis() throws Exception {
 		/**
 		 * Use setup to construct the relevant data structures (cfg, etc). and
@@ -68,6 +70,7 @@ public class PAVPointerAnalysis {
 
 		setup.setD0();
 
+		displayJoinedOutput = true;
 		setup.kildall();
 	}
 
