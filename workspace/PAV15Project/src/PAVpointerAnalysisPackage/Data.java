@@ -10,6 +10,7 @@ public class Data {
 
 	private HashMap<String, HashMap<Integer, Boolean>> marked = new HashMap<String, HashMap<Integer, Boolean>>();
 	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
+	public static HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp_joined = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
 
 	// pp1 contains pp2, ie, pp2 is a subset of pp1
 	public Boolean contains(String pp1, String pp2) {
@@ -260,27 +261,67 @@ public class Data {
 		return true;
 	}
 
-	public Boolean propagate(String ppoint, Integer col, HashMap<String, ArrayList<String>> h) {
+	// This will propagate the the hashMap MAP to the column COL at the program
+	// point PPOINT
+	// If MAP is BOT: If no mappings are there at PPOINT under COL, then set it
+	// to BOT
+	// Else, DO NOT change the mappings already present
+	public Boolean propagate(String pPoint, Integer col, HashMap<String, ArrayList<String>> map) {
+		verifyPPAndCol(pPoint, col, "propagate");
+
+//		if (pPoint.equals("phiTest.11.16")) {
+//			if (col == 0) {
+//				System.out.println("Map at 11.16 is \n");
+//
+//				System.out.println(map);
+//				System.out.println("PP is\n");
+//				displayProgramPointUnderCol(pPoint, col);
+//			}
+//		}
 
 		Boolean flag = false;
-		if (h != null) {
-			if (h.containsKey("bot")) {
-				return true; // TODO
+		if ( map.containsKey("bot")) {
+
+			// Check if the COL under PPOINT is NULL
+			if (isNullMap(pPoint, col) || pp.get(pPoint).get(col).size() == 0 ) {
+				setToBOT(pPoint, col);
+				mark(pPoint, col);
+				return true;
 			}
-			for (Map.Entry<String, ArrayList<String>> entry : h.entrySet()) {
-				String var = entry.getKey();
-				ArrayList<String> pointsto = entry.getValue();
-				for (String pt : pointsto) {
-					if (add(ppoint, col, var, pt)) {
-						mark(ppoint, col);
-						flag = true;
-					}
+			else if ( !isBOT(pPoint,col))
+				return false ;
+		}
+
+		// Remove BOT entry from the next program point
+		// Also remove "" mapping if it is there
+		HashMap<String, ArrayList<String>> oldMap = retrieve(pPoint, col);
+//		if (oldMap.containsKey("bot"))
+//			remove(pPoint, col, "bot");
+
+		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
+			String var = entry.getKey();
+			ArrayList<String> pointsto = entry.getValue();
+
+			for (String pt : pointsto) {
+				if ( pt.equals(""))
+					continue ;
+				if (add(pPoint, col, var, pt)) {
+					mark(pPoint, col);
+					flag = true;
 				}
 			}
-			return flag;
-		} else {
-			throw new NullPointerException("H is null here");
 		}
+		
+//		if (pPoint.equals("phiTest.16.17")) {
+//			if (col == 0) {
+////				System.out.println("Map at 16.17 is \n");
+////
+////				System.out.println(map);
+////				System.out.println("\n");
+//				displayProgramPointUnderCol(pPoint, col);
+//			}
+//		}
+		return flag;
 	}
 
 	// pp1 = pp1 union pp2
@@ -509,7 +550,7 @@ public class Data {
 		return true;
 	}
 
-	public boolean columnMapExists(String pPoint, HashMap<String, ArrayList<String>> map) {
+	public int columnMapExists(String pPoint, HashMap<String, ArrayList<String>> map) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> columnMap = pp.get(pPoint);
 		if (pp == null)
 			throw new NullPointerException("columnMapExists: " + pPoint + " programPoint NOT present");
@@ -518,9 +559,9 @@ public class Data {
 			HashMap<String, ArrayList<String>> pointsToMap = entry.getValue();
 
 			if (pointsToMap.equals(map))
-				return true;
+				return entry.getKey();
 		}
-		return false;
+		return -1;
 	}
 
 	public int getNewColumnNum(String pPoint) {

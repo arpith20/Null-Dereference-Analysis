@@ -11,8 +11,6 @@ import java.io.*;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import javax.annotation.processing.SupportedSourceVersion;
-
 import org.apache.commons.lang3.StringUtils;
 
 import com.ibm.wala.cfg.IBasicBlock;
@@ -672,8 +670,8 @@ public class SetUpAnalysis {
 		String targetPP = targetMethodName + ".0.1";
 
 		// Check if propagatedValue already exists in the TARGETMETHOD
-		int newCol = -1;
-		if (!d.columnMapExists(targetPP, callSiteValue)) {
+		int newCol = d.columnMapExists(targetPP, callSiteValue);
+		if (newCol == -1) {
 			// Does not exist. Get the new column number
 			newCol = d.getNewColumnNum(targetPP);
 			openColumnsDriver(targetMethodName, newCol);
@@ -757,7 +755,7 @@ public class SetUpAnalysis {
 			ArrayList<String> valuesInVar_rhs = d.retrieve(pp_pred, column, var_rhs + "");
 			if (valuesInVar_rhs != null) {
 				for (String value : valuesInVar_rhs) {
-					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs);
+					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs+"");
 					if (al_var_lhs == null) {
 						ArrayList<String> temp = new ArrayList<String>();
 						temp.add(value);
@@ -769,6 +767,7 @@ public class SetUpAnalysis {
 				}
 			} else {
 				// check for null constants
+				// String null_constant = "v" + var_rhs + ":#null";
 				if (node.getIR().getSymbolTable().isNullConstant(var_rhs)) {
 					// add var_lhs -> null mapping
 					ArrayList<String> al_var_lhs = toPropagate.get(var_lhs);
@@ -849,12 +848,14 @@ public class SetUpAnalysis {
 				check = d.add(csd.pPoint, col_original, Integer.toString(csd.varNum), v);
 				if (check == true)
 					changed = true;
-				break;
 			}
-		}
-		if (changed) {
-			workingList.add(returnPP);
-			d.mark(returnPP, returnColumn);
+			if (changed) {
+				// System.out.println("added to working list");
+				workingList.add(returnPP);
+				d.mark(returnPP, returnColumn);
+			}
+			// System.out.println("Return Data:");
+			// d.displayProgramPointUnderCol(returnPP, returnColumn);
 		}
 
 		// System.out.println("\npropagated value after return:");
@@ -888,16 +889,16 @@ public class SetUpAnalysis {
 		// Operator used on the conditional
 		String op = inst.getOperator().toString();
 
-		// Check if any of the two variables are a constant.
-		if (node.getIR().getSymbolTable().isNullConstant(var1)) {
-			// System.out.println("V1 null constant");
-			// Add this NULL Constant into the propagated value
-			propagatedValue.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
-		}
-		if (node.getIR().getSymbolTable().isNullConstant(var2)) {
-			// System.out.println("V2 null constant");
-			// Add this NULL Constant into the propagated value
-			propagatedValue.put(var2Str, new ArrayList<String>(Arrays.asList("null")));
+		// Iterate over all the variables to check if NULL
+		int numOfUses = inst.getNumberOfUses();
+		for (int i = 0; i < numOfUses; i++) {
+			int varNum = inst.getUse(i);
+			String varStr = Integer.toString(varNum);
+
+			if (node.getIR().getSymbolTable().isNullConstant(varNum)) {
+				// Add this NULL Constant into the propagated value
+				propagatedValue.put(varStr, new ArrayList<String>(Arrays.asList("null")));
+			}
 		}
 		// System.out.println(inst.toString());
 
@@ -911,6 +912,7 @@ public class SetUpAnalysis {
 			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
 			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
 
+			// if ( pPoint.equals("))
 			// Get TRUE and FALSE basicBlocks
 			int trueInst = inst.getTarget();
 			BasicBlock trueBB = node.getIR().getControlFlowGraph().getBlockForInstruction(trueInst);
