@@ -911,6 +911,18 @@ public class SetUpAnalysis {
 		return;
 	}
 
+	public <T> List<T> intersection(List<T> list1, List<T> list2) {
+		List<T> list = new ArrayList<T>();
+
+		for (T t : list1) {
+			if (list2.contains(t)) {
+				list.add(t);
+			}
+		}
+
+		return list;
+	}
+
 	public void branchTransferFunction(String pPoint, int column, SSAConditionalBranchInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
 
@@ -1034,34 +1046,41 @@ public class SetUpAnalysis {
 				// trueBranch.remove("9");
 				if (op.equals("ne")) {
 
-//					// Intersection of v1 and v2 in FALSEBRANCH
-//					ArrayList<String> work1 = falseBranch.get(var1Str);
-//					ArrayList<String> work2 = falseBranch.get(var2Str);
-//					for (int i = 0; i < work1.size(); i++) {
-//						String inter = work1.get(i);
-//						if (work2.contains(inter) == false) {
-//							work1.remove(inter);
-//							i--;
-//						}
-//					}
-//					for (int i = 0; i < work2.size(); i++) {
-//						String inter = work2.get(i);
-//						if (work1.contains(inter) == false) {
-//							work2.remove(inter);
-//							i--;
-//						}
-//					}
+					// // Intersection of v1 and v2 in FALSEBRANCH
+					// ArrayList<String> work1 = falseBranch.get(var1Str);
+					// ArrayList<String> work2 = falseBranch.get(var2Str);
+					// for (int i = 0; i < work1.size(); i++) {
+					// String inter = work1.get(i);
+					// if (work2.contains(inter) == false) {
+					// work1.remove(inter);
+					// i--;
+					// }
+					// }
+					// for (int i = 0; i < work2.size(); i++) {
+					// String inter = work2.get(i);
+					// if (work1.contains(inter) == false) {
+					// work2.remove(inter);
+					// i--;
+					// }
+					// }
 
-					// falseBranch.get(var1Str).retainAll(falseBranch.get(var2Str));
-					 falseBranch.get(var2Str).retainAll(falseBranch.get(var1Str));
+					// falseBranch.get(var1 + "").retainAll(falseBranch.get(var1
+					// + ""));
+					// falseBranch.get(var2 + "").retainAll(falseBranch.get(var1
+					// + ""));
+					ArrayList<String> temp = new ArrayList<String>(
+							intersection(falseBranch.get(var1 + ""), falseBranch.get(var2 + "")));
 
 					// System.out.println("1:" + falseBranch.get(var1Str));
 					// System.out.println("2:" + falseBranch.get(var2Str));
+					falseBranch.put(var1 + "", new ArrayList<String>(temp));
+					falseBranch.put(var2 + "", new ArrayList<String>(temp));
+
 					System.out.println("After intersection:");
 					System.out.println("True:");
 					System.out.println(trueBranch);
 					System.out.println("false");
-					System.out.println(falseBranch);
+					System.out.println(temp);
 					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
 					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
 						// falseBranch.clear();
@@ -1094,8 +1113,15 @@ public class SetUpAnalysis {
 				} else if (op.equals("eq")) {
 
 					// Intersection of v1 and v2 in TRUEBRANCH
-					trueBranch.get(var1Str).retainAll(trueBranch.get(var2Str));
-					trueBranch.get(var2Str).retainAll(trueBranch.get(var1Str));
+					// trueBranch.get(var1Str).retainAll(trueBranch.get(var2Str));
+					// trueBranch.get(var2Str).retainAll(trueBranch.get(var1Str));
+					ArrayList<String> temp = new ArrayList<String>(
+							intersection(trueBranch.get(var1Str), trueBranch.get(var2Str)));
+
+					// System.out.println("1:" + falseBranch.get(var1Str));
+					// System.out.println("2:" + falseBranch.get(var2Str));
+					trueBranch.put(var1Str, new ArrayList<String>(temp));
+					trueBranch.put(var2Str, new ArrayList<String>(temp));
 
 					// Check if the INTERSECTION is NULL. If TRUE, make it BOT
 					if (trueBranch.get(var1Str).size() == 0 && trueBranch.get(var2Str).size() == 0) {
