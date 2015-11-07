@@ -292,9 +292,9 @@ public class Data {
 
 		// Remove BOT entry from the next program point
 		// Also remove "" mapping if it is there
-		// HashMap<String, ArrayList<String>> oldMap = retrieve(pPoint, col);
-		// if (oldMap.containsKey("bot"))
-		// remove(pPoint, col, "bot");
+		HashMap<String, ArrayList<String>> oldMap = retrieve(pPoint, col);
+		if (oldMap.containsKey("bot"))
+			remove(pPoint, col, "bot");
 
 		for (Map.Entry<String, ArrayList<String>> entry : map.entrySet()) {
 			String var = entry.getKey();
