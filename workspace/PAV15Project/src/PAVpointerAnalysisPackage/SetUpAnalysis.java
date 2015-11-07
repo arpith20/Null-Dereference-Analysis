@@ -100,17 +100,11 @@ public class SetUpAnalysis {
 		// the call site
 		public HashMap<Integer, Integer> columnsOpened;
 
+		// Constructor for this class
 		public callSiteData(String succPPoint, int returnVar) {
 			pPoint = succPPoint;
 			varNum = returnVar;
 			columnsOpened = new HashMap<Integer, Integer>();
-			return;
-		}
-
-		public void display() {
-			System.out.println("PPoint: " + pPoint);
-			System.out.println("Variable: " + varNum);
-			System.out.println("HashMap:\n" + columnsOpened);
 			return;
 		}
 	};
@@ -192,17 +186,18 @@ public class SetUpAnalysis {
 	// Method to initialize a few things before the analysis starts
 	public void init() throws FileNotFoundException {
 
-		// FLAG to display JOIN output or TABLE output
+		// Initialization of flags required for the run of the analysis
 		displayJoinedOutput = false;
+		boolean printToFile = true;
+		String outputFile = "test1.txt";
 
-		boolean printToFile = false;
 		if (printToFile == true) {
-			PrintStream out = new PrintStream(new FileOutputStream("output.txt"));
+			PrintStream out = new PrintStream(new FileOutputStream(outputFile));
 			System.setOut(out);
 		}
 
 		// Set TARGET to point to the method which we are analyzing
-		if (!setTarget()) {
+		if (setTarget() == false) {
 			System.out.println("Set Target Failed");
 			System.exit(-1);
 		}
@@ -437,6 +432,7 @@ public class SetUpAnalysis {
 
 	// Helper function to open new columns for an entire method
 	public void openColumnsDriver(String methodName, int column) {
+		
 		ArrayList<String> pPoints = programPoints.get(methodName);
 		for (String pp : pPoints) {
 			data.openColumn(pp, column);
@@ -463,8 +459,16 @@ public class SetUpAnalysis {
 
 			workingList.remove(0);
 		}
+		
+		// Output of the ENTIRE ANALYSIS
+		displayOutput();
 
-		// Display the output of the ENTIRE ANALYSIS
+		return;
+	}
+	
+	// Display the output of the ENTIRE ANALYSIS
+	public void displayOutput(){
+		
 		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
 			String method = entry.getKey();
 			ArrayList<String> iterate = entry.getValue();
@@ -475,8 +479,7 @@ public class SetUpAnalysis {
 			for (String pPoint : iterate)
 				data.displayProgramPoint(pPoint);
 		}
-
-		return;
+		return ;
 	}
 
 	// Helper function which is used to call the particular transfer function
