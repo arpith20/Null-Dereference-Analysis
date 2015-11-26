@@ -8,13 +8,13 @@ import java.util.Map;
 
 public class Data {
 
-	private HashMap<String, HashMap<Integer, Boolean>> marked = new HashMap<String, HashMap<Integer, Boolean>>();
-	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
+	private HashMap<String, HashMap<Integer, Boolean>> columnMarkings = new HashMap<String, HashMap<Integer, Boolean>>();
+	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pointsToMap = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
 
 	// pp1 contains pp2, ie, pp2 is a subset of pp1
 	public Boolean contains(String pp1, String pp2) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pointsToMap.get(pp2);
 		if (al_col1 == null && al_col2 == null)
 			return true;
 		if (al_col1 == null || al_col2 == null)
@@ -35,8 +35,8 @@ public class Data {
 	// tested
 	// returns true if pp1 dominates pp2, ie., all entries of pp2 is in pp1
 	public Boolean contains(String pp1, Integer col1, String pp2, Integer col2) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pointsToMap.get(pp2);
 		if (al_col1 == null && al_col2 == null)
 			return true;
 		if (al_col1 == null || al_col2 == null)
@@ -66,8 +66,8 @@ public class Data {
 	// returns the column numbers
 	public ArrayList<Integer> contains(String pp1, String pp2, Integer col2) {
 		ArrayList<Integer> a = new ArrayList<Integer>();
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pointsToMap.get(pp2);
 		if (al_col1 == null && al_col2 == null)
 			return null;
 		if (al_col1 == null || al_col2 == null)
@@ -107,8 +107,8 @@ public class Data {
 
 	// returns the column number in pp1 where hash of (pp2,col2) is equal
 	public Integer equals(String pp1, String pp2, Integer col2) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pointsToMap.get(pp2);
 		if (al_col1 == null && al_col2 == null)
 			return null;
 		if (al_col1 == null || al_col2 == null)
@@ -129,7 +129,7 @@ public class Data {
 	public Boolean add(String pPoint, Integer col, String var, String pointsTo) {
 		verifyPPAndCol(pPoint, col, "add");
 
-		HashMap<String, ArrayList<String>> var_hash = pp.get(pPoint).get(col);
+		HashMap<String, ArrayList<String>> var_hash = pointsToMap.get(pPoint).get(col);
 
 		remove(pPoint, col, "bot");
 
@@ -153,7 +153,7 @@ public class Data {
 	public void copyEntireMap(String pPoint, Integer col, HashMap<String, ArrayList<String>> map) {
 		verifyPPAndCol(pPoint, col, "copyEntireMap");
 
-		HashMap<String, ArrayList<String>> originalMap = pp.get(pPoint).get(col);
+		HashMap<String, ArrayList<String>> originalMap = pointsToMap.get(pPoint).get(col);
 		if (originalMap == null) {
 			// No Mapping exists. Create mapping for the first time
 			originalMap = new HashMap<String, ArrayList<String>>(map);
@@ -167,9 +167,9 @@ public class Data {
 
 	public void display() {
 		String s_pointsto = "";
-		if (pp == null)
+		if (pointsToMap == null)
 			throw new NullPointerException("How is this even possible?");
-		for (Map.Entry<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> entry : pp.entrySet()) {
+		for (Map.Entry<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> entry : pointsToMap.entrySet()) {
 			String programPoint = entry.getKey();
 			System.out.println("\n" + programPoint + ":  ");
 			HashMap<Integer, HashMap<String, ArrayList<String>>> al_cols = entry.getValue();
@@ -215,30 +215,38 @@ public class Data {
 	}
 
 	// This will mark the column COL under the program point PP
-	public void mark(String pp, Integer col) {
-		HashMap<Integer, Boolean> h = marked.get(pp);
+	public void mark(String pPoint, Integer col) {
+		HashMap<Integer, Boolean> h = columnMarkings.get(pPoint);
 		if (h == null) {
 			throw new NullPointerException(
-					"mark: " + pp + " " + col + " Program Point doesn't exist while trying to mark");
+					"mark: " + pPoint + " " + col + " Program Point doesn't exist while trying to mark");
 		}
 		h.put(col, true);
 	}
 
 	// This will un-mark the column COL under the program point PP
-	public void unmark(String pp, Integer col) {
-		HashMap<Integer, Boolean> h = marked.get(pp);
-		if (h == null) {
+	// CHECKED
+	public void unmark(String pPoint, Integer col) {
+
+		HashMap<Integer, Boolean> markings = columnMarkings.get(pPoint);
+		if (markings == null)
+			throw new NullPointerException("unmark: " + pPoint + " " + col
+					+ " Program Point doesn't exist in columnMarkings while trying to unmark");
+
+		if (markings.containsKey(col) == false)
 			throw new NullPointerException(
-					"unmark: " + pp + " " + col + " Program Point doesn't exist while trying to unmark");
-		}
-		h.put(col, false);
+					"unmark: " + pPoint + " " + col + " Column doesn't exist in columnMarkings while trying to unmark");
+
+		markings.put(col, false);
+
+		return;
 	}
 
 	// This will return TRUE if the column COL is maked under the program point
 	// PP
 	// With an assumption that initially everything is marked
 	public Boolean marked(String pp, Integer col) {
-		HashMap<Integer, Boolean> h = marked.get(pp);
+		HashMap<Integer, Boolean> h = columnMarkings.get(pp);
 		if (h == null) {
 			throw new NullPointerException(
 					"marked: " + pp + " " + col + " Program Point doesn't exist while trying check if marked");
@@ -247,14 +255,18 @@ public class Data {
 	}
 
 	// Return TRUE only if all the columns under a program point PP is unmarked
-	public Boolean checkAllColumnsUnmarked(String pp) {
-		HashMap<Integer, Boolean> h = marked.get(pp);
-		if (h == null) {
-			throw new NullPointerException("checkAllColumnsUnmarked: " + pp + " Program Point doesn't exist");
-		}
-		for (Map.Entry<Integer, Boolean> entry : h.entrySet()) {
+	//
+	public Boolean checkAllColumnsUnmarked(String pPoint) {
+
+		// Check if the program point exists
+		HashMap<Integer, Boolean> markings = columnMarkings.get(pPoint);
+		if (markings == null)
+			throw new NullPointerException("checkAllColumnsUnmarked: " + pPoint + " Program Point doesn't exist");
+
+		// Return FALSE even if one of the columns is marked
+		for (Map.Entry<Integer, Boolean> entry : markings.entrySet()) {
 			Boolean mark = entry.getValue();
-			if (mark)
+			if (mark == true)
 				return false;
 		}
 		return true;
@@ -282,7 +294,7 @@ public class Data {
 		if (map.containsKey("bot")) {
 
 			// Check if the COL under PPOINT is NULL
-			if (isNullMap(pPoint, col) || pp.get(pPoint).get(col).size() == 0) {
+			if (isNullMap(pPoint, col) || pointsToMap.get(pPoint).get(col).size() == 0) {
 				setToBOT(pPoint, col);
 				mark(pPoint, col);
 				return true;
@@ -324,7 +336,7 @@ public class Data {
 
 	// pp1 = pp1 union pp2
 	public void join(String pp1, Integer col1, String pp2, Integer col2) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pp.get(pp2);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pointsToMap.get(pp2);
 		if (al_col2 != null) {
 			HashMap<String, ArrayList<String>> h = al_col2.get(col2);
 			if (h != null) {
@@ -342,7 +354,7 @@ public class Data {
 	// pp1 = pp2 union pp3
 	// previous values at pp1, if any are removed
 	public void join(String pp1, Integer col1, String pp2, Integer col2, String pp3, Integer col3) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
 		if (al_col1 != null) {
 			al_col1.clear();
 		}
@@ -351,7 +363,7 @@ public class Data {
 	}
 
 	public void remove(String pp1, Integer col, String var, String pttoremove) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
 		if (al_col1 != null) {
 			HashMap<String, ArrayList<String>> h = al_col1.get(col);
 			if (h != null) {
@@ -362,7 +374,7 @@ public class Data {
 	}
 
 	public void remove(String pp1, Integer col, String var) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pp.get(pp1);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
 		if (al_col1 != null) {
 			HashMap<String, ArrayList<String>> h = al_col1.get(col);
 			if (h != null) {
@@ -380,71 +392,100 @@ public class Data {
 	public ArrayList<String> retrieve(String pPoint, Integer col, String var) {
 		verifyPPAndCol(pPoint, col, "retrieve ArrayList");
 
-		if (pp.get(pPoint).get(col) == null)
+		if (pointsToMap.get(pPoint).get(col) == null)
 			System.out.println("HashMap is null");
 		// Check if the pointsTo set of VAR is empty
-		ArrayList<String> map = pp.get(pPoint).get(col).get(var);
+		ArrayList<String> map = pointsToMap.get(pPoint).get(col).get(var);
 		if (map == null)
 			return null;
 		else
-			return new ArrayList<String>(pp.get(pPoint).get(col).get(var));
+			return new ArrayList<String>(pointsToMap.get(pPoint).get(col).get(var));
 	}
 
 	// Retrieves the mappings of all the variables under the column COL at the
 	// program point PPOINT
 	// This is a COPY of the HashMap
+	// CHECKED
 	public HashMap<String, ArrayList<String>> retrieve(String pPoint, Integer col) {
 		verifyPPAndCol(pPoint, col, "retrieve HashMap");
 
-		return new HashMap<String, ArrayList<String>>(pp.get(pPoint).get(col));
+		return new HashMap<String, ArrayList<String>>(pointsToMap.get(pPoint).get(col));
 	}
 
 	// Retrieves the mappings of all the columns under the program point pPoint
 	// This is a COPY of the HashMap
 	public HashMap<Integer, HashMap<String, ArrayList<String>>> retrieve(String pPoint) {
-		return new HashMap<Integer, HashMap<String, ArrayList<String>>>(pp.get(pPoint));
+		return new HashMap<Integer, HashMap<String, ArrayList<String>>>(pointsToMap.get(pPoint));
 	}
 
+	// Function to get the column markings HashMap at a particular program point
+	// PPOINT
+	// CHECKED
 	public HashMap<Integer, Boolean> getColumnMarkings(String pPoint) {
-		if (marked.get(pPoint) != null)
-			return marked.get(pPoint);
-		else
-			return null;
+
+		HashMap<Integer, Boolean> markings = columnMarkings.get(pPoint);
+		if (markings == null)
+			throw new NullPointerException(
+					"getColumnMarkings: " + pPoint + " program point not present in columnMarkings");
+
+		return markings;
 	}
 
+	// Function to add a column to the program point PPOINT
+	// CHECKED
 	public void openColumn(String pPoint, Integer col) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> hm = pp.get(pPoint);
-		if (hm != null) {
-			HashMap<String, ArrayList<String>> hMap = new HashMap<String, ArrayList<String>>();
-			hm.put(col, hMap);
-		} else {
-			throw new NullPointerException("openColumn: " + pPoint + " " + col + " programPoint not present");
-		}
+
+		// Check if the program point is present
+		HashMap<Integer, HashMap<String, ArrayList<String>>> colMap = pointsToMap.get(pPoint);
+		if (colMap != null) {
+
+			// Add the new column
+			HashMap<String, ArrayList<String>> varMap = new HashMap<String, ArrayList<String>>();
+			colMap.put(col, varMap);
+		} else
+			throw new NullPointerException(
+					"openColumn: " + pPoint + " " + col + " programPoint not present in pointsToMap");
 
 		// Open a column in the MARKED data structure as well and MARK it
-		HashMap<Integer, Boolean> markings = marked.get(pPoint);
-		markings.put(col, true);
+		HashMap<Integer, Boolean> markings = columnMarkings.get(pPoint);
+		if (markings == null)
+			throw new NullPointerException("openColun: " + pPoint + " " + col
+					+ " program point not present in columnMarkings when adding a column to it");
+		else
+			markings.put(col, true);
+
+		return;
 	}
 
+	// Function to add a new program point to DATA
+	// Note: This will NOT create any columns at the program points
+	// Columns will be added to the program points once addColumn is called
+	// CHECKED
 	public void addProgramPoint(String pPoint) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> newPP = pp.get(pPoint);
-		if (newPP == null) {
-			newPP = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
-			pp.put(pPoint, newPP);
 
-			// Create a HashMap for this program point in MARKED as well
+		// Check if the program point is already present
+		HashMap<Integer, HashMap<String, ArrayList<String>>> colMap = pointsToMap.get(pPoint);
+		if (colMap == null) {
+			colMap = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
+
+			// Add the program point to the MAIN HashMap
+			pointsToMap.put(pPoint, colMap);
+
+			// Create and add a HashMap for this program point in MARKED as well
 			HashMap<Integer, Boolean> markings = new HashMap<Integer, Boolean>();
-			marked.put(pPoint, markings);
-		} else {
-			throw new NullPointerException("addProgramPoint: " + pPoint + "programPoint already present");
-		}
+			columnMarkings.put(pPoint, markings);
+		} else
+			throw new NullPointerException(
+					"addProgramPoint: " + pPoint + "programPoint already present in pointsToMap");
+
+		return;
 	}
 
 	// Method to make a column at a particular program point to be mapped to BOT
 	public void setToBOT(String pPoint, Integer col) {
 		verifyPPAndCol(pPoint, col, "setToBot");
 
-		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
+		HashMap<String, ArrayList<String>> map = pointsToMap.get(pPoint).get(col);
 
 		map.clear();
 		map.put("bot", new ArrayList<String>(Arrays.asList("bot")));
@@ -453,23 +494,24 @@ public class Data {
 	}
 
 	// This method checks if the COLUMN and a PROGRAM PONIT BOTh exists in DATA
+	// CHECKED
 	private void verifyPPAndCol(String pPoint, Integer col, String methodName) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> newPP = pp.get(pPoint);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> newPP = pointsToMap.get(pPoint);
 		if (newPP == null)
-			throw new NullPointerException(methodName + ": " + pPoint + " programPoint NOT present");
+			throw new NullPointerException(methodName + ": " + pPoint + " programPoint NOT present in pointsToMap");
 
-		if (!newPP.containsKey(col))
-			throw new NullPointerException(methodName + ": " + pPoint + " column NOT present");
+		if (newPP.containsKey(col) == false)
+			throw new NullPointerException(methodName + ": " + pPoint + " column NOT present in pointsToMap");
 
 		return;
 	}
 
 	public void displayProgramPoint(String pPoint) {
-		if (pp.get(pPoint) == null)
+		if (pointsToMap.get(pPoint) == null)
 			throw new NullPointerException("In DISPLAYprogramPoint program point is null");
 
 		HashMap<String, ArrayList<String>> hm_joined;
-		HashMap<Integer, HashMap<String, ArrayList<String>>> map = pp.get(pPoint);
+		HashMap<Integer, HashMap<String, ArrayList<String>>> map = pointsToMap.get(pPoint);
 
 		System.out.println("BB" + pPoint.split("[.]")[1] + " -> BB" + pPoint.split("[.]")[2] + ":");
 
@@ -506,7 +548,7 @@ public class Data {
 	public void displayProgramPointUnderCol(String pPoint, Integer col) {
 		verifyPPAndCol(pPoint, col, "displayProgramPointUnderCol");
 
-		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
+		HashMap<String, ArrayList<String>> map = pointsToMap.get(pPoint).get(col);
 		System.out.println("C" + col + ":");
 		displayMap(map);
 	}
@@ -587,14 +629,15 @@ public class Data {
 	}
 
 	// Returns TRUE if a particular column under a program point is BOT
+	// CHECKED
 	public boolean isBOT(String pPoint, Integer col) {
 		verifyPPAndCol(pPoint, col, "isBOT");
 
-		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
-		if (map.size() != 1)
+		HashMap<String, ArrayList<String>> varMap = pointsToMap.get(pPoint).get(col);
+		if (varMap.size() != 1)
 			return false;
 
-		ArrayList<String> pointsTo = map.get("bot");
+		ArrayList<String> pointsTo = varMap.get("bot");
 		if (pointsTo == null)
 			return false;
 		return true;
@@ -605,7 +648,7 @@ public class Data {
 	public boolean isNullMap(String pPoint, Integer col) {
 		verifyPPAndCol(pPoint, col, "isNullMap");
 
-		HashMap<String, ArrayList<String>> map = pp.get(pPoint).get(col);
+		HashMap<String, ArrayList<String>> map = pointsToMap.get(pPoint).get(col);
 		if (map.size() != 1)
 			return false;
 
@@ -616,8 +659,8 @@ public class Data {
 	}
 
 	public int columnMapExists(String pPoint, HashMap<String, ArrayList<String>> map) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> columnMap = pp.get(pPoint);
-		if (pp == null)
+		HashMap<Integer, HashMap<String, ArrayList<String>>> columnMap = pointsToMap.get(pPoint);
+		if (pointsToMap == null)
 			throw new NullPointerException("columnMapExists: " + pPoint + " programPoint NOT present");
 
 		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : columnMap.entrySet()) {
@@ -630,8 +673,8 @@ public class Data {
 	}
 
 	public int getNewColumnNum(String pPoint) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> columnMap = pp.get(pPoint);
-		if (pp == null)
+		HashMap<Integer, HashMap<String, ArrayList<String>>> columnMap = pointsToMap.get(pPoint);
+		if (pointsToMap == null)
 			throw new NullPointerException("getNewColumnNum: " + pPoint + " programPoint NOT present");
 
 		return columnMap.size();

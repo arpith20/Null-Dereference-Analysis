@@ -71,6 +71,8 @@ public class SetUpAnalysis {
 
 	// HashMap which maps the names of the methods to its corresponding CGNodes
 	// Key = ClassName + MethodName
+	// Ex: Key = "LTestCases/Test1ifTest" where TestCases is the package name
+	// and Test1 is the class name and ifTest is the method name
 	private HashMap<String, CGNode> hashGlobalMethods = new HashMap<String, CGNode>();
 
 	// Main DATA class to store the analysis results
@@ -112,6 +114,8 @@ public class SetUpAnalysis {
 	// HashMap which keeps track of all the callSites of a particular Method
 	// If a function foo is being called by bar1 and bar2, then foo will have 2
 	// Objects of CALLSITEDATA in the ArrayList one for each callSite
+	// Key: MethodName without any extra information. Ex: public void ifTest()
+	// will have key "ifTest"
 	HashMap<String, ArrayList<callSiteData>> mapToCallSiteData = new HashMap<String, ArrayList<callSiteData>>();
 
 	// FLAG to display either JOIN output or TABLE output
@@ -186,11 +190,13 @@ public class SetUpAnalysis {
 	// Method to initialize a few things before the analysis starts
 	public void init() throws FileNotFoundException {
 
+		// TODO Initialization flags for the analysis
 		// Initialization of flags required for the run of the analysis
 		displayJoinedOutput = false;
 		boolean printToFile = true;
 		String outputFile = "test1.txt";
 
+		// If set, write the output generated to a file
 		if (printToFile == true) {
 			PrintStream out = new PrintStream(new FileOutputStream(outputFile));
 			System.setOut(out);
@@ -252,6 +258,7 @@ public class SetUpAnalysis {
 				String[] s = nodeInfo.split("[ ]");
 				if (s[2].contains("Application")) {
 
+					// TODO Check if there is a better way to do this
 					// Add the CGNode to the GLOBALMETHODS
 					// Do not add the Constructor i.e init to the array list or
 					// to the hashMap
@@ -279,7 +286,7 @@ public class SetUpAnalysis {
 
 		// Get the list of all the methods reachable directly or transitively
 		// from the method which we are analyzing
-		ArrayList<CGNode> methods = getTransitiveCallSites(target);
+		ArrayList<CGNode> methods = getDirectAndTransitiveCallSites(target);
 		for (CGNode cgnode : methods) {
 
 			// Get just the name of the method from the method signature. This
@@ -303,6 +310,7 @@ public class SetUpAnalysis {
 					String pp = methodName + "." + bb.getNumber() + "." + succ.getNumber();
 
 					// Add the program point to the WORKINGLIST
+					// Create a program point for the DATA class
 					workingList.add(pp);
 					data.addProgramPoint(pp);
 
@@ -329,7 +337,7 @@ public class SetUpAnalysis {
 
 	// Returns the list of all the methods which are called directly or
 	// transitively by the TARGET method
-	public ArrayList<CGNode> getTransitiveCallSites(CGNode node) {
+	public ArrayList<CGNode> getDirectAndTransitiveCallSites(CGNode node) {
 		ArrayList<CGNode> callSites = new ArrayList<CGNode>();
 		ArrayList<CGNode> workingList = new ArrayList<CGNode>();
 
@@ -363,6 +371,7 @@ public class SetUpAnalysis {
 
 	// Returns the list of all the methods which are called directly by the ROOT
 	// method
+	// This method also creates entries in the mapToCallSiteData as well
 	public ArrayList<CGNode> getDirectCallSites(CGNode root) {
 		ArrayList<CGNode> callSites = new ArrayList<CGNode>();
 
@@ -375,7 +384,7 @@ public class SetUpAnalysis {
 			// invokeVirtual is for method invocation including library methods
 			// invokeStatic is for invoking static methods
 			// Considering only invokeVirtual and invokeStatic
-			// TODO
+			// TODO Check if this is sufficient
 			if (!csr.isSpecial()) {
 
 				// Check if the target method of this call site is present in
@@ -432,11 +441,11 @@ public class SetUpAnalysis {
 
 	// Helper function to open new columns for an entire method
 	public void openColumnsDriver(String methodName, int column) {
-		
 		ArrayList<String> pPoints = programPoints.get(methodName);
 		for (String pp : pPoints) {
 			data.openColumn(pp, column);
 		}
+
 		return;
 	}
 
@@ -459,16 +468,17 @@ public class SetUpAnalysis {
 
 			workingList.remove(0);
 		}
-		
+
 		// Output of the ENTIRE ANALYSIS
 		displayOutput();
 
 		return;
 	}
-	
+
 	// Display the output of the ENTIRE ANALYSIS
-	public void displayOutput(){
-		
+	// TODO Not CHECKED
+	public void displayOutput() {
+
 		for (Map.Entry<String, ArrayList<String>> entry : programPoints.entrySet()) {
 			String method = entry.getKey();
 			ArrayList<String> iterate = entry.getValue();
@@ -479,7 +489,7 @@ public class SetUpAnalysis {
 			for (String pPoint : iterate)
 				data.displayProgramPoint(pPoint);
 		}
-		return ;
+		return;
 	}
 
 	// Helper function which is used to call the particular transfer function
@@ -490,6 +500,7 @@ public class SetUpAnalysis {
 		String methodName = pPoint.split("[.]")[0];
 		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
+		// Get source basic block from the CFG of the method
 		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
 		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
@@ -519,7 +530,7 @@ public class SetUpAnalysis {
 			propagatedValue = data.retrieve(pPoint, column);
 
 			// Check if the value is BOT. If so, propagate BOT and continue
-			if (data.isBOT(pPoint, column)) {
+			if (data.isBOT(pPoint, column) == true) {
 				for (ISSABasicBlock succ : succBB) {
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
 					boolean changed = false;
@@ -698,6 +709,7 @@ public class SetUpAnalysis {
 		}
 		if (thisCallSite == null) {
 			// No entry for this callSite. Add a new one
+			// TODO: Remove the constructor. Variables are public anyway
 			thisCallSite = new callSiteData(succPPoint, returnVar);
 			thisCallSite.pPoint = new String(succPPoint);
 			thisCallSite.varNum = returnVar;
@@ -870,6 +882,8 @@ public class SetUpAnalysis {
 		// Operator used on the conditional
 		String op = inst.getOperator().toString();
 
+		boolean hasNullConstant = false;
+
 		// Iterate over all the variables to check if NULL
 		int numOfUses = inst.getNumberOfUses();
 		for (int i = 0; i < numOfUses; i++) {
@@ -879,15 +893,17 @@ public class SetUpAnalysis {
 			if (node.getIR().getSymbolTable().isNullConstant(varNum)) {
 				// Add this NULL Constant into the propagated value
 				propagatedValue.put(varStr, new ArrayList<String>(Arrays.asList("null")));
+				hasNullConstant = true;
 			}
 		}
 
-		HashMap<String, ArrayList<String>> trueBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
-		HashMap<String, ArrayList<String>> falseBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
-
 		// Check if it is an object comparison. If TRUE, then Deterministic IF,
 		// else Non-Deterministic IF
-		if (inst.isObjectComparison()) {
+		if (inst.isObjectComparison() == true && hasNullConstant == true) {
+
+			HashMap<String, ArrayList<String>> trueBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
+			HashMap<String, ArrayList<String>> falseBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
+
 			ArrayList<String> v1PointsTo = propagatedValue.get(var1Str);
 			ArrayList<String> v2PointsTo = propagatedValue.get(var2Str);
 
@@ -1017,6 +1033,7 @@ public class SetUpAnalysis {
 					workingList.add(succPP);
 			}
 		}
+
 		return;
 	}
 
