@@ -194,7 +194,7 @@ public class SetUpAnalysis {
 		// Initialization of flags required for the run of the analysis
 		displayJoinedOutput = false;
 		boolean printToFile = true;
-		String outputFile = "test1.txt";
+		String outputFile = "test6table.txt";
 
 		// If set, write the output generated to a file
 		if (printToFile == true) {
@@ -873,12 +873,6 @@ public class SetUpAnalysis {
 		// Get the list of all the successor basicBlocks
 		Collection<ISSABasicBlock> succBB = cfg.getNormalSuccessors(srcBB);
 
-		// Get the variable numbers
-		int var1 = inst.getUse(0);
-		int var2 = inst.getUse(1);
-		String var1Str = Integer.toString(var1);
-		String var2Str = Integer.toString(var2);
-
 		// Operator used on the conditional
 		String op = inst.getOperator().toString();
 
@@ -900,6 +894,30 @@ public class SetUpAnalysis {
 		// Check if it is an object comparison. If TRUE, then Deterministic IF,
 		// else Non-Deterministic IF
 		if (inst.isObjectComparison() == true && hasNullConstant == true) {
+
+			// Get the variable numbers
+			int var1 = inst.getUse(0);
+			int var2 = inst.getUse(1);
+			String var1Str = Integer.toString(var1);
+			String var2Str = Integer.toString(var2);
+
+			// Assumption is that the NULL variable is always the second
+			// variable
+			// If that fails, make var1 as var2 and var1str as var2str
+			//
+			// Check if first variable is the null constant
+			ArrayList<String> tempSwap = propagatedValue.get(var1Str);
+			if (tempSwap.size() == 1 && tempSwap.contains("null")) {
+				
+				// Swap int and String representing var1 and var2
+				int tempInt = var1;
+				var1 = var2;
+				var2 = tempInt;
+				
+				String tempStr = var1Str;
+				var1Str = var2Str;
+				var2Str = tempStr;
+			}
 
 			HashMap<String, ArrayList<String>> trueBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
 			HashMap<String, ArrayList<String>> falseBranch = new HashMap<String, ArrayList<String>>(propagatedValue);
@@ -960,65 +978,99 @@ public class SetUpAnalysis {
 					// falseBranch.get(var1Str).retainAll(falseBranch.get(var2Str));
 					// falseBranch.get(var2Str).retainAll(falseBranch.get(var1Str));
 
-					ArrayList<String> temp = new ArrayList<String>(
-							intersection(falseBranch.get(var1Str), falseBranch.get(var2Str)));
+//					ArrayList<String> temp = new ArrayList<String>(
+//							intersection(falseBranch.get(var1Str), falseBranch.get(var2Str)));
 
-					falseBranch.put(var1Str, new ArrayList<String>(temp));
-					falseBranch.put(var2Str, new ArrayList<String>(temp));
+					falseBranch.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
+					
+					v1PointsTo.remove("null") ;
+					trueBranch.put(var1Str, v1PointsTo);
+					
+					boolean changed = false;
+					changed = data.propagate(falseSuccPP, column, falseBranch);
+					if (changed)
+						workingList.add(falseSuccPP);
+					// System.out.println("SUcc: " + falseSuccPP);
+					// d.displayProgramPointUnderCol(falseSuccPP, column);
 
+					changed = false;
+					changed = data.propagate(trueSuccPP, column, trueBranch);
+					if (changed)
+						workingList.add(trueSuccPP);
+					
+//					falseBranch.put(var2Str, new ArrayList<String>(temp));
+
+//					System.out.println("temp intersection is " + temp);
 					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
-					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
-						data.setToBOT(falseSuccPP, column);
-						boolean changed = false;
-						changed = data.propagate(trueSuccPP, column, trueBranch);
-						if (changed)
-							workingList.add(trueSuccPP);
-					} else {
-						boolean changed = false;
-						changed = data.propagate(falseSuccPP, column, falseBranch);
-						if (changed)
-							workingList.add(falseSuccPP);
-						// System.out.println("SUcc: " + falseSuccPP);
-						// d.displayProgramPointUnderCol(falseSuccPP, column);
-
-						changed = false;
-						changed = data.propagate(trueSuccPP, column, trueBranch);
-						if (changed)
-							workingList.add(trueSuccPP);
-						// System.out.println("SUcc: " + trueSuccPP);
-						// d.displayProgramPointUnderCol(trueSuccPP, column);
-					}
+//					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
+//						data.setToBOT(falseSuccPP, column);
+//						boolean changed = false;
+//						changed = data.propagate(trueSuccPP, column, trueBranch);
+//						if (changed)
+//							workingList.add(trueSuccPP);
+//					} else {
+//						boolean changed = false;
+//						changed = data.propagate(falseSuccPP, column, falseBranch);
+//						if (changed)
+//							workingList.add(falseSuccPP);
+//						// System.out.println("SUcc: " + falseSuccPP);
+//						// d.displayProgramPointUnderCol(falseSuccPP, column);
+//
+//						changed = false;
+//						changed = data.propagate(trueSuccPP, column, trueBranch);
+//						if (changed)
+//							workingList.add(trueSuccPP);
+//						// System.out.println("SUcc: " + trueSuccPP);
+//						// d.displayProgramPointUnderCol(trueSuccPP, column);
+//					}
 				} else if (op.equals("eq")) {
 
 					// Intersection of v1 and v2 in TRUEBRANCH
 					// trueBranch.get(var1Str).retainAll(trueBranch.get(var2Str));
 					// trueBranch.get(var2Str).retainAll(trueBranch.get(var1Str));
+					
+					trueBranch.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
+					
+					v1PointsTo.remove("null") ;
+					falseBranch.put(var1Str, v1PointsTo);
+					
+					boolean changed = false;
+					changed = data.propagate(falseSuccPP, column, falseBranch);
+					if (changed)
+						workingList.add(falseSuccPP);
+					// System.out.println("SUcc: " + falseSuccPP);
+					// d.displayProgramPointUnderCol(falseSuccPP, column);
 
-					ArrayList<String> temp = new ArrayList<String>(
-							intersection(trueBranch.get(var1Str), trueBranch.get(var2Str)));
+					changed = false;
+					changed = data.propagate(trueSuccPP, column, trueBranch);
+					if (changed)
+						workingList.add(trueSuccPP);
 
-					trueBranch.put(var1Str, new ArrayList<String>(temp));
-					trueBranch.put(var2Str, new ArrayList<String>(temp));
-
-					// Check if the INTERSECTION is NULL. If TRUE, make it BOT
-					if (trueBranch.get(var1Str).size() == 0 && trueBranch.get(var2Str).size() == 0) {
-						data.setToBOT(trueSuccPP, column);
-						boolean changed = false;
-						changed = data.propagate(falseSuccPP, column, falseBranch);
-						if (changed)
-							workingList.add(falseSuccPP);
-					} else {
-						boolean changed = false;
-						changed = data.propagate(trueSuccPP, column, trueBranch);
-						if (changed)
-							workingList.add(trueSuccPP);
-
-						changed = false;
-						changed = data.propagate(falseSuccPP, column, falseBranch);
-						if (changed)
-							workingList.add(falseSuccPP);
-						// System.out.println("SUcc: " + falseSuccPP);
-					}
+//					ArrayList<String> temp = new ArrayList<String>(
+//							intersection(trueBranch.get(var1Str), trueBranch.get(var2Str)));
+//
+//					trueBranch.put(var1Str, new ArrayList<String>(temp));
+//					trueBranch.put(var2Str, new ArrayList<String>(temp));
+//
+//					// Check if the INTERSECTION is NULL. If TRUE, make it BOT
+//					if (trueBranch.get(var1Str).size() == 0 && trueBranch.get(var2Str).size() == 0) {
+//						data.setToBOT(trueSuccPP, column);
+//						boolean changed = false;
+//						changed = data.propagate(falseSuccPP, column, falseBranch);
+//						if (changed)
+//							workingList.add(falseSuccPP);
+//					} else {
+//						boolean changed = false;
+//						changed = data.propagate(trueSuccPP, column, trueBranch);
+//						if (changed)
+//							workingList.add(trueSuccPP);
+//
+//						changed = false;
+//						changed = data.propagate(falseSuccPP, column, falseBranch);
+//						if (changed)
+//							workingList.add(falseSuccPP);
+//						// System.out.println("SUcc: " + falseSuccPP);
+//					}
 					// throw new NullPointerException(
 					// "Intersection of ArrayList<> is not same. Branch transfer
 					// function: EQ");
