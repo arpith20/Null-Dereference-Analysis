@@ -1,0 +1,122 @@
+
+
+
+recursiveTest
+=============
+
+BB0 -> BB1:
+{v2 -> {null, recursiveTest.new10}}
+
+BB1 -> BB2:
+{v2 -> {null, recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB2 -> BB3:
+{v2 -> {null, recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB3 -> BB4:
+{v2 -> {null, recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB4 -> BB5:
+{v2 -> {null, recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB5 -> BB11:
+{v2 -> {null, recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB5 -> BB6:
+{v2 -> {null, recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB6 -> BB7:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB7 -> BB8:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB8 -> BB9:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB9 -> BB10:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB10 -> BB11:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB11 -> BB12:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB12 -> BB14:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB12 -> BB13:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB13 -> BB15:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB14 -> BB15:
+{v2 -> {null, recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+
+
+
+startTest
+=========
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB2:
+{v3 -> {null}
+ v5 -> {recursiveTest.new0, recursiveTest.new10, null}}
+
+BB2 -> BB3:
+{v3 -> {null}
+ v5 -> {recursiveTest.new0, recursiveTest.new10, null}}
+
+BB3 -> BB4:
+{v3 -> {null}
+ v5 -> {recursiveTest.new0, recursiveTest.new10, null}}
+

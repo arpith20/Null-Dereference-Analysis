@@ -98,15 +98,23 @@ public class SetUpAnalysis {
 
 		// If a call site under column col1 opens a column col2 at the target
 		// method, then this HashMap will have a mapping from col2 => col1
-		// Key is the column at the target method and the Value is the column at
+		// In recursive functions, a single column at the target program point
+		// can be opened by more than 1 columns at the call site. Hence, we
+		// require an ArrayList of columns
+		//
+		// If column 2 at target is opened by both col 1 and col 2 from call
+		// site, then we will have mapping from 2 => {1,2}
+		//
+		// Key is the column at the target method and the Value is the columns
+		// at
 		// the call site
-		public HashMap<Integer, Integer> columnsOpened;
+		public HashMap<Integer, ArrayList<Integer>> columnsOpened;
 
 		// Constructor for this class
 		public callSiteData(String succPPoint, int returnVar) {
 			pPoint = succPPoint;
 			varNum = returnVar;
-			columnsOpened = new HashMap<Integer, Integer>();
+			columnsOpened = new HashMap<Integer, ArrayList<Integer>>();
 			return;
 		}
 	};
@@ -192,9 +200,9 @@ public class SetUpAnalysis {
 
 		// TODO Initialization flags for the analysis
 		// Initialization of flags required for the run of the analysis
-		displayJoinedOutput = false;
-		boolean printToFile = true;
-		String outputFile = "test6table.txt";
+		displayJoinedOutput = true;
+		boolean printToFile = false;
+		String outputFile = "test7join.txt";
 
 		// If set, write the output generated to a file
 		if (printToFile == true) {
@@ -689,6 +697,7 @@ public class SetUpAnalysis {
 			newCol = data.getNewColumnNum(targetPP);
 			openColumnsDriver(targetMethodName, newCol);
 			data.copyEntireMap(targetPP, newCol, callSiteValue);
+			workingList.add(targetPP);
 		}
 
 		if (inst.getNumberOfReturnValues() == 0)
@@ -713,15 +722,19 @@ public class SetUpAnalysis {
 			thisCallSite = new callSiteData(succPPoint, returnVar);
 			thisCallSite.pPoint = new String(succPPoint);
 			thisCallSite.varNum = returnVar;
-			thisCallSite.columnsOpened = new HashMap<Integer, Integer>();
-			thisCallSite.columnsOpened.put(newCol, column);
+			thisCallSite.columnsOpened = new HashMap<Integer, ArrayList<Integer>>();
+			thisCallSite.columnsOpened.put(newCol, new ArrayList<Integer>(Arrays.asList(column)));
 			listCallSites.add(thisCallSite);
 		} else {
-			Integer columnMapped = thisCallSite.columnsOpened.get(newCol);
+			ArrayList<Integer> columnMapped = thisCallSite.columnsOpened.get(newCol);
 			if (columnMapped == null)
-				thisCallSite.columnsOpened.put(newCol, column);
-			else if (columnMapped != column)
-				throw new NullPointerException("CallData with column mapping not correct:\n" + inst + "\n");
+				thisCallSite.columnsOpened.put(newCol, new ArrayList<Integer>(Arrays.asList(column)));
+			else {
+				columnMapped.add(column);
+				// TODO
+				// throw new NullPointerException("CallData with column mapping
+				// not correct:\n" + inst + "\n");
+			}
 
 		}
 		return;
@@ -771,6 +784,7 @@ public class SetUpAnalysis {
 
 			int var_rhs = inst.getUse(i);
 			pp_pred = methodName + "." + predBBNumbers.get(i) + "." + currentBlockNumber;
+//			System.out.println(var_rhs + " corresponds to " + pp_pred);
 
 			ArrayList<String> valuesInVar_rhs;
 			if (pp_pred.equals(pPoint))
@@ -838,22 +852,29 @@ public class SetUpAnalysis {
 		int returnColumn = -1;
 		for (callSiteData csd : al_csd) {
 			if (csd.columnsOpened == null)
+			{
 				System.out.println("CSD.columndsOPned is nULL");
-			Integer col_original = csd.columnsOpened.get(column);
+				break ;
+			}
+			ArrayList<Integer> col_original = csd.columnsOpened.get(column);
 			if (col_original == null)
 				// This column was not opened by this call. Continue searching
 				continue;
-			returnColumn = col_original;
-			boolean check;
-			returnPP = csd.pPoint;
-			for (String v : pointsTo) {
-				check = data.add(csd.pPoint, col_original, Integer.toString(csd.varNum), v);
-				if (check == true)
-					changed = true;
-			}
-			if (changed) {
-				workingList.add(returnPP);
-				data.mark(returnPP, returnColumn);
+
+			for (Integer iterateColumn : col_original) {
+				returnColumn = iterateColumn;
+
+				boolean check;
+				returnPP = csd.pPoint;
+				for (String v : pointsTo) {
+					check = data.add(csd.pPoint, returnColumn, Integer.toString(csd.varNum), v);
+					if (check == true)
+						changed = true;
+				}
+				if (changed) {
+					workingList.add(returnPP);
+					data.mark(returnPP, returnColumn);
+				}
 			}
 		}
 		return;
@@ -908,12 +929,12 @@ public class SetUpAnalysis {
 			// Check if first variable is the null constant
 			ArrayList<String> tempSwap = propagatedValue.get(var1Str);
 			if (tempSwap.size() == 1 && tempSwap.contains("null")) {
-				
+
 				// Swap int and String representing var1 and var2
 				int tempInt = var1;
 				var1 = var2;
 				var2 = tempInt;
-				
+
 				String tempStr = var1Str;
 				var1Str = var2Str;
 				var2Str = tempStr;
@@ -978,14 +999,15 @@ public class SetUpAnalysis {
 					// falseBranch.get(var1Str).retainAll(falseBranch.get(var2Str));
 					// falseBranch.get(var2Str).retainAll(falseBranch.get(var1Str));
 
-//					ArrayList<String> temp = new ArrayList<String>(
-//							intersection(falseBranch.get(var1Str), falseBranch.get(var2Str)));
+					// ArrayList<String> temp = new ArrayList<String>(
+					// intersection(falseBranch.get(var1Str),
+					// falseBranch.get(var2Str)));
 
 					falseBranch.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
-					
-					v1PointsTo.remove("null") ;
+
+					v1PointsTo.remove("null");
 					trueBranch.put(var1Str, v1PointsTo);
-					
+
 					boolean changed = false;
 					changed = data.propagate(falseSuccPP, column, falseBranch);
 					if (changed)
@@ -997,43 +1019,45 @@ public class SetUpAnalysis {
 					changed = data.propagate(trueSuccPP, column, trueBranch);
 					if (changed)
 						workingList.add(trueSuccPP);
-					
-//					falseBranch.put(var2Str, new ArrayList<String>(temp));
 
-//					System.out.println("temp intersection is " + temp);
+					// falseBranch.put(var2Str, new ArrayList<String>(temp));
+
+					// System.out.println("temp intersection is " + temp);
 					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
-//					if (falseBranch.get(var1Str).size() == 0 && falseBranch.get(var2Str).size() == 0) {
-//						data.setToBOT(falseSuccPP, column);
-//						boolean changed = false;
-//						changed = data.propagate(trueSuccPP, column, trueBranch);
-//						if (changed)
-//							workingList.add(trueSuccPP);
-//					} else {
-//						boolean changed = false;
-//						changed = data.propagate(falseSuccPP, column, falseBranch);
-//						if (changed)
-//							workingList.add(falseSuccPP);
-//						// System.out.println("SUcc: " + falseSuccPP);
-//						// d.displayProgramPointUnderCol(falseSuccPP, column);
-//
-//						changed = false;
-//						changed = data.propagate(trueSuccPP, column, trueBranch);
-//						if (changed)
-//							workingList.add(trueSuccPP);
-//						// System.out.println("SUcc: " + trueSuccPP);
-//						// d.displayProgramPointUnderCol(trueSuccPP, column);
-//					}
+					// if (falseBranch.get(var1Str).size() == 0 &&
+					// falseBranch.get(var2Str).size() == 0) {
+					// data.setToBOT(falseSuccPP, column);
+					// boolean changed = false;
+					// changed = data.propagate(trueSuccPP, column, trueBranch);
+					// if (changed)
+					// workingList.add(trueSuccPP);
+					// } else {
+					// boolean changed = false;
+					// changed = data.propagate(falseSuccPP, column,
+					// falseBranch);
+					// if (changed)
+					// workingList.add(falseSuccPP);
+					// // System.out.println("SUcc: " + falseSuccPP);
+					// // d.displayProgramPointUnderCol(falseSuccPP, column);
+					//
+					// changed = false;
+					// changed = data.propagate(trueSuccPP, column, trueBranch);
+					// if (changed)
+					// workingList.add(trueSuccPP);
+					// // System.out.println("SUcc: " + trueSuccPP);
+					// // d.displayProgramPointUnderCol(trueSuccPP, column);
+					// }
 				} else if (op.equals("eq")) {
 
 					// Intersection of v1 and v2 in TRUEBRANCH
 					// trueBranch.get(var1Str).retainAll(trueBranch.get(var2Str));
 					// trueBranch.get(var2Str).retainAll(trueBranch.get(var1Str));
-					
+
 					trueBranch.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
-					
-					v1PointsTo.remove("null") ;
+
+					v1PointsTo.remove("null");
 					falseBranch.put(var1Str, v1PointsTo);
-					
+
 					boolean changed = false;
 					changed = data.propagate(falseSuccPP, column, falseBranch);
 					if (changed)
@@ -1046,31 +1070,36 @@ public class SetUpAnalysis {
 					if (changed)
 						workingList.add(trueSuccPP);
 
-//					ArrayList<String> temp = new ArrayList<String>(
-//							intersection(trueBranch.get(var1Str), trueBranch.get(var2Str)));
-//
-//					trueBranch.put(var1Str, new ArrayList<String>(temp));
-//					trueBranch.put(var2Str, new ArrayList<String>(temp));
-//
-//					// Check if the INTERSECTION is NULL. If TRUE, make it BOT
-//					if (trueBranch.get(var1Str).size() == 0 && trueBranch.get(var2Str).size() == 0) {
-//						data.setToBOT(trueSuccPP, column);
-//						boolean changed = false;
-//						changed = data.propagate(falseSuccPP, column, falseBranch);
-//						if (changed)
-//							workingList.add(falseSuccPP);
-//					} else {
-//						boolean changed = false;
-//						changed = data.propagate(trueSuccPP, column, trueBranch);
-//						if (changed)
-//							workingList.add(trueSuccPP);
-//
-//						changed = false;
-//						changed = data.propagate(falseSuccPP, column, falseBranch);
-//						if (changed)
-//							workingList.add(falseSuccPP);
-//						// System.out.println("SUcc: " + falseSuccPP);
-//					}
+					// ArrayList<String> temp = new ArrayList<String>(
+					// intersection(trueBranch.get(var1Str),
+					// trueBranch.get(var2Str)));
+					//
+					// trueBranch.put(var1Str, new ArrayList<String>(temp));
+					// trueBranch.put(var2Str, new ArrayList<String>(temp));
+					//
+					// // Check if the INTERSECTION is NULL. If TRUE, make it
+					// BOT
+					// if (trueBranch.get(var1Str).size() == 0 &&
+					// trueBranch.get(var2Str).size() == 0) {
+					// data.setToBOT(trueSuccPP, column);
+					// boolean changed = false;
+					// changed = data.propagate(falseSuccPP, column,
+					// falseBranch);
+					// if (changed)
+					// workingList.add(falseSuccPP);
+					// } else {
+					// boolean changed = false;
+					// changed = data.propagate(trueSuccPP, column, trueBranch);
+					// if (changed)
+					// workingList.add(trueSuccPP);
+					//
+					// changed = false;
+					// changed = data.propagate(falseSuccPP, column,
+					// falseBranch);
+					// if (changed)
+					// workingList.add(falseSuccPP);
+					// // System.out.println("SUcc: " + falseSuccPP);
+					// }
 					// throw new NullPointerException(
 					// "Intersection of ArrayList<> is not same. Branch transfer
 					// function: EQ");

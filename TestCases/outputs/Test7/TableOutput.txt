@@ -1,0 +1,238 @@
+
+
+
+recursiveTest
+=============
+
+BB0 -> BB1:
+C0:
+{v2 -> {null}}
+
+C1:
+{v2 -> {recursiveTest.new10}}
+
+BB1 -> BB2:
+C0:
+{v2 -> {null}
+ v4 -> {recursiveTest.new0}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB2 -> BB3:
+C0:
+{v2 -> {null}
+ v4 -> {recursiveTest.new0}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB3 -> BB4:
+C0:
+{v2 -> {null}
+ v4 -> {recursiveTest.new0}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB4 -> BB5:
+C0:
+{v2 -> {null}
+ v4 -> {recursiveTest.new0}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB5 -> BB11:
+C0:
+{v2 -> {null}
+ v4 -> {recursiveTest.new0}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB5 -> BB6:
+C0:
+{v2 -> {null}
+ v4 -> {recursiveTest.new0}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB6 -> BB7:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB7 -> BB8:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}}
+
+BB8 -> BB9:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB9 -> BB10:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB10 -> BB11:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB11 -> BB12:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {recursiveTest.new10, recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB12 -> BB14:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {recursiveTest.new10, recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB12 -> BB13:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {recursiveTest.new10, recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB13 -> BB15:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {recursiveTest.new10, recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+BB14 -> BB15:
+C0:
+{v2 -> {null}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {null, recursiveTest.new0, recursiveTest.new10}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+C1:
+{v2 -> {recursiveTest.new10}
+ v10 -> {recursiveTest.new10}
+ v4 -> {recursiveTest.new0}
+ v17 -> {recursiveTest.new0, recursiveTest.new10}
+ v16 -> {recursiveTest.new10, recursiveTest.new0}
+ v13 -> {recursiveTest.new0, recursiveTest.new10}}
+
+
+
+
+startTest
+=========
+
+BB0 -> BB1:
+C0:
+{}
+
+BB1 -> BB2:
+C0:
+{v3 -> {null}
+ v5 -> {recursiveTest.new0, recursiveTest.new10, null}}
+
+BB2 -> BB3:
+C0:
+{v3 -> {null}
+ v5 -> {recursiveTest.new0, recursiveTest.new10, null}}
+
+BB3 -> BB4:
+C0:
+{v3 -> {null}
+ v5 -> {recursiveTest.new0, recursiveTest.new10, null}}
+
