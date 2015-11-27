@@ -12,18 +12,10 @@ package PAVpointerAnalysisPackage;
  *
  */
 
-// Do NOT import the pointer analysis package
 import java.io.*;
-import java.lang.reflect.Method;
 import java.util.*;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.ibm.wala.cfg.IBasicBlock;
 import com.ibm.wala.classLoader.CallSiteReference;
-import com.ibm.wala.classLoader.IClass;
-import com.ibm.wala.classLoader.IField;
-import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.core.tests.callGraph.CallGraphTestUtil;
 import com.ibm.wala.ipa.callgraph.AnalysisCache;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
@@ -34,10 +26,6 @@ import com.ibm.wala.ipa.callgraph.CallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.impl.Util;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
-import com.ibm.wala.ipa.cha.ClassHierarchyException;
-import com.ibm.wala.shrikeBT.IConditionalBranchInstruction;
-import com.ibm.wala.ssa.DefUse;
-import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSACFG;
 import com.ibm.wala.ssa.SSACFG.BasicBlock;
@@ -49,12 +37,8 @@ import com.ibm.wala.ssa.SSANewInstruction;
 import com.ibm.wala.ssa.SSAPhiInstruction;
 import com.ibm.wala.ssa.SSAPutInstruction;
 import com.ibm.wala.ssa.SSAReturnInstruction;
-import com.ibm.wala.types.FieldReference;
-import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.config.AnalysisScopeReader;
 import com.ibm.wala.util.io.FileProvider;
-import com.ibm.wala.viz.viewer.IrAndSourceViewer;
-import com.ibm.wala.ssa.analysis.ExplodedControlFlowGraph;
 
 public class SetUpAnalysis {
 
@@ -140,11 +124,15 @@ public class SetUpAnalysis {
 	private CallGraphBuilder builder; // Builder object for the call graph
 	private CallGraph cg; // Call graph for the program
 
-	public SetUpAnalysis(String classpath, String mainClass, String analysisClass, String analysisMethod) {
+	public SetUpAnalysis(String classpath, String mainClass, String analysisClass, String analysisMethod, String join) {
 		this.classpath = classpath;
 		this.mainClass = mainClass;
 		this.analysisClass = analysisClass;
 		this.analysisMethod = analysisMethod;
+		if (join.equals("join") == true)
+			displayJoinedOutput = true;
+		else
+			displayJoinedOutput = false;
 	}
 
 	/**
@@ -200,7 +188,6 @@ public class SetUpAnalysis {
 
 		// TODO Initialization flags for the analysis
 		// Initialization of flags required for the run of the analysis
-		displayJoinedOutput = true;
 		boolean printToFile = false;
 		String outputFile = "test7join.txt";
 
@@ -574,6 +561,13 @@ public class SetUpAnalysis {
 				if (inst instanceof SSANewInstruction) {
 					newTransferFunction(pPoint, column, (SSANewInstruction) inst, propagatedValue);
 					propagate = true;
+
+				} else if (inst instanceof SSAPutInstruction) {
+					putTransferFunction(pPoint, column, (SSAPutInstruction) inst, propagatedValue);
+					propagate = true;
+				} else if (inst instanceof SSAGetInstruction) {
+					getTransferFunction(pPoint, column, (SSAGetInstruction) inst, propagatedValue);
+					propagate = true;
 				} else if (inst instanceof SSAInvokeInstruction) {
 					if (((SSAInvokeInstruction) inst).isSpecial()) {
 						propagate = true;
@@ -647,6 +641,89 @@ public class SetUpAnalysis {
 		return;
 	}
 
+	public void putTransferFunction(String pPoint, int column, SSAPutInstruction inst,
+			HashMap<String, ArrayList<String>> propagatedValue) {
+		// System.out.println("=====================");
+		// System.out.println(inst.toString());
+
+		String varRIGHT = Integer.toString(inst.getVal()); // xyz->{||THIS||}
+		String varLEFT = Integer.toString(inst.getUse(0)); // ||THIS||->{xyz}
+
+		// null constants are added here
+		String rootMethodName = pPoint.split("[.]")[0];
+		CGNode node = hashGlobalMethods.get(analysisClass + rootMethodName);
+		if (node.getIR().getSymbolTable().isNullConstant(inst.getVal())) {
+			propagatedValue.put(Integer.toString(inst.getVal()), new ArrayList<String>(Arrays.asList("null")));
+		}
+
+		// xyz.THIS = abc
+		// some sorcery to get the data member
+		String dataMember = (inst.toString().split("[,]"))[2].substring(1, (inst.toString().split("[,]"))[2].length());
+
+		ArrayList<String> pointsToLEFT = propagatedValue.get(varLEFT);
+		ArrayList<String> pointsToRIGHT = new ArrayList<String>(propagatedValue.get(varRIGHT));
+		if (pointsToLEFT != null && pointsToRIGHT != null) {
+			for (String s : pointsToLEFT) {
+				// System.out.print(s + "."+dataMember+"->");
+				String point = s + "." + dataMember;
+
+				// The following performs weak update
+				if (propagatedValue.get(point) != null) {
+					ArrayList<String> old_pointsto = new ArrayList<String>(propagatedValue.get(point));
+					for (String s2 : old_pointsto) {
+						pointsToRIGHT.add(s2);
+					}
+				}
+
+				propagatedValue.put(point, pointsToRIGHT);
+				// for (String s2 : pointsToRIGHT) {
+				// //System.out.print(s2);
+				// }
+				// System.out.println("");
+			}
+		}
+
+		// System.out.println("=====================");
+	}
+
+	public void getTransferFunction(String pPoint, int column, SSAGetInstruction inst,
+			HashMap<String, ArrayList<String>> propagatedValue) {
+		// System.out.println("=====================");
+		// System.out.println(inst.toString());
+
+		// null constants are added here
+		String rootMethodName = pPoint.split("[.]")[0];
+		CGNode node = hashGlobalMethods.get(analysisClass + rootMethodName);
+		if (node.getIR().getSymbolTable().isNullConstant(inst.getUse(0))) {
+			propagatedValue.put(Integer.toString(inst.getUse(0)), new ArrayList<String>(Arrays.asList("null")));
+		}
+
+		// gets the data member
+		String dataMember = (inst.toString().split("[,]"))[2].substring(1, (inst.toString().split("[,]"))[2].length());
+
+		String varRIGHT = Integer.toString(inst.getUse(0)); // xyz->{||THIS||}
+		String varLEFT = Integer.toString(inst.getDef()); // ||THIS||->{xyz}
+
+		ArrayList<String> pointsToRIGHT = propagatedValue.get(varRIGHT);
+		ArrayList<String> pointsToFinal = new ArrayList<String>();
+		if (pointsToRIGHT != null) {
+			for (String s : pointsToRIGHT) {
+				String point = s + "." + dataMember;
+
+				if (propagatedValue.get(point) != null) {
+					ArrayList<String> point_pointsto = propagatedValue.get(point);
+					for (String s2 : point_pointsto) {
+						pointsToFinal.add(s2);
+					}
+				}
+			}
+			propagatedValue.put(varLEFT, pointsToFinal);
+		}
+
+		// System.out.println(varLEFT + " " + varRIGHT);
+		// System.out.println("=====================");
+	}
+
 	public void callTransferFunction(String pPoint, Integer column, SSAInvokeInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue, String targetMethodName, String succPPoint) {
 
@@ -688,6 +765,29 @@ public class SetUpAnalysis {
 
 			callSiteValue.put(Integer.toString(i + 1), callSitePointsTo);
 		}
+
+		// finds and adds the symbolic objects to callSiteValue
+		for (int i = start; i < inst.getNumberOfParameters(); i++) {
+			int var = inst.getUse(i);
+			String varStr = Integer.toString(var);
+			ArrayList<String> pointsTo = propagatedValue.get(varStr);
+
+			if (pointsTo == null)
+				continue;
+
+			for (String point : pointsTo) {
+				for (Map.Entry<String, ArrayList<String>> entry : propagatedValue.entrySet()) {
+					String key = entry.getKey();
+					if (entry.getValue() == null)
+						continue;
+					ArrayList<String> value = new ArrayList<String>(entry.getValue());
+					if (key.contains(point)) {
+						callSiteValue.put(key, value);
+					}
+				}
+			}
+		}
+
 		String targetPP = targetMethodName + ".0.1";
 
 		// Check if propagatedValue already exists in the TARGETMETHOD
@@ -776,7 +876,7 @@ public class SetUpAnalysis {
 
 			int var_rhs = inst.getUse(i);
 			pp_pred = methodName + "." + predBBNumbers.get(i) + "." + currentBlockNumber;
-//			System.out.println(var_rhs + " corresponds to " + pp_pred);
+			// System.out.println(var_rhs + " corresponds to " + pp_pred);
 
 			ArrayList<String> valuesInVar_rhs;
 			if (pp_pred.equals(pPoint))
@@ -843,10 +943,9 @@ public class SetUpAnalysis {
 		String returnPP = null;
 		int returnColumn = -1;
 		for (callSiteData csd : al_csd) {
-			if (csd.columnsOpened == null)
-			{
+			if (csd.columnsOpened == null) {
 				System.out.println("CSD.columndsOPned is nULL");
-				break ;
+				break;
 			}
 			ArrayList<Integer> col_original = csd.columnsOpened.get(column);
 			if (col_original == null)

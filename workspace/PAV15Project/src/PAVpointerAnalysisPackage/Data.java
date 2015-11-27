@@ -1,8 +1,19 @@
 package PAVpointerAnalysisPackage;
 
+/**
+ * @authors Sridhar Gopinath	-	g.sridhar53@gmail.com
+ * @authors Arpith K			-	arpith@live.com		
+ *
+ * Null Pointer Dereference analysis,
+ * Program Analysis and Verification Course, Fall - 2015,
+ * Computer Science and Automation (CSA),
+ * Indian Institute of Science (IISc),
+ * Bangalore
+ *
+ */
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -465,10 +476,17 @@ public class Data {
 				continue;
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {
-				op = "v" + var + " -> " + "{";
+				if (Character.isLetter(var.charAt(var.length() - 1)))
+					op = "" + var + " -> " + "{";
+				else
+					op = "v" + var + " -> " + "{";
 				flag = false;
-			} else
-				op = "\n v" + var + " -> " + "{";
+			} else {
+				if (Character.isLetter(var.charAt(var.length() - 1)))
+					op = "\n " + var + " -> " + "{";
+				else
+					op = "\n v" + var + " -> " + "{";
+			}
 			for (String pt : pointsto) {
 				op = op + pt + ", ";
 			}
@@ -504,10 +522,17 @@ public class Data {
 				continue;
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {
-				op = "v" + var + " -> " + "{";
+				if (Character.isLetter(var.charAt(var.length() - 1)))
+					op = "" + var + " -> " + "{";
+				else
+					op = "v" + var + " -> " + "{";
 				flag = false;
-			} else
-				op = "\n v" + var + " -> " + "{";
+			} else {
+				if (Character.isLetter(var.charAt(var.length() - 1)))
+					op = "\n " + var + " -> " + "{";
+				else
+					op = "\n v" + var + " -> " + "{";
+			}
 			for (String pt : pointsto) {
 				op = op + pt + ", ";
 			}

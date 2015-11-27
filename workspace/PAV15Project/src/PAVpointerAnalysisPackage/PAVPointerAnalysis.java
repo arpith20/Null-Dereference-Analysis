@@ -1,49 +1,27 @@
 package PAVpointerAnalysisPackage;
 
 /**
- * @author Arpith K, Sridhar G
- * Program Analysis and Verification, 2015
+ * @authors Sridhar Gopinath	-	g.sridhar53@gmail.com
+ * @authors Arpith K			-	arpith@live.com		
+ *
+ * Null Pointer Dereference analysis,
+ * Program Analysis and Verification Course, Fall - 2015,
+ * Computer Science and Automation (CSA),
+ * Indian Institute of Science (IISc),
+ * Bangalore
  *
  */
 
-//Do NOT import the slicer package
-import java.io.*;
-import java.util.*;
-
 import PAVpointerAnalysisPackage.PAVPointerAnalysis;
 import PAVpointerAnalysisPackage.SetUpAnalysis;
-
-import com.ibm.wala.classLoader.IClass;
-import com.ibm.wala.classLoader.IField;
-import com.ibm.wala.classLoader.IMethod;
-import com.ibm.wala.core.tests.callGraph.CallGraphTestUtil;
-import com.ibm.wala.ipa.callgraph.AnalysisCache;
-import com.ibm.wala.ipa.callgraph.AnalysisOptions;
-import com.ibm.wala.ipa.callgraph.AnalysisScope;
-import com.ibm.wala.ipa.callgraph.CGNode;
-import com.ibm.wala.ipa.callgraph.CallGraph;
-import com.ibm.wala.ipa.callgraph.CallGraphBuilder;
-import com.ibm.wala.ipa.callgraph.Entrypoint;
-import com.ibm.wala.ipa.callgraph.impl.Util;
-import com.ibm.wala.ipa.cha.ClassHierarchy;
-import com.ibm.wala.ipa.cha.ClassHierarchyException;
-import com.ibm.wala.ssa.IR;
-import com.ibm.wala.ssa.SSACFG;
-import com.ibm.wala.ssa.SSAGetInstruction;
-import com.ibm.wala.ssa.SSAInstruction;
-import com.ibm.wala.ssa.SSAPutInstruction;
-import com.ibm.wala.types.FieldReference;
-import com.ibm.wala.util.CancelException;
-import com.ibm.wala.util.config.AnalysisScopeReader;
-import com.ibm.wala.util.io.FileProvider;
-import com.ibm.wala.ssa.analysis.ExplodedControlFlowGraph;
 
 public class PAVPointerAnalysis {
 
 	private SetUpAnalysis setup; // Object to setup (check presentation)
 
-	public PAVPointerAnalysis(String classpath, String mainClass, String analysisClass, String analysisMethod) {
-		setup = new SetUpAnalysis(classpath, mainClass, analysisClass, analysisMethod);
+	public PAVPointerAnalysis(String classpath, String mainClass, String analysisClass, String analysisMethod,
+			String join) {
+		setup = new SetUpAnalysis(classpath, mainClass, analysisClass, analysisMethod, join);
 	}
 
 	public void runAnalysis() throws Exception {
@@ -61,12 +39,24 @@ public class PAVPointerAnalysis {
 		setup.generateCallGraph();
 		// END: NO CHANGE REGION
 
+		// Initializes the things needed for the analysis
+		// FLAGS for writing to the file and to display the JOIN output is also
+		// in this method
 		setup.init();
+
+		// Creates program points in the methods which we will analyze
 		setup.getProgramPoints();
 
+		// Initialize the element D0 on top of which the analysis runs
 		setup.setD0();
 
+		// MAIN ALGORITHM
+		// This is where the magic happens
+		// The kildall iterator which analyzes the methods and stores the
+		// results
 		setup.kildall();
+
+		return;
 	}
 
 	// START: NO CHANGE REGION
@@ -87,18 +77,24 @@ public class PAVPointerAnalysis {
 	 */
 	public static void main(String[] args) throws Exception {
 
-		String classpath, mainClass, analysisClass, analysisMethod;
+		String classpath, mainClass, analysisClass, analysisMethod, join;
 
 		classpath = args[0];
 		mainClass = args[1];
 		analysisClass = args[2];
 		analysisMethod = args[3];
 
-		PAVPointerAnalysis pAnalysis = new PAVPointerAnalysis(classpath, mainClass, analysisClass, analysisMethod);
+		if (args.length == 5)
+			join = args[4];
+		else
+			join = "table";
+
+		PAVPointerAnalysis pAnalysis = new PAVPointerAnalysis(classpath, mainClass, analysisClass, analysisMethod,
+				join);
 
 		pAnalysis.runAnalysis();
 
+		return;
 	}
 	// END: NO CHANGE REGION
-
 }
