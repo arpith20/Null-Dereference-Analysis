@@ -537,10 +537,17 @@ public class Data {
 				continue;
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {
-				op = "v" + var + " -> " + "{";
+				if (Character.isLetter(var.charAt(var.length() - 1)))
+					op = "" + var + " -> " + "{";
+				else
+					op = "v" + var + " -> " + "{";
 				flag = false;
-			} else
-				op = "\n v" + var + " -> " + "{";
+			} else {
+				if (Character.isLetter(var.charAt(var.length() - 1)))
+					op = "\n " + var + " -> " + "{";
+				else
+					op = "\n v" + var + " -> " + "{";
+			}
 			for (String pt : pointsto) {
 				op = op + pt + ", ";
 			}
@@ -573,10 +580,17 @@ public class Data {
 				continue;
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {
-				op = "v" + var + " -> " + "{";
+				if (Character.isLetter(var.charAt(var.length() - 1)))
+					op = "" + var + " -> " + "{";
+				else
+					op = "v" + var + " -> " + "{";
 				flag = false;
-			} else
-				op = "\n v" + var + " -> " + "{";
+			} else {
+				if (Character.isLetter(var.charAt(var.length() - 1)))
+					op = "\n " + var + " -> " + "{";
+				else
+					op = "\n v" + var + " -> " + "{";
+			}
 			for (String pt : pointsto) {
 				op = op + pt + ", ";
 			}
@@ -636,4 +650,8 @@ public class Data {
 
 		return columnMap.size();
 	}
+
+	// TODO
+	// Print the statement that can possibly result in a null dereference
+	// exception
 }

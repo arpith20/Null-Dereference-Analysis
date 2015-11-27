@@ -65,6 +65,9 @@ public class PAVPointerAnalysis {
 		setup.generateCallGraph();
 		// END: NO CHANGE REGION
 
+		setup.printNodes();
+		setup.printIR();
+
 		setup.init();
 		setup.getProgramPoints();
 
