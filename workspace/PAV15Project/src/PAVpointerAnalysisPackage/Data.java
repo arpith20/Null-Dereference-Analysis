@@ -61,67 +61,6 @@ public class Data {
 
 	}
 
-	// do we need this?
-	// untested.
-	// returns the column numbers
-	public ArrayList<Integer> contains(String pp1, String pp2, Integer col2) {
-		ArrayList<Integer> a = new ArrayList<Integer>();
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pointsToMap.get(pp2);
-		if (al_col1 == null && al_col2 == null)
-			return null;
-		if (al_col1 == null || al_col2 == null)
-			return null;
-
-		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : al_col1.entrySet()) {
-			HashMap<String, ArrayList<String>> var_hash1 = entry.getValue();
-			HashMap<String, ArrayList<String>> var_hash2 = al_col2.get(col2);
-			for (Map.Entry<String, ArrayList<String>> innerentry : var_hash2.entrySet()) {
-				String var = innerentry.getKey();
-				if (var_hash1.containsKey(var)) {
-					ArrayList<String> al_pt1 = var_hash1.get(var);
-					ArrayList<String> al_pt2 = innerentry.getValue();
-					if (al_pt1.containsAll(al_pt2)) {
-						a.add(entry.getKey());
-					}
-				}
-			}
-		}
-		return a;
-
-	}
-
-	// DO NOT USE THIS DIRECTLY checks equality of two program points
-	public Boolean equals(String pp1, String pp2) {
-		if (contains(pp1, pp2) && contains(pp2, pp1))
-			return true;
-		return false;
-	}
-
-	// checks equality of two hash maps
-	public Boolean equals(String pp1, Integer col1, String pp2, Integer col2) {
-		if (contains(pp1, col1, pp2, col2) && contains(pp2, col2, pp1, col1))
-			return true;
-		return false;
-	}
-
-	// returns the column number in pp1 where hash of (pp2,col2) is equal
-	public Integer equals(String pp1, String pp2, Integer col2) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pointsToMap.get(pp2);
-		if (al_col1 == null && al_col2 == null)
-			return null;
-		if (al_col1 == null || al_col2 == null)
-			return null;
-
-		for (Map.Entry<Integer, HashMap<String, ArrayList<String>>> entry : al_col1.entrySet()) {
-			Integer col1 = entry.getKey();
-			if (contains(pp1, col1, pp2, col2) && contains(pp2, col2, pp1, col1))
-				return col1;
-		}
-		return null;
-	}
-
 	// Function to add a mapping from VARIABLE to POINTSTO
 	// Removes BOT if already present
 	// STRONG UPDATE
@@ -207,11 +146,6 @@ public class Data {
 			}
 		}
 
-	}
-
-	public void sort(ArrayList<String> al) {
-		if (al != null)
-			Collections.sort(al);
 	}
 
 	// This will mark the column COL under the program point PP
@@ -334,45 +268,6 @@ public class Data {
 		return flag;
 	}
 
-	// pp1 = pp1 union pp2
-	public void join(String pp1, Integer col1, String pp2, Integer col2) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col2 = pointsToMap.get(pp2);
-		if (al_col2 != null) {
-			HashMap<String, ArrayList<String>> h = al_col2.get(col2);
-			if (h != null) {
-				for (Map.Entry<String, ArrayList<String>> entry : h.entrySet()) {
-					String var = entry.getKey();
-					ArrayList<String> pointsto = entry.getValue();
-					for (String pt : pointsto) {
-						add(pp1, col1, var, pt);
-					}
-				}
-			}
-		}
-	}
-
-	// pp1 = pp2 union pp3
-	// previous values at pp1, if any are removed
-	public void join(String pp1, Integer col1, String pp2, Integer col2, String pp3, Integer col3) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
-		if (al_col1 != null) {
-			al_col1.clear();
-		}
-		join(pp1, col1, pp2, col2);
-		join(pp1, col1, pp3, col3);
-	}
-
-	public void remove(String pp1, Integer col, String var, String pttoremove) {
-		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
-		if (al_col1 != null) {
-			HashMap<String, ArrayList<String>> h = al_col1.get(col);
-			if (h != null) {
-				ArrayList<String> a = h.get(var);
-				a.remove(pttoremove);
-			}
-		}
-	}
-
 	public void remove(String pp1, Integer col, String var) {
 		HashMap<Integer, HashMap<String, ArrayList<String>>> al_col1 = pointsToMap.get(pp1);
 		if (al_col1 != null) {
@@ -410,12 +305,6 @@ public class Data {
 		verifyPPAndCol(pPoint, col, "retrieve HashMap");
 
 		return new HashMap<String, ArrayList<String>>(pointsToMap.get(pPoint).get(col));
-	}
-
-	// Retrieves the mappings of all the columns under the program point pPoint
-	// This is a COPY of the HashMap
-	public HashMap<Integer, HashMap<String, ArrayList<String>>> retrieve(String pPoint) {
-		return new HashMap<Integer, HashMap<String, ArrayList<String>>>(pointsToMap.get(pPoint));
 	}
 
 	// Function to get the column markings HashMap at a particular program point

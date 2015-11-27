@@ -12,7 +12,6 @@ import java.util.*;
 
 import PAVpointerAnalysisPackage.PAVPointerAnalysis;
 import PAVpointerAnalysisPackage.SetUpAnalysis;
-import PAVpointerAnalysisPackage.NullDereference;
 
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
@@ -42,7 +41,6 @@ import com.ibm.wala.ssa.analysis.ExplodedControlFlowGraph;
 public class PAVPointerAnalysis {
 
 	private SetUpAnalysis setup; // Object to setup (check presentation)
-	public NullDereference nulldereference;
 
 	public PAVPointerAnalysis(String classpath, String mainClass, String analysisClass, String analysisMethod) {
 		setup = new SetUpAnalysis(classpath, mainClass, analysisClass, analysisMethod);

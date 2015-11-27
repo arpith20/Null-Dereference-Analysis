@@ -731,9 +731,6 @@ public class SetUpAnalysis {
 				thisCallSite.columnsOpened.put(newCol, new ArrayList<Integer>(Arrays.asList(column)));
 			else {
 				columnMapped.add(column);
-				// TODO
-				// throw new NullPointerException("CallData with column mapping
-				// not correct:\n" + inst + "\n");
 			}
 
 		}
@@ -765,11 +762,6 @@ public class SetUpAnalysis {
 		ISSABasicBlock bb = cfg.getBasicBlock(currentBlockNumber);
 
 		Iterator<ISSABasicBlock> predNodes = cfg.getPredNodes(bb);
-
-		// Collection<ISSABasicBlock> succNodes = cfg.getNormalSuccessors(bb);
-		// if (succNodes.size() > 1)
-		// throw new NullPointerException("The number of successors is assumed
-		// to be one");
 
 		ArrayList<Integer> predBBNumbers = new ArrayList<Integer>();
 		while (predNodes.hasNext()) {
@@ -995,14 +987,6 @@ public class SetUpAnalysis {
 				// and ID to != branch
 				if (op.equals("ne")) {
 
-					// Intersection of v1 and v2 in FALSEBRANCH
-					// falseBranch.get(var1Str).retainAll(falseBranch.get(var2Str));
-					// falseBranch.get(var2Str).retainAll(falseBranch.get(var1Str));
-
-					// ArrayList<String> temp = new ArrayList<String>(
-					// intersection(falseBranch.get(var1Str),
-					// falseBranch.get(var2Str)));
-
 					falseBranch.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
 
 					v1PointsTo.remove("null");
@@ -1020,38 +1004,7 @@ public class SetUpAnalysis {
 					if (changed)
 						workingList.add(trueSuccPP);
 
-					// falseBranch.put(var2Str, new ArrayList<String>(temp));
-
-					// System.out.println("temp intersection is " + temp);
-					// Check if the INTERSECTION is NULL. If TRUE, set it to BOT
-					// if (falseBranch.get(var1Str).size() == 0 &&
-					// falseBranch.get(var2Str).size() == 0) {
-					// data.setToBOT(falseSuccPP, column);
-					// boolean changed = false;
-					// changed = data.propagate(trueSuccPP, column, trueBranch);
-					// if (changed)
-					// workingList.add(trueSuccPP);
-					// } else {
-					// boolean changed = false;
-					// changed = data.propagate(falseSuccPP, column,
-					// falseBranch);
-					// if (changed)
-					// workingList.add(falseSuccPP);
-					// // System.out.println("SUcc: " + falseSuccPP);
-					// // d.displayProgramPointUnderCol(falseSuccPP, column);
-					//
-					// changed = false;
-					// changed = data.propagate(trueSuccPP, column, trueBranch);
-					// if (changed)
-					// workingList.add(trueSuccPP);
-					// // System.out.println("SUcc: " + trueSuccPP);
-					// // d.displayProgramPointUnderCol(trueSuccPP, column);
-					// }
 				} else if (op.equals("eq")) {
-
-					// Intersection of v1 and v2 in TRUEBRANCH
-					// trueBranch.get(var1Str).retainAll(trueBranch.get(var2Str));
-					// trueBranch.get(var2Str).retainAll(trueBranch.get(var1Str));
 
 					trueBranch.put(var1Str, new ArrayList<String>(Arrays.asList("null")));
 
@@ -1070,39 +1023,6 @@ public class SetUpAnalysis {
 					if (changed)
 						workingList.add(trueSuccPP);
 
-					// ArrayList<String> temp = new ArrayList<String>(
-					// intersection(trueBranch.get(var1Str),
-					// trueBranch.get(var2Str)));
-					//
-					// trueBranch.put(var1Str, new ArrayList<String>(temp));
-					// trueBranch.put(var2Str, new ArrayList<String>(temp));
-					//
-					// // Check if the INTERSECTION is NULL. If TRUE, make it
-					// BOT
-					// if (trueBranch.get(var1Str).size() == 0 &&
-					// trueBranch.get(var2Str).size() == 0) {
-					// data.setToBOT(trueSuccPP, column);
-					// boolean changed = false;
-					// changed = data.propagate(falseSuccPP, column,
-					// falseBranch);
-					// if (changed)
-					// workingList.add(falseSuccPP);
-					// } else {
-					// boolean changed = false;
-					// changed = data.propagate(trueSuccPP, column, trueBranch);
-					// if (changed)
-					// workingList.add(trueSuccPP);
-					//
-					// changed = false;
-					// changed = data.propagate(falseSuccPP, column,
-					// falseBranch);
-					// if (changed)
-					// workingList.add(falseSuccPP);
-					// // System.out.println("SUcc: " + falseSuccPP);
-					// }
-					// throw new NullPointerException(
-					// "Intersection of ArrayList<> is not same. Branch transfer
-					// function: EQ");
 				}
 			}
 		} else {
@@ -1116,17 +1036,5 @@ public class SetUpAnalysis {
 		}
 
 		return;
-	}
-
-	public <T> List<T> intersection(List<T> list1, List<T> list2) {
-		List<T> list = new ArrayList<T>();
-
-		for (T t : list1) {
-			if (list2.contains(t)) {
-				list.add(t);
-			}
-		}
-
-		return list;
 	}
 }
