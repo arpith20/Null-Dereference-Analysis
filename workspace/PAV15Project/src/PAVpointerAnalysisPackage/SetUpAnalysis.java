@@ -567,10 +567,11 @@ public class SetUpAnalysis {
 				} else if (inst instanceof SSAGetInstruction) {
 					propagate = getTransferFunction(pPoint, column, (SSAGetInstruction) inst, propagatedValue);
 				} else if (inst instanceof SSAInvokeInstruction) {
-					if (((SSAInvokeInstruction) inst).isSpecial()) {
-						propagate = true;
-						continue;
-					}
+					// if (((SSAInvokeInstruction) inst).isSpecial()) {
+					// propagate = true;
+					// continue;
+					// }
+					System.out.println(inst);
 					// Check if library methods are being called
 					CallSiteReference csr = ((SSAInvokeInstruction) inst).getCallSite();
 					String signature = csr.getDeclaredTarget().getSignature();
@@ -647,10 +648,6 @@ public class SetUpAnalysis {
 		String varRIGHT = Integer.toString(inst.getVal()); // xyz->{||THIS||}
 		String varLEFT = Integer.toString(inst.getUse(0)); // ||THIS||->{xyz}
 
-		// If it is not a OBJECT which we are handling
-		if (propagatedValue.get(varRIGHT) == null)
-			return true;
-
 		// null constants are added here
 		String rootMethodName = pPoint.split("[.]")[0];
 		CGNode node = hashGlobalMethods.get(analysisClass + rootMethodName);
@@ -661,6 +658,10 @@ public class SetUpAnalysis {
 		// xyz.THIS = abc
 		// some sorcery to get the data member
 		String dataMember = (inst.toString().split("[,]"))[2].substring(1, (inst.toString().split("[,]"))[2].length());
+
+		// If it is not a OBJECT which we are handling
+		if (propagatedValue.get(varRIGHT) == null)
+			return true;
 
 		if (propagatedValue.get(varLEFT).contains("null") == true) {
 			if (propagatedValue.get(varLEFT).size() == 1) {
@@ -711,10 +712,9 @@ public class SetUpAnalysis {
 		// If it is not a OBJECT which we are handling
 		if (propagatedValue.get(varRIGHT) == null)
 			return true;
-		
-		if ( inst.getDeclaredFieldType().isPrimitiveType() == true )
-			return true ;
 
+		if (inst.getDeclaredFieldType().isPrimitiveType() == true)
+			return true;
 
 		if (inst.getNumberOfUses() > 1)
 			throw new Error("getTransferFunction: Number of uses is greater than 1");
@@ -743,12 +743,13 @@ public class SetUpAnalysis {
 			for (String s : pointsToRIGHT) {
 				String point = s + "." + dataMember;
 
-				if (propagatedValue.get(point) != null) {
-					ArrayList<String> point_pointsto = propagatedValue.get(point);
-					for (String s2 : point_pointsto) {
-						pointsToFinal.add(s2);
-					}
-				}
+				// if (propagatedValue.get(point) != null) {
+				// ArrayList<String> point_pointsto =
+				// propagatedValue.get(point);
+				// for (String s2 : point_pointsto) {
+				pointsToFinal.add(point);
+				// }
+				// }
 			}
 			propagatedValue.put(varLEFT, pointsToFinal);
 		}
@@ -838,7 +839,7 @@ public class SetUpAnalysis {
 			throw new NullPointerException("CallStatement returned more than 1 value:\n" + inst + "\n");
 
 		int returnVar = inst.getReturnValue(0);
-//		System.out.println(returnVar);
+		// System.out.println(returnVar);
 
 		// Update the callSiteData to correspond to this new values
 		ArrayList<callSiteData> listCallSites = mapToCallSiteData.get(targetMethodName);
@@ -969,26 +970,28 @@ public class SetUpAnalysis {
 			if (method.contains(analysisMethod.split("[(]")[0]))
 				continue;
 
-//			System.out.println(analysisMethod.split("[(]")[0] + ">>>>>>>>>>>>>>>>" + pPoint);
-//			System.out.println("method: " + method);
+			// System.out.println(analysisMethod.split("[(]")[0] +
+			// ">>>>>>>>>>>>>>>>" + pPoint);
+			// System.out.println("method: " + method);
 
 			ArrayList<callSiteData> al_csd2 = mapToCallSiteData.get(pPoint.split("[.]")[0]);
 			if (al_csd2 == null)
 				throw new NullPointerException("al_csd inside return is null");
-//			System.out.println("-------------before for");
+			// System.out.println("-------------before for");
 			for (callSiteData csd : al_csd2) {
-//				System.out.println("-------------in for");
+				// System.out.println("-------------in for");
 				// if (csd.pPoint == null)
 				// continue;
-//				System.out.println("-------------" + csd.pPoint);
+				// System.out.println("-------------" + csd.pPoint);
 				ArrayList<String> pointsto_symbolic_obj = propagatedValue.get(symbolic_object);
 				for (String s : pointsto_symbolic_obj) {
-//					System.out.print("Adding to --" + pPoint + "'s " + symbolic_object);
-//					System.out.println("--" + s);
+					// System.out.print("Adding to --" + pPoint + "'s " +
+					// symbolic_object);
+					// System.out.println("--" + s);
 					data.add(csd.pPoint, column, symbolic_object, s);
 					data.mark(csd.pPoint, column);
 				}
-//				System.out.println("-----------------done");
+				// System.out.println("-----------------done");
 			}
 			// ArrayList<String> iterate = entry.getValue();
 			// System.out.println("\n\n\n" + method + "");
