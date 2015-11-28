@@ -702,12 +702,19 @@ public class SetUpAnalysis {
 		// System.out.println("=====================");
 		// System.out.println(inst.toString());
 
-		String varRIGHT = Integer.toString(inst.getUse(0)); // xyz->{||THIS||}
-		String varLEFT = Integer.toString(inst.getDef()); // ||THIS||->{xyz}
+		// x = v.f
+		// v is varRIGHT
+		// x is varLEFT
+		String varRIGHT = Integer.toString(inst.getUse(0));
+		String varLEFT = Integer.toString(inst.getDef());
 
 		// If it is not a OBJECT which we are handling
 		if (propagatedValue.get(varRIGHT) == null)
 			return true;
+		
+		if ( inst.getDeclaredFieldType().isPrimitiveType() == true )
+			return true ;
+
 
 		if (inst.getNumberOfUses() > 1)
 			throw new Error("getTransferFunction: Number of uses is greater than 1");
@@ -722,12 +729,12 @@ public class SetUpAnalysis {
 		// gets the data member
 		String dataMember = (inst.toString().split("[,]"))[2].substring(1, (inst.toString().split("[,]"))[2].length());
 
-		if (propagatedValue.get(varLEFT).contains("null") == true) {
-			if (propagatedValue.get(varLEFT).size() == 1) {
+		if (propagatedValue.get(varRIGHT).contains("null") == true) {
+			if (propagatedValue.get(varRIGHT).size() == 1) {
 				data.setToBOT(pPoint, column);
 				return false;
 			}
-			propagatedValue.get(varLEFT).remove("null");
+			propagatedValue.get(varRIGHT).remove("null");
 		}
 
 		ArrayList<String> pointsToRIGHT = propagatedValue.get(varRIGHT);
@@ -951,7 +958,7 @@ public class SetUpAnalysis {
 			// - 1)))
 			//
 			// TODO Assuming that fields will be of type (X.Y.t)
-			if (symbolic_object.split("[.]").length == 3)
+			if (symbolic_object.split("[.]").length == 1)
 				continue;
 
 			// if the symbolic object does not point to anything; continue
