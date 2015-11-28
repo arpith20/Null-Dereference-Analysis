@@ -317,6 +317,12 @@ public class Data {
 
 		return new HashMap<String, ArrayList<String>>(pointsToMap.get(pPoint).get(col));
 	}
+	
+	public HashMap<String, ArrayList<String>> retrieveOriginal(String pPoint, Integer col) {
+		verifyPPAndCol(pPoint, col, "retrieve HashMap");
+
+		return pointsToMap.get(pPoint).get(col);
+	}
 
 	// Function to get the column markings HashMap at a particular program point
 	// PPOINT
@@ -478,14 +484,14 @@ public class Data {
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {
 				// if (Character.isLetter(var.charAt(var.length() - 1)))
-				if (var.split("[.]").length == 3)
+				if (var.split("[.]").length != 1)
 					op = "" + var + " -> " + "{";
 				else
 					op = "v" + var + " -> " + "{";
 				flag = false;
 			} else {
 				// if (Character.isLetter(var.charAt(var.length() - 1)))
-				if (var.split("[.]").length == 3)
+				if (var.split("[.]").length != 1)
 					op = "\n " + var + " -> " + "{";
 				else
 					op = "\n v" + var + " -> " + "{";
@@ -525,13 +531,13 @@ public class Data {
 				continue;
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {
-				if (var.split("[.]").length == 3)
+				if (var.split("[.]").length != 1)
 					op = "" + var + " -> " + "{";
 				else
 					op = "v" + var + " -> " + "{";
 				flag = false;
 			} else {
-				if (var.split("[.]").length == 3)
+				if (var.split("[.]").length != 1)
 					op = "\n " + var + " -> " + "{";
 				else
 					op = "\n v" + var + " -> " + "{";

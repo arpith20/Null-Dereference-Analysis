@@ -188,8 +188,8 @@ public class SetUpAnalysis {
 
 		// TODO Initialization flags for the analysis
 		// Initialization of flags required for the run of the analysis
-		boolean printToFile = true;
-		String outputFile = "test9table.txt";
+		boolean printToFile = false;
+		String outputFile = "test10table.txt";
 
 		// If set, write the output generated to a file
 		if (printToFile == true) {
@@ -257,7 +257,7 @@ public class SetUpAnalysis {
 					// Add the CGNode to the GLOBALMETHODS
 					// Do not add the Constructor i.e init to the array list or
 					// to the hashMap
-					if (!nodeInfo.contains("<init>()V")) {
+					if (nodeInfo.contains("<init>") == false) {
 						globalMethods.add(node);
 
 						// Get shorthand name of the method and the className
@@ -272,6 +272,9 @@ public class SetUpAnalysis {
 				}
 			}
 		}
+		// System.out.println("Global methods are:");
+		// System.out.println(hashGlobalMethods);
+		// System.out.println("\n\n");
 		return;
 	}
 
@@ -386,15 +389,22 @@ public class SetUpAnalysis {
 			// the HashMap containing all the Global Methods
 			// If not present, DO NOT ADD
 			String signature = csr.getDeclaredTarget().getSignature();
+
 			String[] sigString = signature.split("[.]");
 			String targetMethodName = sigString[2].split("[(]")[0];
 			String targetClassName = "L" + sigString[0] + "/" + sigString[1];
+
+			// System.out.println(signature);
+			// System.out.println((targetClassName + targetMethodName));
+			// if (signature.contains("<init>()V"))
+			// continue;
 
 			if (hashGlobalMethods.containsKey(targetClassName + targetMethodName)) {
 				Set<CGNode> nodes = cg.getPossibleTargets(root, csr);
 				if (nodes.size() == 1) {
 					Iterator<CGNode> i = nodes.iterator();
 					CGNode temp = i.next();
+					// System.out.println(temp.toString());
 
 					// Add this node to callSites
 					callSites.add(temp);
@@ -447,6 +457,7 @@ public class SetUpAnalysis {
 	// the WORKINGLIST is empty
 	public void kildall() {
 
+		System.out.println(programPoints);
 		while (workingList.isEmpty() == false) {
 			String curPP = workingList.get(0);
 
@@ -495,6 +506,7 @@ public class SetUpAnalysis {
 		int srcBBNum = Integer.parseInt(pPoint.split("[.]")[2]);
 
 		// Get source basic block from the CFG of the method
+		// System.out.println(pPoint);
 		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 		SSACFG cfg = node.getIR().getControlFlowGraph();
 		BasicBlock srcBB = cfg.getBasicBlock(srcBBNum);
@@ -570,7 +582,7 @@ public class SetUpAnalysis {
 					// propagate = true;
 					// continue;
 					// }
-//					System.out.println(inst);
+					// System.out.println(inst);
 					// Check if library methods are being called
 					CallSiteReference csr = ((SSAInvokeInstruction) inst).getCallSite();
 					String signature = csr.getDeclaredTarget().getSignature();
@@ -644,8 +656,14 @@ public class SetUpAnalysis {
 		// System.out.println("=====================");
 		// System.out.println(inst.toString());
 
+		// v.f = x
+		// v is varLEFT
+		// x is varRIGHT
 		String varRIGHT = Integer.toString(inst.getVal()); // xyz->{||THIS||}
 		String varLEFT = Integer.toString(inst.getUse(0)); // ||THIS||->{xyz}
+
+		// System.out.println(inst + "\nright:" + varRIGHT + "\nLeft:" +
+		// varLEFT);
 
 		// null constants are added here
 		String rootMethodName = pPoint.split("[.]")[0];
@@ -657,6 +675,14 @@ public class SetUpAnalysis {
 		// xyz.THIS = abc
 		// some sorcery to get the data member
 		String dataMember = (inst.toString().split("[,]"))[2].substring(1, (inst.toString().split("[,]"))[2].length());
+
+		if (node.getMethod().isStatic() == false) {
+			// System.out.println("inside isstatic");
+			// System.out.println(inst.getUse(0));
+			if (inst.getUse(0) == 1) {
+				propagatedValue.put(varLEFT, new ArrayList<String>(Arrays.asList("this")));
+			}
+		}
 
 		// If it is not a OBJECT which we are handling
 		if (propagatedValue.get(varRIGHT) == null)
@@ -677,11 +703,16 @@ public class SetUpAnalysis {
 				// System.out.print(s + "."+dataMember+"->");
 				String point = s + "." + dataMember;
 
-				// The following performs weak update
-				if (propagatedValue.get(point) != null) {
-					ArrayList<String> old_pointsto = new ArrayList<String>(propagatedValue.get(point));
-					for (String s2 : old_pointsto) {
-						pointsToRIGHT.add(s2);
+				// The following performs weak update only if POINT is NOT
+				// "this" object
+				// This is because, "this" object always points to a single
+				// object
+				if (s.equals("this") != true) {
+					if (propagatedValue.get(point) != null) {
+						ArrayList<String> old_pointsto = new ArrayList<String>(propagatedValue.get(point));
+						for (String s2 : old_pointsto) {
+							pointsToRIGHT.add(s2);
+						}
 					}
 				}
 
@@ -702,25 +733,37 @@ public class SetUpAnalysis {
 		// System.out.println("=====================");
 		// System.out.println(inst.toString());
 
+		if (pPoint.equals("startTest.8.9") == true) {
+			System.out.println("\npropagated valued is:");
+			System.out.println(propagatedValue);
+		}
+
 		// x = v.f
 		// v is varRIGHT
 		// x is varLEFT
 		String varRIGHT = Integer.toString(inst.getUse(0));
 		String varLEFT = Integer.toString(inst.getDef());
 
-		// If it is not a OBJECT which we are handling
-		if (propagatedValue.get(varRIGHT) == null)
+		if (inst.getDeclaredFieldType().isPrimitiveType() == true)
 			return true;
 
-		if (inst.getDeclaredFieldType().isPrimitiveType() == true)
+		String rootMethodName = pPoint.split("[.]")[0];
+		CGNode node = hashGlobalMethods.get(analysisClass + rootMethodName);
+
+		if (node.getMethod().isStatic() == false) {
+			if (inst.getUse(0) == 1)
+				propagatedValue.put(varRIGHT, new ArrayList<String>(Arrays.asList("this")));
+		}
+
+		// If it is not a OBJECT which we are handling
+		if (propagatedValue.get(varRIGHT) == null)
 			return true;
 
 		if (inst.getNumberOfUses() > 1)
 			throw new Error("getTransferFunction: Number of uses is greater than 1");
 
 		// null constants are added here
-		String rootMethodName = pPoint.split("[.]")[0];
-		CGNode node = hashGlobalMethods.get(analysisClass + rootMethodName);
+
 		if (node.getIR().getSymbolTable().isNullConstant(inst.getUse(0))) {
 			propagatedValue.put(Integer.toString(inst.getUse(0)), new ArrayList<String>(Arrays.asList("null")));
 		}
@@ -777,14 +820,14 @@ public class SetUpAnalysis {
 
 		HashMap<String, ArrayList<String>> callSiteValue = new HashMap<String, ArrayList<String>>();
 
-		int start;
-		if (inst.isStatic()) {
-			// Static, variables will be set from 0
-			start = 0;
-		} else
-			start = 1;
+		// int start;
+		// if (inst.isStatic()) {
+		// // Static, variables will be set from 0
+		// start = 0;
+		// } else
+		// start = 1;
 
-		for (int i = start; i < inst.getNumberOfParameters(); i++) {
+		for (int i = 0; i < inst.getNumberOfParameters(); i++) {
 			int var = inst.getUse(i);
 			String varStr = Integer.toString(var);
 			ArrayList<String> pointsTo = propagatedValue.get(varStr);
@@ -800,7 +843,7 @@ public class SetUpAnalysis {
 		}
 
 		// finds and adds the symbolic objects to callSiteValue
-		for (int i = start; i < inst.getNumberOfParameters(); i++) {
+		for (int i = 0; i < inst.getNumberOfParameters(); i++) {
 			int var = inst.getUse(i);
 			String varStr = Integer.toString(var);
 			ArrayList<String> pointsTo = propagatedValue.get(varStr);
@@ -941,15 +984,21 @@ public class SetUpAnalysis {
 	public void returnTransferFunction(String pPoint, Integer column, SSAReturnInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
 
+		// Details from pPoint
+		String methodName = pPoint.split("[.]")[0];
+
+		String initialPPoint = methodName + ".0.1";
+		HashMap<String, ArrayList<String>> initialMap = data.retrieve(initialPPoint, column);
+
+		HashMap<String, ArrayList<String>> symbolicFieldMap = new HashMap<String, ArrayList<String>>();
 		// copy all symbolic objects to the call site
 		for (Map.Entry<String, ArrayList<String>> entry : propagatedValue.entrySet()) {
-			String symbolic_object = entry.getKey();
+			String key = entry.getKey();
 
-			// current method
-			String method = pPoint.split("[.]")[0];
-
-			if (symbolic_object.split("[.]").length == 2 || symbolic_object.split("[.]").length > 3)
+			if (key.split("[.]").length > 3) {
+				System.out.println(key);
 				throw new Error("Split failed in returnTransferFunction");
+			}
 
 			// not a symbolic object; continue
 			// if
@@ -957,53 +1006,90 @@ public class SetUpAnalysis {
 			// - 1)))
 			//
 			// TODO Assuming that fields will be of type (X.Y.t)
-			if (symbolic_object.split("[.]").length == 1)
+			if (key.split("[.]").length == 1)
 				continue;
 
-			// if the symbolic object does not point to anything; continue
-			// (Shouldn't this be an error???)
-			if (entry.getValue() == null)
-				continue;
-			// shouldn't be done
-			if (method.contains(analysisMethod.split("[(]")[0]))
-				continue;
+			for (Map.Entry<String, ArrayList<String>> entry2 : initialMap.entrySet()) {
+				String keyAtEntry = entry2.getKey();
 
-			// System.out.println(analysisMethod.split("[(]")[0] +
-			// ">>>>>>>>>>>>>>>>" + pPoint);
-			// System.out.println("method: " + method);
+				if (keyAtEntry.split("[.]").length != 1)
+					continue;
 
-			ArrayList<callSiteData> al_csd2 = mapToCallSiteData.get(pPoint.split("[.]")[0]);
-			if (al_csd2 == null)
-				throw new NullPointerException("al_csd inside return is null");
-			// System.out.println("-------------before for");
-			for (callSiteData csd : al_csd2) {
-				// System.out.println("-------------in for");
-				// if (csd.pPoint == null)
-				// continue;
-				// System.out.println("-------------" + csd.pPoint);
-				ArrayList<String> pointsto_symbolic_obj = propagatedValue.get(symbolic_object);
-				for (String s : pointsto_symbolic_obj) {
-					// System.out.print("Adding to --" + pPoint + "'s " +
-					// symbolic_object);
-					// System.out.println("--" + s);
-					data.add(csd.pPoint, column, symbolic_object, s);
-					data.mark(csd.pPoint, column);
+				ArrayList<String> valueAtEntry = entry2.getValue();
+				for (String points : valueAtEntry) {
+					if (key.contains(points) == true) {
+						symbolicFieldMap.put(key, propagatedValue.get(key));
+					}
 				}
-				// System.out.println("-----------------done");
 			}
-			// ArrayList<String> iterate = entry.getValue();
-			// System.out.println("\n\n\n" + method + "");
-			// for (int i = 0; i < method.length(); i++)
-			// System.out.print("=");
-			// System.out.println("\n");
-			// for (String pPoint : iterate)
-			// d.displayProgramPoint(pPoint);
 		}
+
+		// if the symbolic object does not point to anything; continue
+		// (Shouldn't this be an error???)
+		// if (entry.getValue() == null)
+		// continue;
+		// shouldn't be done
+		// if (methodName.contains(analysisMethod.split("[(]")[0]))
+		// continue;
+
+		// System.out.println(analysisMethod.split("[(]")[0] +
+		// ">>>>>>>>>>>>>>>>" + pPoint);
+		// System.out.println("method: " + method);
+
+		ArrayList<callSiteData> al_csd2 = mapToCallSiteData.get(methodName);
+		if (al_csd2 == null) {
+			return;
+			// throw new NullPointerException("al_csd2 inside return is null");
+		}
+		// System.out.println("-------------before for");
+
+		for (callSiteData csd : al_csd2) {
+			if (csd.columnsOpened == null) {
+				System.out.println("CSD.columndsOPned is nULL");
+				break;
+			}
+			ArrayList<Integer> col_original = csd.columnsOpened.get(column);
+			if (col_original == null)
+				// This column was not opened by this call. Continue searching
+				continue;
+
+			for (Integer returnColumn : col_original) {
+				// returnColumn = iterateColumn;
+				// boolean changed = false;
+				//
+				// boolean check;
+				String returnPP = csd.pPoint;
+
+				HashMap<String, ArrayList<String>> returnSiteMap = data.retrieveOriginal(returnPP, returnColumn);
+
+				for (Map.Entry<String, ArrayList<String>> entry3 : symbolicFieldMap.entrySet()) {
+					returnSiteMap.put(entry3.getKey(), new ArrayList<String>(entry3.getValue()));
+				}
+
+				// returnPP = csd.pPoint;
+				// for (String v : pointsTo) {
+				// check = data.add(csd.pPoint, iterateColumn,
+				// Integer.toString(csd.varNum), v);
+				// if (check == true)
+				// changed = true;
+				// }
+				// if (changed) {
+				workingList.add(returnPP);
+				data.mark(returnPP, returnColumn);
+				// }
+			}
+		}
+		// ArrayList<String> iterate = entry.getValue();
+		// System.out.println("\n\n\n" + method + "");
+		// for (int i = 0; i < method.length(); i++)
+		// System.out.print("=");
+		// System.out.println("\n");
+		// for (String pPoint : iterate)
+		// d.displayProgramPoint(pPoint);
 
 		if (inst.getNumberOfUses() == 0)
 			return;
 
-		String methodName = pPoint.split("[.]")[0];
 		CGNode node = hashGlobalMethods.get(analysisClass + methodName);
 
 		// Iterate over all the variables to check if NULL
