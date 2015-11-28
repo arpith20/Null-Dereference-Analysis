@@ -2,7 +2,7 @@ package TestCases;
 
 public class PublicTests {
 	int i;
-	
+
 	public static void main(String[] args) {
 		Test1 t1 = new Test1();
 		t1.startTest();
@@ -14,5 +14,11 @@ public class PublicTests {
 		t4.startTest();
 		Test5 t5 = new Test5();
 		t5.startTest();
+		Test8 t8 = new Test8();
+		t8.startTest();
+		Test9 t9 = new Test9();
+		t9.startTest();
+		Test10 t10 = new Test10();
+		t10.startTest();
 	}
 }

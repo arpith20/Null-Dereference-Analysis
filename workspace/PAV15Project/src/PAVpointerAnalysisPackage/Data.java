@@ -9,7 +9,7 @@ import java.util.Map;
 public class Data {
 
 	private HashMap<String, HashMap<Integer, Boolean>> marked = new HashMap<String, HashMap<Integer, Boolean>>();
-	private HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
+	public HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>> pp = new HashMap<String, HashMap<Integer, HashMap<String, ArrayList<String>>>>();
 	HashMap<String, ArrayList<String>> hm_joined;
 
 	// pp1 contains pp2, ie, pp2 is a subset of pp1

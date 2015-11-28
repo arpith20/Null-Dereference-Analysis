@@ -633,8 +633,8 @@ public class SetUpAnalysis {
 
 	public void putTransferFunction(String pPoint, int column, SSAPutInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
-		// System.out.println("=====================");
-		// System.out.println(inst.toString());
+		System.out.println("=====================");
+		System.out.println(inst.toString());
 
 		String varRIGHT = Integer.toString(inst.getVal()); // xyz->{||THIS||}
 		String varLEFT = Integer.toString(inst.getUse(0)); // ||THIS||->{xyz}
@@ -649,6 +649,20 @@ public class SetUpAnalysis {
 		// xyz.THIS = abc
 		// some sorcery to get the data member
 		String dataMember = (inst.toString().split("[,]"))[2].substring(1, (inst.toString().split("[,]"))[2].length());
+
+		// If it is not a OBJECT which we are handling
+		if (propagatedValue.get(varRIGHT) == null)
+			// return true;
+			return;
+
+		if (propagatedValue.get(varLEFT).contains("null") == true) {
+			if (propagatedValue.get(varLEFT).size() == 1) {
+				d.setToBOT(pPoint, column);
+				// return false;
+				return;
+			}
+			propagatedValue.get(varLEFT).remove("null");
+		}
 
 		ArrayList<String> pointsToLEFT = propagatedValue.get(varLEFT);
 		ArrayList<String> pointsToRIGHT = new ArrayList<String>(propagatedValue.get(varRIGHT));
@@ -673,6 +687,7 @@ public class SetUpAnalysis {
 			}
 		}
 
+		// return true;
 		// System.out.println("=====================");
 	}
 
@@ -680,6 +695,22 @@ public class SetUpAnalysis {
 			HashMap<String, ArrayList<String>> propagatedValue) {
 		// System.out.println("=====================");
 		// System.out.println(inst.toString());
+
+		// x = v.f
+		// v is varRIGHT
+		// x is varLEFT
+		String varRIGHT = Integer.toString(inst.getUse(0));
+		String varLEFT = Integer.toString(inst.getDef());
+
+		// If it is not a OBJECT which we are handling
+		if (propagatedValue.get(varRIGHT) == null)
+			return;
+
+		if (inst.getDeclaredFieldType().isPrimitiveType() == true)
+			return;
+
+		if (inst.getNumberOfUses() > 1)
+			throw new Error("getTransferFunction: Number of uses is greater than 1");
 
 		// null constants are added here
 		String rootMethodName = pPoint.split("[.]")[0];
@@ -691,8 +722,13 @@ public class SetUpAnalysis {
 		// gets the data member
 		String dataMember = (inst.toString().split("[,]"))[2].substring(1, (inst.toString().split("[,]"))[2].length());
 
-		String varRIGHT = Integer.toString(inst.getUse(0)); // xyz->{||THIS||}
-		String varLEFT = Integer.toString(inst.getDef()); // ||THIS||->{xyz}
+		if (propagatedValue.get(varRIGHT).contains("null") == true) {
+			if (propagatedValue.get(varRIGHT).size() == 1) {
+				d.setToBOT(pPoint, column);
+				return;
+			}
+			propagatedValue.get(varRIGHT).remove("null");
+		}
 
 		ArrayList<String> pointsToRIGHT = propagatedValue.get(varRIGHT);
 		ArrayList<String> pointsToFinal = new ArrayList<String>();
@@ -710,6 +746,7 @@ public class SetUpAnalysis {
 			propagatedValue.put(varLEFT, pointsToFinal);
 		}
 
+		return;
 		// System.out.println(varLEFT + " " + varRIGHT);
 		// System.out.println("=====================");
 	}
@@ -957,9 +994,19 @@ public class SetUpAnalysis {
 
 			// current method
 			String method = pPoint.split("[.]")[0];
+
+			if (symbolic_object.split("[.]").length == 2 || symbolic_object.split("[.]").length > 3)
+				throw new Error("Split failed in returnTransferFunction");
+
 			// not a symbolic object; continue
-			if (!Character.isLetter(symbolic_object.charAt(symbolic_object.length() - 1)))
+			// if
+			// (!Character.isLetter(symbolic_object.charAt(symbolic_object.length()
+			// - 1)))
+			//
+			// TODO Assuming that fields will be of type (X.Y.t)
+			if (symbolic_object.split("[.]").length == 1)
 				continue;
+
 			// if the symbolic object does not point to anything; continue
 			// (Shouldn't this be an error???)
 			if (entry.getValue() == null)
@@ -968,26 +1015,37 @@ public class SetUpAnalysis {
 			if (method.contains(analysisMethod.split("[(]")[0]))
 				continue;
 
-			System.out.println(analysisMethod.split("[(]")[0] + ">>>>>>>>>>>>>>>>" + pPoint);
-			System.out.println("method: " + method);
+			// System.out.println(analysisMethod.split("[(]")[0] +
+			// ">>>>>>>>>>>>>>>>" + pPoint);
+			// System.out.println("method: " + method);
 
 			ArrayList<callSiteData> al_csd2 = mapToCallSiteData.get(pPoint.split("[.]")[0]);
 			if (al_csd2 == null)
 				throw new NullPointerException("al_csd inside return is null");
-			System.out.println("-------------before for");
+			// System.out.println("-------------before for");
 			for (callSiteData csd : al_csd2) {
-				System.out.println("-------------in for");
+				// System.out.println("-------------in for");
 				// if (csd.pPoint == null)
 				// continue;
-				System.out.println("-------------" + csd.pPoint);
+				// System.out.println("-------------" + csd.pPoint);
 				ArrayList<String> pointsto_symbolic_obj = propagatedValue.get(symbolic_object);
 				for (String s : pointsto_symbolic_obj) {
-					System.out.print("Adding to --" + pPoint + "'s " + symbolic_object);
-					System.out.println("--" + s);
+					// System.out.print("Adding to --" + pPoint + "'s " +
+					// symbolic_object);
+					// System.out.println("--" + s);
+					// if (d.pp.get(csd.pPoint) == null ||
+					// d.pp.get(csd.pPoint).get(column) == null)
+					// throw new Error("[new]returnTransferFunction: Required
+					// program point or column is not present");
+					//
+					// if
+					// (d.pp.get(csd.pPoint).get(column).containsKey(symbolic_object))
+					// {
 					d.add(csd.pPoint, column, symbolic_object, s);
 					d.mark(csd.pPoint, column);
+					// }
 				}
-				System.out.println("-----------------done");
+				// System.out.println("-----------------done");
 			}
 			// ArrayList<String> iterate = entry.getValue();
 			// System.out.println("\n\n\n" + method + "");
