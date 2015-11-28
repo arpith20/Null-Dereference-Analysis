@@ -477,13 +477,15 @@ public class Data {
 				continue;
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {
-				if (Character.isLetter(var.charAt(var.length() - 1)))
+				// if (Character.isLetter(var.charAt(var.length() - 1)))
+				if (var.split("[.]").length == 3)
 					op = "" + var + " -> " + "{";
 				else
 					op = "v" + var + " -> " + "{";
 				flag = false;
 			} else {
-				if (Character.isLetter(var.charAt(var.length() - 1)))
+				// if (Character.isLetter(var.charAt(var.length() - 1)))
+				if (var.split("[.]").length == 3)
 					op = "\n " + var + " -> " + "{";
 				else
 					op = "\n v" + var + " -> " + "{";
@@ -523,13 +525,13 @@ public class Data {
 				continue;
 			ArrayList<String> pointsto = entry.getValue();
 			if (flag) {
-				if (Character.isLetter(var.charAt(var.length() - 1)))
+				if (var.split("[.]").length == 3)
 					op = "" + var + " -> " + "{";
 				else
 					op = "v" + var + " -> " + "{";
 				flag = false;
 			} else {
-				if (Character.isLetter(var.charAt(var.length() - 1)))
+				if (var.split("[.]").length == 3)
 					op = "\n " + var + " -> " + "{";
 				else
 					op = "\n v" + var + " -> " + "{";

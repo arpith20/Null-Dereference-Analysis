@@ -188,8 +188,8 @@ public class SetUpAnalysis {
 
 		// TODO Initialization flags for the analysis
 		// Initialization of flags required for the run of the analysis
-		boolean printToFile = false;
-		String outputFile = "test7join.txt";
+		boolean printToFile = true;
+		String outputFile = "test9table.txt";
 
 		// If set, write the output generated to a file
 		if (printToFile == true) {
@@ -380,37 +380,36 @@ public class SetUpAnalysis {
 			// invokeStatic is for invoking static methods
 			// Considering only invokeVirtual and invokeStatic
 			// TODO Check if this is sufficient
-			if (!csr.isSpecial()) {
+			// if (!csr.isSpecial()) {
 
-				// Check if the target method of this call site is present in
-				// the HashMap containing all the Global Methods
-				// If not present, DO NOT ADD
-				String signature = csr.getDeclaredTarget().getSignature();
-				String[] sigString = signature.split("[.]");
-				String targetMethodName = sigString[2].split("[(]")[0];
-				String targetClassName = "L" + sigString[0] + "/" + sigString[1];
+			// Check if the target method of this call site is present in
+			// the HashMap containing all the Global Methods
+			// If not present, DO NOT ADD
+			String signature = csr.getDeclaredTarget().getSignature();
+			String[] sigString = signature.split("[.]");
+			String targetMethodName = sigString[2].split("[(]")[0];
+			String targetClassName = "L" + sigString[0] + "/" + sigString[1];
 
-				if (hashGlobalMethods.containsKey(targetClassName + targetMethodName)) {
-					Set<CGNode> nodes = cg.getPossibleTargets(root, csr);
-					if (nodes.size() == 1) {
-						Iterator<CGNode> i = nodes.iterator();
-						CGNode temp = i.next();
+			if (hashGlobalMethods.containsKey(targetClassName + targetMethodName)) {
+				Set<CGNode> nodes = cg.getPossibleTargets(root, csr);
+				if (nodes.size() == 1) {
+					Iterator<CGNode> i = nodes.iterator();
+					CGNode temp = i.next();
 
-						// Add this node to callSites
-						callSites.add(temp);
+					// Add this node to callSites
+					callSites.add(temp);
 
-						// Add this callSite to the CallSiteData class
-						// Check if targetMethodName already exists
-						ArrayList<callSiteData> siteData = mapToCallSiteData.get(targetMethodName);
-						if (siteData == null) {
-							siteData = new ArrayList<callSiteData>();
-							mapToCallSiteData.put(targetMethodName, siteData);
-						}
-					} else
-						throw new NullPointerException(
-								"getDirectCallSites: size of possibletarget nodes not equal to 1");
+					// Add this callSite to the CallSiteData class
+					// Check if targetMethodName already exists
+					ArrayList<callSiteData> siteData = mapToCallSiteData.get(targetMethodName);
+					if (siteData == null) {
+						siteData = new ArrayList<callSiteData>();
+						mapToCallSiteData.put(targetMethodName, siteData);
+					}
 				} else
-					continue;
+					throw new NullPointerException("getDirectCallSites: size of possibletarget nodes not equal to 1");
+				// } else
+				// continue;
 			}
 		}
 		return callSites;
@@ -571,7 +570,7 @@ public class SetUpAnalysis {
 					// propagate = true;
 					// continue;
 					// }
-					System.out.println(inst);
+//					System.out.println(inst);
 					// Check if library methods are being called
 					CallSiteReference csr = ((SSAInvokeInstruction) inst).getCallSite();
 					String signature = csr.getDeclaredTarget().getSignature();
@@ -743,13 +742,12 @@ public class SetUpAnalysis {
 			for (String s : pointsToRIGHT) {
 				String point = s + "." + dataMember;
 
-				// if (propagatedValue.get(point) != null) {
-				// ArrayList<String> point_pointsto =
-				// propagatedValue.get(point);
-				// for (String s2 : point_pointsto) {
-				pointsToFinal.add(point);
-				// }
-				// }
+				if (propagatedValue.get(point) != null) {
+					ArrayList<String> point_pointsto = propagatedValue.get(point);
+					for (String s2 : point_pointsto) {
+						pointsToFinal.add(s2);
+					}
+				}
 			}
 			propagatedValue.put(varLEFT, pointsToFinal);
 		}

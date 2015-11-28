@@ -1,0 +1,95 @@
+
+
+
+startTest
+=========
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB2:
+{v3 -> {startTest.new0}}
+
+BB2 -> BB3:
+{v3 -> {startTest.new0}}
+
+BB3 -> BB4:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new5}}
+
+BB4 -> BB5:
+{v3 -> {startTest.new0}
+ v5 -> {startTest.new5}}
+
+BB5 -> BB6:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {startTest.new5}
+ v5 -> {startTest.new5}}
+
+BB6 -> BB7:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {startTest.new5}
+ v7 -> {startTest.new5}
+ v5 -> {startTest.new5}}
+
+BB7 -> BB8:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {startTest.new5}
+ v7 -> {startTest.new5}
+ v5 -> {startTest.new5}}
+
+BB8 -> BB9:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {startTest.new5}
+ v7 -> {startTest.new5}
+ v5 -> {startTest.new5}
+ v9 -> {startTest.new5}}
+
+BB9 -> BB10:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {startTest.new5}
+ v7 -> {startTest.new5}
+ v5 -> {startTest.new5}
+ v9 -> {startTest.new5}}
+
+BB10 -> BB11:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {startTest.new5}
+ v7 -> {startTest.new5}
+ v5 -> {startTest.new5}
+ v9 -> {startTest.new5}}
+
+
+
+
+calltest
+========
+
+BB0 -> BB1:
+{v2 -> {startTest.new5}}
+
+BB1 -> BB2:
+{v2 -> {startTest.new5}}
+
+BB2 -> BB3:
+{v2 -> {startTest.new5}}
+
+BB3 -> BB5:
+{v2 -> {startTest.new5}}
+
+BB3 -> BB4:
+{v2 -> {startTest.new5}}
+
+BB4 -> BB5:
+{v2 -> {startTest.new5}}
+
+BB5 -> BB6:
+{v2 -> {startTest.new5}
+ v9 -> {startTest.new5, null}
+ v8 -> {null}}
+
+BB6 -> BB7:
+{v2 -> {startTest.new5}
+ v9 -> {startTest.new5, null}
+ v8 -> {null}}
+

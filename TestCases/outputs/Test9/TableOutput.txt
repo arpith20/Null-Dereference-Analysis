@@ -1,0 +1,115 @@
+
+
+
+retTest
+=======
+
+BB0 -> BB1:
+C0:
+{v2 -> {null}}
+
+BB1 -> BB5:
+C0:
+bot
+
+BB1 -> BB2:
+C0:
+{v2 -> {null}
+ v4 -> {null}}
+
+BB2 -> BB3:
+C0:
+{v2 -> {null}
+ v5 -> {retTest.new3}
+ v4 -> {null}}
+
+BB3 -> BB4:
+C0:
+{v2 -> {null}
+ v5 -> {retTest.new3}
+ v4 -> {null}}
+
+BB4 -> BB6:
+C0:
+{v2 -> {null}
+ v5 -> {retTest.new3}
+ v4 -> {null}}
+
+BB5 -> BB6:
+C0:
+bot
+
+
+
+
+startTest
+=========
+
+BB0 -> BB1:
+C0:
+{}
+
+BB1 -> BB2:
+C0:
+{v3 -> {startTest.new0}}
+
+BB2 -> BB3:
+C0:
+{v3 -> {startTest.new0}}
+
+BB3 -> BB4:
+C0:
+{v3 -> {startTest.new0}
+ v5 -> {null}
+ startTest.new0.t8 -> {null}}
+
+BB4 -> BB5:
+C0:
+{v3 -> {startTest.new0}
+ v6 -> {null}
+ v5 -> {null}
+ startTest.new0.t8 -> {null}}
+
+BB5 -> BB6:
+C0:
+{v3 -> {startTest.new0}
+ v6 -> {null}
+ v5 -> {null}
+ v8 -> {retTest.new3}
+ startTest.new0.t8 -> {null}}
+
+BB6 -> BB7:
+C0:
+{v3 -> {startTest.new0}
+ v6 -> {null}
+ v5 -> {null}
+ v8 -> {retTest.new3}
+ startTest.new0.t8 -> {null, retTest.new3}}
+
+BB7 -> BB8:
+C0:
+{v3 -> {startTest.new0}
+ v6 -> {null}
+ v5 -> {null}
+ v9 -> {null, retTest.new3}
+ v8 -> {retTest.new3}
+ startTest.new0.t8 -> {null, retTest.new3}}
+
+BB8 -> BB9:
+C0:
+{v3 -> {startTest.new0}
+ v6 -> {null}
+ v5 -> {null}
+ v9 -> {null, retTest.new3}
+ v8 -> {retTest.new3}
+ startTest.new0.t8 -> {null, retTest.new3}}
+
+BB9 -> BB10:
+C0:
+{v3 -> {startTest.new0}
+ v6 -> {null}
+ v5 -> {null}
+ v9 -> {null, retTest.new3}
+ v8 -> {retTest.new3}
+ startTest.new0.t8 -> {null, retTest.new3}}
+
