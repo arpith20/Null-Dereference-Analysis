@@ -799,8 +799,8 @@ public class SetUpAnalysis {
 			d.copyEntireMap(targetPP, newCol, callSiteValue);
 		}
 
-		if (inst.getNumberOfReturnValues() == 0)
-			return;
+		// if (inst.getNumberOfReturnValues() == 0)
+		// return;
 		else if (inst.getNumberOfReturnValues() > 1)
 			throw new NullPointerException("CallStatement returned more than 1 value:\n" + inst + "\n");
 
@@ -951,6 +951,53 @@ public class SetUpAnalysis {
 
 	public void returnTransferFunction(String pPoint, Integer column, SSAReturnInstruction inst,
 			HashMap<String, ArrayList<String>> propagatedValue) {
+		// copy all symbolic objects to the call site
+		for (Map.Entry<String, ArrayList<String>> entry : propagatedValue.entrySet()) {
+			String symbolic_object = entry.getKey();
+
+			// current method
+			String method = pPoint.split("[.]")[0];
+			// not a symbolic object; continue
+			if (!Character.isLetter(symbolic_object.charAt(symbolic_object.length() - 1)))
+				continue;
+			// if the symbolic object does not point to anything; continue
+			// (Shouldn't this be an error???)
+			if (entry.getValue() == null)
+				continue;
+			// shouldn't be done
+			if (method.contains(analysisMethod.split("[(]")[0]))
+				continue;
+
+			System.out.println(analysisMethod.split("[(]")[0] + ">>>>>>>>>>>>>>>>" + pPoint);
+			System.out.println("method: " + method);
+
+			ArrayList<callSiteData> al_csd2 = mapToCallSiteData.get(pPoint.split("[.]")[0]);
+			if (al_csd2 == null)
+				throw new NullPointerException("al_csd inside return is null");
+			System.out.println("-------------before for");
+			for (callSiteData csd : al_csd2) {
+				System.out.println("-------------in for");
+				// if (csd.pPoint == null)
+				// continue;
+				System.out.println("-------------" + csd.pPoint);
+				ArrayList<String> pointsto_symbolic_obj = propagatedValue.get(symbolic_object);
+				for (String s : pointsto_symbolic_obj) {
+					System.out.print("Adding to --" + pPoint + "'s " + symbolic_object);
+					System.out.println("--" + s);
+					d.add(csd.pPoint, column, symbolic_object, s);
+					d.mark(csd.pPoint, column);
+				}
+				System.out.println("-----------------done");
+			}
+			// ArrayList<String> iterate = entry.getValue();
+			// System.out.println("\n\n\n" + method + "");
+			// for (int i = 0; i < method.length(); i++)
+			// System.out.print("=");
+			// System.out.println("\n");
+			// for (String pPoint : iterate)
+			// d.displayProgramPoint(pPoint);
+		}
+
 		if (inst.getNumberOfUses() == 0)
 			return;
 
