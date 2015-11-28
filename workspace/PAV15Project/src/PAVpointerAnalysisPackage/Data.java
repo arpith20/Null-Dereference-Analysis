@@ -357,10 +357,11 @@ public class Data {
 		return;
 	}
 
-	// Function to add a new program point to DATA
-	// Note: This will NOT create any columns at the program points
-	// Columns will be added to the program points once addColumn is called
-	// CHECKED
+	/**
+	 * Function to add a new program point to DATA // Note: This will NOT create
+	 * any columns at the program points // Columns will be added to the program
+	 * points once addColumn is called // CHECKED
+	 */
 	public void addProgramPoint(String pPoint) {
 
 		// Check if the program point is already present

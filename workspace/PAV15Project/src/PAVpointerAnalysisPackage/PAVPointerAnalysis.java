@@ -17,7 +17,7 @@ import PAVpointerAnalysisPackage.SetUpAnalysis;
 
 public class PAVPointerAnalysis {
 
-	private SetUpAnalysis setup; // Object to setup (check presentation)
+	private SetUpAnalysis setup;
 
 	public PAVPointerAnalysis(String classpath, String mainClass, String analysisClass, String analysisMethod,
 			String join) {
@@ -59,19 +59,26 @@ public class PAVPointerAnalysis {
 		return;
 	}
 
-	// START: NO CHANGE REGION
 	/**
 	 * The main method reads in the arguments from the command line and sets up
 	 * the appropriate variables.
 	 * 
 	 * @param args
-	 *            args[0]: Full path of the application jar file. args[1]: Fully
-	 *            qualified name of the class containing the main method. The
-	 *            name is of the form L<package_name>/<class_name>. For example,
-	 *            to analyze the class test1 in package tests, the argument
-	 *            would be Ltests/test1 args[2]: Fully qualified name of the
-	 *            class containing the method which we want to analyze. args[3]:
-	 *            Name of the method we want to analyze.
+	 *            args[0]: Full path of the application jar file.
+	 * 
+	 *            args[1]: Fully qualified name of the class containing the main
+	 *            method. The name is of the form L<package_name>/<class_name>.
+	 *            For example, to analyze the class test1 in package tests, the
+	 *            argument would be Ltests/test1.
+	 * 
+	 *            args[2]: Fully qualified name of the class containing the
+	 *            method which we want to analyze.
+	 * 
+	 *            args[3]: Name of the method we want to analyze.
+	 * 
+	 *            args[4]: [OPTIONAL] If "join" is given as the 5th argument,
+	 *            then the analysis produces the JOINOUTPUT. Else, TABLEOUTPUT
+	 *            is generated.
 	 * 
 	 * @throws Exception
 	 */
@@ -96,5 +103,4 @@ public class PAVPointerAnalysis {
 
 		return;
 	}
-	// END: NO CHANGE REGION
 }
