@@ -19,7 +19,7 @@
 # If the 5th argument for the analysis is given as "join", the analysis outputs the JOIN OUTPUT. If anything other than "join" is specified, including "", TABLE OUTPUT will be generated.
 #
 
-allTests="1 2 3 4 5 6 7"
+allTests="1 2 3 4 5 6 7 8 9 10"
 
 if [ $# -eq 1 ]
 then

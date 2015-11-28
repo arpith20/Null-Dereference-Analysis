@@ -1,0 +1,119 @@
+
+
+
+foo
+===
+
+BB0 -> BB1:
+{v1 -> {this}
+ this.t2 -> {null}}
+
+BB1 -> BB2:
+{v3 -> {null}
+ v1 -> {this}
+ this.t2 -> {null}}
+
+BB2 -> BB3:
+{v3 -> {null}
+ v1 -> {this}
+ this.t2 -> {null}}
+
+BB3 -> BB4:
+{v3 -> {null}
+ v1 -> {this}
+ v6 -> {foo.new5}
+ this.t2 -> {null}}
+
+BB4 -> BB5:
+{v3 -> {null}
+ v1 -> {this}
+ v6 -> {foo.new5}
+ this.t2 -> {null}}
+
+BB5 -> BB6:
+{v3 -> {null}
+ v1 -> {this}
+ v6 -> {foo.new5}
+ this.t2 -> {foo.new5}}
+
+BB6 -> BB7:
+{v3 -> {null}
+ v1 -> {this}
+ v6 -> {foo.new5}
+ this.t2 -> {foo.new5}}
+
+
+
+
+startTest
+=========
+
+BB0 -> BB1:
+{}
+
+BB1 -> BB2:
+{v3 -> {startTest.new0}}
+
+BB2 -> BB3:
+{v3 -> {startTest.new0}}
+
+BB3 -> BB4:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {null}
+ v5 -> {null}}
+
+BB4 -> BB5:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {null}
+ v6 -> {null}
+ v5 -> {null}}
+
+BB5 -> BB6:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {null}
+ v6 -> {null}
+ v5 -> {null}}
+
+BB6 -> BB7:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {null}
+ v1 -> {this}
+ v6 -> {null}
+ v5 -> {null}
+ this.t2 -> {null}}
+
+BB7 -> BB8:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {null}
+ v1 -> {this}
+ v6 -> {null}
+ v5 -> {null}
+ this.t2 -> {foo.new5}}
+
+BB8 -> BB9:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {null}
+ v10 -> {foo.new5}
+ v1 -> {this}
+ v6 -> {null}
+ v5 -> {null}
+ this.t2 -> {foo.new5}}
+
+BB9 -> BB10:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {null}
+ v10 -> {foo.new5}
+ v1 -> {this}
+ v6 -> {null}
+ v5 -> {null}
+ this.t2 -> {foo.new5}}
+
+BB10 -> BB11:
+{v3 -> {startTest.new0}
+ startTest.new0.t -> {null}
+ v10 -> {foo.new5}
+ v1 -> {this}
+ v6 -> {null}
+ v5 -> {null}
+ this.t2 -> {foo.new5}}
+

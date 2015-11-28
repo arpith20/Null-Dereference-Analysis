@@ -189,7 +189,7 @@ public class SetUpAnalysis {
 		// TODO Initialization flags for the analysis
 		// Initialization of flags required for the run of the analysis
 		boolean printToFile = false;
-		String outputFile = "test10table.txt";
+		String outputFile = "test10join.txt";
 
 		// If set, write the output generated to a file
 		if (printToFile == true) {
@@ -457,7 +457,7 @@ public class SetUpAnalysis {
 	// the WORKINGLIST is empty
 	public void kildall() {
 
-		System.out.println(programPoints);
+		// System.out.println(programPoints);
 		while (workingList.isEmpty() == false) {
 			String curPP = workingList.get(0);
 
@@ -615,8 +615,12 @@ public class SetUpAnalysis {
 			if (propagate) {
 				// Iterate over the successor basicBlocks to JOIN the
 				// propagatedValue
+
 				boolean changed = false;
 				for (ISSABasicBlock succ : succBB) {
+
+					// if ( cfg.getNormalPredecessors(succ).size() == 1 )
+
 					String succPP = methodName + "." + srcBB.getNumber() + "." + succ.getNumber();
 					changed = data.propagate(succPP, column, propagatedValue);
 					if (changed)
@@ -732,11 +736,6 @@ public class SetUpAnalysis {
 			HashMap<String, ArrayList<String>> propagatedValue) {
 		// System.out.println("=====================");
 		// System.out.println(inst.toString());
-
-		if (pPoint.equals("startTest.8.9") == true) {
-			System.out.println("\npropagated valued is:");
-			System.out.println(propagatedValue);
-		}
 
 		// x = v.f
 		// v is varRIGHT
@@ -909,6 +908,15 @@ public class SetUpAnalysis {
 			}
 
 		}
+
+		// HACK for handling the case when THIS sybolic object is present in the
+		// propagatedValue
+		for (Map.Entry<String, ArrayList<String>> entry : propagatedValue.entrySet()) {
+			String key = entry.getKey();
+			if (key.contains("this") == true)
+				propagatedValue.remove(key);
+		}
+
 		return;
 	}
 
