@@ -1,9 +1,3 @@
-#PAV Project _2015
-##Null Dereference Analysis
-###Introduction
-//TODO
-###Team Members
--[Arpith K](http://arpith.xyz/)
--[Sridhar G](http://www.csa.iisc.ernet.in/people/people-msc.php)
-###Instructions
-//TODO. Currently, I am wayy too sleepy...... 
+# Null-Dereference-Analysis
+
+Given a Java program, this tool performs interprocedural pointer analysis on a user-specified method to verify a given dereference as safe or potentially unsafe.
